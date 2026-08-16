@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class DossierReferenceGeneratorAdapter implements SequenceReferenceGenerator {
 
-    private final ReferenceGenerator referenceGenerator;
+  private final ReferenceGenerator referenceGenerator;
 
-    @Override
-    public Reference generer(String prefixe, int annee) {
-        return referenceGenerator.generer(prefixe, annee);
-    }
+  @Override
+  public Reference generer(String prefixe, int annee) {
+    return referenceGenerator.generer(prefixe, annee);
+  }
 }

@@ -76,14 +76,13 @@ public class SecurityConfig {
     }
 
     http.headers(
-            headers ->
-                headers
-                    .contentTypeOptions(withDefaults -> {})
-                    .frameOptions(frameOptions -> frameOptions.deny())
-                    .referrerPolicy(
-                        referrer ->
-                            referrer.policy(
-                                ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER)));
+        headers ->
+            headers
+                .contentTypeOptions(withDefaults -> {})
+                .frameOptions(frameOptions -> frameOptions.deny())
+                .referrerPolicy(
+                    referrer ->
+                        referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER)));
 
     return http.build();
   }

@@ -1,15 +1,22 @@
 package com.logiflow.tms.ai.infrastructure.client;
 
 import com.logiflow.tms.ai.domain.model.CandidatDossier;
+import com.logiflow.tms.ai.domain.model.ItineraireCalcule;
+import com.logiflow.tms.ai.domain.model.PointItineraire;
 import com.logiflow.tms.ai.domain.model.PropositionGroupage;
 import com.logiflow.tms.ai.domain.model.ReponseCopilote;
+import com.logiflow.tms.ai.domain.model.SegmentItineraire;
 import com.logiflow.tms.ai.domain.port.out.AiServiceClientPort;
 import com.logiflow.tms.ai.infrastructure.client.dto.CopilotAskRequest;
 import com.logiflow.tms.ai.infrastructure.client.dto.CopilotAskResponse;
 import com.logiflow.tms.ai.infrastructure.client.dto.GroupageAnalyserRequest;
 import com.logiflow.tms.ai.infrastructure.client.dto.GroupageAnalyserRequest.DossierCandidatDto;
 import com.logiflow.tms.ai.infrastructure.client.dto.GroupageAnalyserResponse;
+import com.logiflow.tms.ai.infrastructure.client.dto.ItineraryCalculerRequest;
+import com.logiflow.tms.ai.infrastructure.client.dto.ItineraryCalculerRequest.PointDto;
+import com.logiflow.tms.ai.infrastructure.client.dto.ItineraryCalculerResponse;
 import com.logiflow.tms.shared.domain.exception.ServiceIndisponibleException;
+import com.logiflow.tms.shared.domain.vo.GeoPoint;
 import com.logiflow.tms.shared.infrastructure.web.CorrelationIdFilter;
 import java.util.List;
 import java.util.Set;
@@ -95,6 +102,47 @@ public class AiServiceHttpAdapter implements AiServiceClientPort {
     } catch (RestClientException e) {
       throw new ServiceIndisponibleException(
           "Le service IA (groupage) est momentanément indisponible", e);
+    }
+  }
+
+  @Override
+  public ItineraireCalcule calculerItineraire(List<PointItineraire> points) {
+    try {
+      List<PointDto> pointsDto =
+          points.stream()
+              .map(
+                  p -> new PointDto(p.position().latitude(), p.position().longitude(), p.libelle()))
+              .toList();
+      ItineraryCalculerResponse reponse =
+          aiServiceRestClient
+              .post()
+              .uri("/internal/ai/v1/itinerary/calculer")
+              .body(
+                  new ItineraryCalculerRequest(
+                      pointsDto, CorrelationIdFilter.correlationIdCourant()))
+              .retrieve()
+              .body(ItineraryCalculerResponse.class);
+      if (reponse == null) {
+        throw new ServiceIndisponibleException("Réponse vide du service IA (itinéraire)");
+      }
+      List<SegmentItineraire> segments =
+          reponse.segments().stream()
+              .map(
+                  s ->
+                      new SegmentItineraire(
+                          new PointItineraire(
+                              new GeoPoint(s.depart().latitude(), s.depart().longitude()),
+                              s.depart().libelle()),
+                          new PointItineraire(
+                              new GeoPoint(s.arrivee().latitude(), s.arrivee().longitude()),
+                              s.arrivee().libelle()),
+                          s.distanceKm(),
+                          s.dureeMin()))
+              .toList();
+      return new ItineraireCalcule(reponse.distanceKm(), reponse.dureeMin(), segments);
+    } catch (RestClientException e) {
+      throw new ServiceIndisponibleException(
+          "Le service IA (itinéraire) est momentanément indisponible", e);
     }
   }
 }

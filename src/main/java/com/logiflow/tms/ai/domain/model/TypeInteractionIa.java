@@ -7,5 +7,6 @@ package com.logiflow.tms.ai.domain.model;
 public enum TypeInteractionIa {
   COPILOTE,
   GROUPAGE,
-  MAINTENANCE
+  MAINTENANCE,
+  ITINERAIRE
 }

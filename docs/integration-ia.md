@@ -2,8 +2,13 @@
 
 ## Principe
 
-Les agents IA (groupage, maintenance prédictive, copilote conversationnel) sont développés dans
-une **application Flask séparée**, déployée et versionnée indépendamment de ce backend.
+Les agents IA (groupage, maintenance prédictive, copilote conversationnel, itinéraire) sont
+développés dans une **application Flask séparée** (dépôt `logiflow-ai-service`), déployée et
+versionnée indépendamment de ce backend. Les modèles de langage sont servis par **Ollama**,
+auto-hébergé sur un serveur dédié (provisionné via Terraform) — aucun appel à une API LLM tierce
+payante. L'agent itinéraire s'appuie sur **OSRM** pour le routing (démo publique par défaut,
+auto-hébergeable plus tard). Voir `docs/architecture.md` du dépôt `logiflow-ai-service` pour le
+détail côté Flask.
 
 **Règle non négociable : Angular ne parle jamais à Flask directement.** Le service Flask n'est
 jamais exposé publiquement — il vit sur un réseau interne, accessible uniquement depuis le backend
@@ -133,6 +138,46 @@ Reprendrait le même schéma : Spring Boot assemble les données (`ScoreSante`, 
 `OrdreTravail` via le module `maintenance`), les transmet à Flask, reçoit une recommandation
 hiérarchisée, la journalise et la renvoie au frontend.
 
+### 4. Agent itinéraire — *implémenté*
+
+`POST /internal/ai/v1/itinerary/calculer`
+
+Calcule le meilleur trajet routier passant par une liste de points ordonnée (coordonnées WGS84,
+format aligné sur le VO partagé `shared.domain.vo.GeoPoint`).
+
+Requête :
+
+```json
+{
+  "points": [
+    { "latitude": 48.8566, "longitude": 2.3522, "libelle": "Site A" },
+    { "latitude": 45.7640, "longitude": 4.8357, "libelle": "Site B" }
+  ],
+  "correlationId": "..."
+}
+```
+
+Réponse attendue (200) :
+
+```json
+{
+  "distanceKm": 465.3,
+  "dureeMin": 258.4,
+  "segments": [
+    {
+      "depart": { "latitude": 48.8566, "longitude": 2.3522, "libelle": "Site A" },
+      "arrivee": { "latitude": 45.7640, "longitude": 4.8357, "libelle": "Site B" },
+      "distanceKm": 465.3,
+      "dureeMin": 258.4
+    }
+  ]
+}
+```
+
+Exposé au frontend par Spring Boot via `POST /api/v1/ia/itineraires/calcul`. Comme pour le
+copilote, aucun repli déterministe pertinent en cas d'indisponibilité (503 RFC 7807) : une
+distance routière estimée sans moteur de routing serait trompeuse plutôt que simplement absente.
+
 ## Journalisation des interactions
 
 Chaque appel à Flask est journalisé en base par le module `ai`
@@ -143,11 +188,14 @@ précision/rappel) décrite dans le CDC.
 
 ## Environnements
 
-- **Local** : le service Flask tourne dans son propre dépôt/conteneur. Un bloc `ai-service`
-  commenté est prévu dans `docker/docker-compose.yml`, à décommenter et pointer vers l'image du
-  dépôt Flask une fois disponible. Tant qu'il n'est pas démarré, Spring Boot fonctionne
-  normalement : seuls les endpoints `/api/v1/ia/**` sont affectés (503 pour le copilote, repli
-  déterministe pour le groupage).
+- **Local** : le service Flask (dépôt `logiflow-ai-service`) tourne à côté, avec Ollama et OSRM
+  accessibles en local ou sur le réseau. Un bloc `ai-service` commenté est prévu dans
+  `docker/docker-compose.yml`, à décommenter une fois le dépôt Flask disponible. Tant qu'il n'est
+  pas démarré, Spring Boot fonctionne normalement : seuls les endpoints `/api/v1/ia/**` sont
+  affectés (503 pour le copilote et l'itinéraire, repli déterministe pour le groupage).
+- **Cible** : Ollama tourne sur un serveur dédié (provisionné via Terraform) ; backend, service IA
+  et frontend démarrent dans WSL sur le même réseau interne. Voir le dépôt d'infrastructure une
+  fois disponible.
 - **CI** : aucun appel réseau réel vers Flask dans les tests — `AiServiceClientPort` est mocké
   dans les tests applicatifs, et les tests d'intégration pointent volontairement vers une URL
   injoignable pour exercer le chemin de dégradation.

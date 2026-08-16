@@ -5,8 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Expose les services de domaine du module {@code tracking} comme beans Spring, sans faire
- * dépendre le domaine du framework (aucune annotation Spring dans {@code tracking.domain}).
+ * Expose les services de domaine du module {@code tracking} comme beans Spring, sans faire dépendre
+ * le domaine du framework (aucune annotation Spring dans {@code tracking.domain}).
  */
 @Configuration
 public class TrackingDomainConfig {
