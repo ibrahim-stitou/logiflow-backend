@@ -1,0 +1,31 @@
+# Build
+target/
+build/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environnement / secrets
+.env
+*.env.local
+
+# Docker
+docker/postgres/data/
+
+# Maven wrapper (garder le script, ignorer le cache local si généré ailleurs)
+.mvn/wrapper/maven-wrapper.jar

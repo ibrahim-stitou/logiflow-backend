@@ -1,0 +1,81 @@
+spring:
+  application:
+    name: logiflow-backend
+
+  threads:
+    virtual:
+      enabled: true
+
+  messages:
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI:}
+          jwk-set-uri: ${OAUTH2_JWK_SET_URI:}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${ACTUATOR_EXPOSE:health,info,metrics,prometheus,modulith}
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logiflow:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  security:
+    permissive-local-profile: false
+  ai-service:
+    # Service interne (application Flask, dépôt séparé) : jamais exposé au frontend.
+    # Voir docs/integration-ia.md.
+    base-url: ${AI_SERVICE_BASE_URL:http://localhost:8000}
+    # Valeur de repli non vide pour que l'application démarre même sans le service IA configuré
+    # (profils local/test) : @NotBlank sur AiServiceProperties exigerait sinon une vraie clé.
+    api-key: ${AI_SERVICE_API_KEY:local-dev-key}
+    connect-timeout: ${AI_SERVICE_CONNECT_TIMEOUT:2s}
+    read-timeout: ${AI_SERVICE_READ_TIMEOUT:8s}
+
+logging:
+  pattern:
+    correlation: "[%X{correlationId}]"

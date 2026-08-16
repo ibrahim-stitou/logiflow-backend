@@ -1,0 +1,14 @@
+# Profil "test" par défaut (surchargé en test par src/test/resources/application-test.yml qui
+# configure notamment la datasource Testcontainers).
+spring:
+  flyway:
+    locations: classpath:db/migration
+
+logiflow:
+  security:
+    permissive-local-profile: false
+
+logging:
+  level:
+    root: WARN
+    com.logiflow.tms: INFO

@@ -1,0 +1,22 @@
+# Datasource fournie dynamiquement par AbstractIntegrationTest (@DynamicPropertySource,
+# conteneur Testcontainers PostgreSQL/PostGIS/pgvector).
+spring:
+  flyway:
+    locations: classpath:db/migration
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+
+logiflow:
+  cors:
+    allowed-origins: http://localhost:4200
+  security:
+    permissive-local-profile: false
+
+logging:
+  level:
+    root: WARN
+    com.logiflow.tms: DEBUG
+    org.testcontainers: INFO

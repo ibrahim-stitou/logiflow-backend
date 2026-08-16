@@ -1,0 +1,96 @@
+package com.logiflow.tms.fleet.application;
+
+import com.logiflow.tms.fleet.api.RemorqueApi;
+import com.logiflow.tms.fleet.api.dto.RemorqueSummary;
+import com.logiflow.tms.fleet.application.command.CreerRemorqueCommand;
+import com.logiflow.tms.fleet.domain.model.Remorque;
+import com.logiflow.tms.fleet.domain.model.StatutVehicule;
+import com.logiflow.tms.fleet.domain.port.out.RemorqueRepository;
+import com.logiflow.tms.fleet.domain.service.FleetDomainService;
+import com.logiflow.tms.shared.application.Page;
+import com.logiflow.tms.shared.application.PageRequest;
+import com.logiflow.tms.shared.domain.exception.NotFoundException;
+import com.logiflow.tms.shared.domain.vo.Capacite;
+import com.logiflow.tms.shared.domain.vo.Immatriculation;
+import java.util.Optional;
+import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/** Cas d'utilisation applicatifs du sous-domaine Remorque. */
+@Service
+@RequiredArgsConstructor
+public class RemorqueService implements RemorqueApi {
+
+  private final RemorqueRepository remorqueRepository;
+  private final FleetDomainService fleetDomainService;
+
+  @Transactional
+  public UUID creerRemorque(CreerRemorqueCommand command) {
+    Immatriculation immatriculation = new Immatriculation(command.immatriculation());
+    fleetDomainService.verifierImmatriculationDisponible(
+        immatriculation.valeur(),
+        remorqueRepository.existeParImmatriculation(immatriculation.valeur()));
+    Remorque remorque =
+        Remorque.creer(
+            UUID.randomUUID(),
+            immatriculation,
+            command.carrosserie(),
+            new Capacite(
+                (int) Math.round(command.chargeUtileKg()),
+                command.volumeUtileM3(),
+                command.nbPositionsPalettes()),
+            command.groupeFroid(),
+            command.temperatureMin(),
+            command.temperatureMax());
+    return remorqueRepository.sauvegarder(remorque).id();
+  }
+
+  @Transactional
+  public void changerStatut(UUID id, StatutVehicule statut) {
+    Remorque remorque = trouverOuEchouer(id);
+    remorque.changerStatut(statut);
+    remorqueRepository.sauvegarder(remorque);
+  }
+
+  @Transactional(readOnly = true)
+  public Remorque consulterRemorque(UUID id) {
+    return trouverOuEchouer(id);
+  }
+
+  @Transactional(readOnly = true)
+  public Page<Remorque> listerRemorques(PageRequest pageRequest) {
+    return remorqueRepository.rechercher(pageRequest);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<RemorqueSummary> consulter(UUID remorqueId) {
+    return remorqueRepository.parId(remorqueId).map(this::versResume);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public boolean estDisponible(UUID remorqueId) {
+    return remorqueRepository.parId(remorqueId).map(Remorque::estDisponible).orElse(false);
+  }
+
+  private RemorqueSummary versResume(Remorque remorque) {
+    var capacite = remorque.capaciteUtile();
+    return new RemorqueSummary(
+        remorque.id(),
+        remorque.immatriculation().valeur(),
+        capacite.volumeM3(),
+        capacite.positionsPalettes(),
+        capacite.poidsKg(),
+        remorque.statut().name());
+  }
+
+  private Remorque trouverOuEchouer(UUID id) {
+    return remorqueRepository
+        .parId(id)
+        .orElseThrow(
+            () -> new NotFoundException("Aucune remorque trouvée pour l'identifiant " + id));
+  }
+}

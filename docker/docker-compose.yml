@@ -1,0 +1,83 @@
+name: logiflow
+
+networks:
+  logiflow-net:
+    driver: bridge
+
+volumes:
+  logiflow-postgres-data:
+
+services:
+  postgres:
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
+    container_name: logiflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-logiflow}
+      POSTGRES_USER: ${POSTGRES_USER:-logiflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local-only}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - logiflow-postgres-data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-logiflow} -d ${POSTGRES_DB:-logiflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - logiflow-net
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: logiflow-pgadmin
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@logiflow.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-change-me-local-only}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - logiflow-net
+
+  # Service applicatif : décommenter pour exécuter le backend en conteneur.
+  # app:
+  #   build:
+  #     context: ..
+  #     dockerfile: docker/Dockerfile
+  #   container_name: logiflow-app
+  #   restart: unless-stopped
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-local}
+  #     DB_HOST: postgres
+  #     DB_PORT: 5432
+  #     DB_NAME: ${POSTGRES_DB:-logiflow}
+  #     DB_USER: ${POSTGRES_USER:-logiflow}
+  #     DB_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local-only}
+  #   ports:
+  #     - "${SERVER_PORT:-8080}:8080"
+  #   networks:
+  #     - logiflow-net
+
+  # Service IA : application Flask du dépôt séparé, jamais exposée publiquement (pas de mapping de
+  # port vers l'hôte) — seul le backend Spring Boot, sur le même réseau interne, peut l'appeler.
+  # Décommenter et adapter `context`/`dockerfile` une fois ce dépôt Flask disponible.
+  # Voir docs/integration-ia.md.
+  # ai-service:
+  #   build:
+  #     context: ../../logiflow-ai-service
+  #   container_name: logiflow-ai-service
+  #   restart: unless-stopped
+  #   environment:
+  #     INTERNAL_API_KEY: ${AI_SERVICE_API_KEY:-change-me-local-only}
+  #   networks:
+  #     - logiflow-net
