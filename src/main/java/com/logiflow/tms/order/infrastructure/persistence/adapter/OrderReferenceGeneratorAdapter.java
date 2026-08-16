@@ -7,14 +7,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /** Délègue au générateur technique partagé ({@code shared.infrastructure.persistence}). */
-@Component
+@Component("orderReferenceGeneratorAdapter")
 @RequiredArgsConstructor
-public class ReferenceGeneratorAdapter implements SequenceReferenceGenerator {
+public class OrderReferenceGeneratorAdapter implements SequenceReferenceGenerator {
 
-  private final ReferenceGenerator referenceGenerator;
+    private final ReferenceGenerator referenceGenerator;
 
-  @Override
-  public Reference generer(String prefixe, int annee) {
-    return referenceGenerator.generer(prefixe, annee);
-  }
+    @Override
+    public Reference generer(String prefixe, int annee) {
+        return referenceGenerator.generer(prefixe, annee);
+    }
 }

@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -25,8 +26,12 @@ import org.springframework.web.cors.CorsConfigurationSource;
  *
  * <p>Prêt pour Keycloak (issuer/JWK configurés via les propriétés standard {@code
  * spring.security.oauth2.resourceserver.jwt.*}), mais l'application démarre sans fournisseur
- * d'identité en profil {@code local} : seuls les endpoints publics restent accessibles, le reste de
- * l'API exige un JWT valide dès qu'un IdP est configuré.
+ * d'identité en profil {@code local}/{@code test} ({@code logiflow.security.permissive-local-
+ * profile=true}) : la configuration {@code oauth2ResourceServer().jwt()} est alors entièrement
+ * omise (aucun {@code JwtDecoder} n'est requis) et les endpoints protégés restent inaccessibles
+ * sans authentification injectée autrement (ex. {@code SecurityMockMvcRequestPostProcessors.jwt()}
+ * dans les tests). Dès qu'un IdP est configuré (profil {@code dev}/prod), le JWT redevient
+ * obligatoire pour toute route non publique.
  *
  * <p>DSL lambda et {@link JwtGrantedAuthoritiesConverter} vérifiés compatibles avec Spring Security
  * 7.1.0 (Spring Boot 4.1) par compilation effective face aux artefacts réels.
@@ -46,7 +51,10 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain securityFilterChain(
-      HttpSecurity http, CorsConfigurationSource corsConfigurationSource) throws Exception {
+      HttpSecurity http,
+      CorsConfigurationSource corsConfigurationSource,
+      @Value("${logiflow.security.permissive-local-profile:false}") boolean permissiveLocalProfile)
+      throws Exception {
     http.cors(cors -> cors.configurationSource(corsConfigurationSource))
         .csrf(csrf -> csrf.disable())
         .sessionManagement(
@@ -57,11 +65,17 @@ public class SecurityConfig {
                     .requestMatchers(PUBLIC_ENDPOINTS)
                     .permitAll()
                     .anyRequest()
-                    .authenticated())
-        .oauth2ResourceServer(
-            (OAuth2ResourceServerConfigurer<HttpSecurity> oauth2) ->
-                oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
-        .headers(
+                    .authenticated());
+
+    if (!permissiveLocalProfile) {
+      // Aucun IdP configuré en mode permissif : ne pas appeler oauth2ResourceServer().jwt() du
+      // tout, sinon Spring Security exige quand même un bean JwtDecoder au démarrage.
+      http.oauth2ResourceServer(
+          (OAuth2ResourceServerConfigurer<HttpSecurity> oauth2) ->
+              oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
+    }
+
+    http.headers(
             headers ->
                 headers
                     .contentTypeOptions(withDefaults -> {})

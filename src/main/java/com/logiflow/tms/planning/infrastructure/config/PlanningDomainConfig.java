@@ -1,0 +1,18 @@
+package com.logiflow.tms.planning.infrastructure.config;
+
+import com.logiflow.tms.planning.domain.service.ConformiteDomainService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * Expose les services de domaine du module {@code planning} comme beans Spring, sans faire
+ * dépendre le domaine du framework (aucune annotation Spring dans {@code planning.domain}).
+ */
+@Configuration
+public class PlanningDomainConfig {
+
+  @Bean
+  public ConformiteDomainService conformiteDomainService() {
+    return new ConformiteDomainService();
+  }
+}

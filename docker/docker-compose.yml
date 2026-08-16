@@ -19,9 +19,13 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-logiflow}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local-only}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      # 5433 par défaut : évite le conflit avec un PostgreSQL natif déjà présent sur 5432
+      # (fréquent sur Windows/Laragon).
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
-      - logiflow-postgres-data:/var/lib/postgresql/data
+      # PostgreSQL 18+ stocke les données dans un sous-répertoire versionné
+      # (/var/lib/postgresql/18/docker) : il faut monter le parent, pas .../data.
+      - logiflow-postgres-data:/var/lib/postgresql
       - ./postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-logiflow} -d ${POSTGRES_DB:-logiflow}"]

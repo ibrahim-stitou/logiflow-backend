@@ -13,7 +13,9 @@ logiflow:
   cors:
     allowed-origins: http://localhost:4200
   security:
-    permissive-local-profile: false
+    # Les tests d'intégration authentifient via SecurityMockMvcRequestPostProcessors.jwt(), qui
+    # injecte directement l'Authentication : aucun IdP réel n'est nécessaire ni disponible ici.
+    permissive-local-profile: true
 
 logging:
   level:

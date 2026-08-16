@@ -2,6 +2,12 @@ spring:
   application:
     name: logiflow-backend
 
+  profiles:
+    # Utilisé uniquement si aucun profil n'est explicitement activé (SPRING_PROFILES_ACTIVE ou
+    # -Dspring-boot.run.profiles) : permet à `./mvnw spring-boot:run` de fonctionner tel quel
+    # en développement local sans argument supplémentaire.
+    default: local
+
   threads:
     virtual:
       enabled: true
@@ -27,16 +33,16 @@ spring:
     baseline-on-migrate: false
 
   jackson:
-    serialization:
-      write-dates-as-timestamps: false
+    # Jackson 3 sérialise nativement java.time sans horodatage numérique : plus besoin de
+    # write-dates-as-timestamps (l'enum SerializationFeature ne le définit d'ailleurs plus).
     default-property-inclusion: non_null
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: ${OAUTH2_ISSUER_URI:}
-          jwk-set-uri: ${OAUTH2_JWK_SET_URI:}
+  # spring.security.oauth2.resourceserver.jwt.* n'est PAS défini ici avec une valeur de repli
+  # vide : un jwk-set-uri lié à une chaîne vide reste une propriété "présente" pour Spring Boot,
+  # ce qui déclenche quand même la création (et l'échec immédiat) du JwtDecoder auto-configuré,
+  # même quand SecurityConfig ne l'utilise pas. Les profils qui ont un vrai IdP (dev, prod) le
+  # définissent eux-mêmes ; local/test tournent en mode permissif (logiflow.security.
+  # permissive-local-profile) et n'en ont pas besoin.
 
 server:
   port: ${SERVER_PORT:8080}

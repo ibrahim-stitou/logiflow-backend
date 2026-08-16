@@ -1,6 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:logiflow}
+    # Port 5433 par défaut (et non 5432) : évite le conflit avec un PostgreSQL natif déjà présent
+    # sur la machine (service Windows, Laragon, etc.) — voir docker/docker-compose.yml.
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:logiflow}
     username: ${DB_USER:logiflow}
     password: ${DB_PASSWORD:change-me-local-only}
 

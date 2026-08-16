@@ -18,11 +18,10 @@
     <description>LogiFlow TMS - Transport Management System (backend monolithe modulaire)</description>
 
     <properties>
-        <java.version>25</java.version>
-        <maven.compiler.release>25</maven.compiler.release>
+        <java.version>24</java.version>
+        <maven.compiler.release>24</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
         <!-- Dépendances hors BOM Spring Boot : versions explicites -->
         <!-- Spring Modulith 2.1.x = ligne alignée sur Spring Boot 4.1.x (cf. section "Points à vérifier") -->
         <spring-modulith.version>2.1.0</spring-modulith.version>
@@ -75,6 +74,13 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+        <!-- Boot 4.0+ a extrait l'auto-configuration Flyway de spring-boot-autoconfigure vers ce
+             module dédié (comme spring-boot-webmvc-test pour @AutoConfigureMockMvc) : sans lui,
+             FlywayAutoConfiguration n'est jamais chargée et les migrations ne s'exécutent pas. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-flyway</artifactId>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>

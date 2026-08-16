@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Logs lisibles en profil local, JSON structuré (ECS) en profil dev/prod.
-
-  TODO vérifier API : org.springframework.boot.logging.logback.StructuredLogEncoder et le format
-  "ecs" s'appuient sur le support de logging structuré intégré à Spring Boot (disponible depuis la
-  ligne 3.4) ; à confronter à la documentation Spring Boot 4.1 avant mise en production.
 -->
 <configuration>
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
 
-    <springProfile name="local">
+    <!-- Profil local et profil par défaut (si aucun -Dspring.profiles.active n'est fourni) -->
+    <springProfile name="local, default">
         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
             <encoder>
                 <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36}) %X{correlationId} - %msg%n%wEx</pattern>
@@ -17,6 +14,7 @@
         </appender>
     </springProfile>
 
+    <!-- Profil test -->
     <springProfile name="test">
         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
             <encoder>
@@ -25,6 +23,7 @@
         </appender>
     </springProfile>
 
+    <!-- Profils dev et prod (Logging JSON ECS) -->
     <springProfile name="dev,prod">
         <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
             <encoder class="org.springframework.boot.logging.logback.StructuredLogEncoder">
