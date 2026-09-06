@@ -117,7 +117,10 @@ class EvenementVoyageControllerIT extends AbstractIntegrationTest {
     UUID vehiculeId =
         creerId(
             objectMapper.writeValueAsString(
-                new VehiculeRequest("TR-IT-001", TypeVehicule.PORTEUR, 19000, 9000, List.of())),
+                new VehiculeRequest(
+                    "TR-IT-001", TypeVehicule.PORTEUR, null, null, null, null, null, null, 19000,
+                    null, 9000, null, null, null, null, null, null, false, null, null, null, null,
+                    null)),
             "/api/v1/vehicules");
     UUID chauffeurId =
         creerId(

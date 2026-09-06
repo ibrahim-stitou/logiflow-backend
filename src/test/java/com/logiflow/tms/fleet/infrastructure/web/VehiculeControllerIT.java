@@ -6,9 +6,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.logiflow.tms.fleet.domain.model.TypeVehicule;
 import com.logiflow.tms.fleet.infrastructure.web.dto.VehiculeRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -23,15 +23,15 @@ class VehiculeControllerIT extends AbstractIntegrationTest {
   @Autowired private MockMvc mockMvc;
   @Autowired private ObjectMapper objectMapper;
 
+  private static VehiculeRequest requeteMinimale(String immatriculation, TypeVehicule type) {
+    return new VehiculeRequest(
+        immatriculation, type, null, null, null, null, null, null, 19000, null, 9000, null, null,
+        null, null, null, null, false, null, null, null, null, null);
+  }
+
   @Test
   void creerPuisConsulterUnVehicule() throws Exception {
-    var requete =
-        new VehiculeRequest(
-            "XY-999-ZZ",
-            com.logiflow.tms.fleet.domain.model.TypeVehicule.TRACTEUR,
-            19000,
-            9000,
-            List.of());
+    var requete = requeteMinimale("XY-999-ZZ", TypeVehicule.TRACTEUR);
 
     String reponseCreation =
         mockMvc

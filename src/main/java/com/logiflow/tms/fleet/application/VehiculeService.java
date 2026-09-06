@@ -1,9 +1,9 @@
 package com.logiflow.tms.fleet.application;
 
+import com.logiflow.tms.document.api.DocumentApi;
 import com.logiflow.tms.fleet.api.VehiculeApi;
 import com.logiflow.tms.fleet.api.dto.VehiculeSummary;
 import com.logiflow.tms.fleet.application.command.CreerVehiculeCommand;
-import com.logiflow.tms.fleet.application.command.MajVehiculeCommand;
 import com.logiflow.tms.fleet.domain.model.StatutVehicule;
 import com.logiflow.tms.fleet.domain.model.Vehicule;
 import com.logiflow.tms.fleet.domain.port.out.VehiculeRepository;
@@ -25,8 +25,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class VehiculeService implements VehiculeApi {
 
+  // Doit correspondre à TypeEntiteDocumentable.VEHICULE du module document (contrat en String pour
+  // ne pas exposer ce type de domaine hors de son module).
+  private static final String TYPE_ENTITE_DOCUMENTABLE = "VEHICULE";
+
   private final VehiculeRepository vehiculeRepository;
   private final FleetDomainService fleetDomainService;
+  private final DocumentApi documentApi;
 
   @Transactional
   public UUID creerVehicule(CreerVehiculeCommand command) {
@@ -39,17 +44,28 @@ public class VehiculeService implements VehiculeApi {
             UUID.randomUUID(),
             immatriculation,
             command.type(),
+            command.numeroParc(),
+            command.vin(),
+            command.marque(),
+            command.modele(),
+            command.anneeMiseEnCirculation(),
+            command.energie(),
             new Poids(command.ptacKg()),
+            command.poidsVideKg() != null ? new Poids(command.poidsVideKg()) : null,
             new Poids(command.chargeUtileKg()),
-            command.documents());
+            command.longueurM(),
+            command.largeurM(),
+            command.hauteurM(),
+            command.volumeUtileM3(),
+            command.nbPositionsPalettes(),
+            command.typeCarrosserie(),
+            command.groupeFroid(),
+            command.temperatureMin(),
+            command.temperatureMax(),
+            command.datePremiereMiseCirculation(),
+            command.dateAcquisition(),
+            command.dateMiseEnService());
     return vehiculeRepository.sauvegarder(vehicule).id();
-  }
-
-  @Transactional
-  public void mettreAJourDocuments(UUID id, MajVehiculeCommand command) {
-    Vehicule vehicule = trouverOuEchouer(id);
-    vehicule.mettreAJourDocuments(command.documents());
-    vehiculeRepository.sauvegarder(vehicule);
   }
 
   @Transactional
@@ -63,6 +79,14 @@ public class VehiculeService implements VehiculeApi {
   public void changerStatut(UUID id, StatutVehicule statut) {
     Vehicule vehicule = trouverOuEchouer(id);
     vehicule.changerStatut(statut);
+    vehiculeRepository.sauvegarder(vehicule);
+  }
+
+  @Transactional
+  public void sortir(
+      UUID id, LocalDate dateSortie, String motifSortie, Integer kilometrageSortie, Integer heuresMoteurSortie) {
+    Vehicule vehicule = trouverOuEchouer(id);
+    vehicule.sortir(dateSortie, motifSortie, kilometrageSortie, heuresMoteurSortie);
     vehiculeRepository.sauvegarder(vehicule);
   }
 
@@ -91,10 +115,8 @@ public class VehiculeService implements VehiculeApi {
   @Override
   @Transactional(readOnly = true)
   public boolean documentsValides(UUID vehiculeId, LocalDate date) {
-    return vehiculeRepository
-        .parId(vehiculeId)
-        .map(vehicule -> vehicule.documentsValides(date))
-        .orElse(false);
+    return vehiculeRepository.parId(vehiculeId).isPresent()
+        && documentApi.tousValides(TYPE_ENTITE_DOCUMENTABLE, vehiculeId, date);
   }
 
   private VehiculeSummary versResume(Vehicule vehicule) {

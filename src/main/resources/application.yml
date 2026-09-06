@@ -37,6 +37,11 @@ spring:
     # write-dates-as-timestamps (l'enum SerializationFeature ne le définit d'ailleurs plus).
     default-property-inclusion: non_null
 
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
   # spring.security.oauth2.resourceserver.jwt.* n'est PAS défini ici avec une valeur de repli
   # vide : un jwk-set-uri lié à une chaîne vide reste une propriété "présente" pour Spring Boot,
   # ce qui déclenche quand même la création (et l'échec immédiat) du JwtDecoder auto-configuré,
@@ -72,6 +77,10 @@ logiflow:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   security:
     permissive-local-profile: false
+  storage:
+    # Stockage disque local des documents (voir com.logiflow.tms.document.infrastructure.storage) ;
+    # amené à être remplacé par un stockage objet (S3) via un nouvel adaptateur FileStorageService.
+    local-path: ${STORAGE_LOCAL_PATH:./data/uploads}
   ai-service:
     # Service interne (application Flask, dépôt séparé) : jamais exposé au frontend.
     # Voir docs/integration-ia.md.

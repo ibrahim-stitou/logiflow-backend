@@ -17,7 +17,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Currency;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +32,10 @@ class MaintenanceControllerIT extends AbstractIntegrationTest {
   @Autowired private ObjectMapper objectMapper;
 
   private UUID creerVehicule() throws Exception {
-    var requete = new VehiculeRequest("MT-IT-001", TypeVehicule.PORTEUR, 19000, 9000, List.of());
+    var requete =
+        new VehiculeRequest(
+            "MT-IT-001", TypeVehicule.PORTEUR, null, null, null, null, null, null, 19000, null,
+            9000, null, null, null, null, null, null, false, null, null, null, null, null);
     String reponse =
         mockMvc
             .perform(

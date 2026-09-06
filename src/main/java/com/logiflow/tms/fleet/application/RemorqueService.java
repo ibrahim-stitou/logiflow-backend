@@ -12,6 +12,8 @@ import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import com.logiflow.tms.shared.domain.vo.Capacite;
 import com.logiflow.tms.shared.domain.vo.Immatriculation;
+import com.logiflow.tms.shared.domain.vo.Poids;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -36,21 +38,53 @@ public class RemorqueService implements RemorqueApi {
         Remorque.creer(
             UUID.randomUUID(),
             immatriculation,
+            command.type(),
             command.carrosserie(),
+            command.numeroParc(),
+            command.vin(),
+            command.marque(),
+            command.modele(),
+            command.anneeFabrication(),
+            command.poidsVideKg() != null ? new Poids(command.poidsVideKg()) : null,
             new Capacite(
                 (int) Math.round(command.chargeUtileKg()),
                 command.volumeUtileM3(),
                 command.nbPositionsPalettes()),
+            command.longueurM(),
+            command.largeurM(),
+            command.hauteurM(),
             command.groupeFroid(),
             command.temperatureMin(),
-            command.temperatureMax());
+            command.temperatureMax(),
+            command.datePremiereMiseCirculation(),
+            command.dateAcquisition(),
+            command.dateMiseEnService());
     return remorqueRepository.sauvegarder(remorque).id();
+  }
+
+  @Transactional
+  public void relever(UUID id, int kilometrage, int heuresGroupeFroid) {
+    Remorque remorque = trouverOuEchouer(id);
+    remorque.relever(kilometrage, heuresGroupeFroid);
+    remorqueRepository.sauvegarder(remorque);
   }
 
   @Transactional
   public void changerStatut(UUID id, StatutVehicule statut) {
     Remorque remorque = trouverOuEchouer(id);
     remorque.changerStatut(statut);
+    remorqueRepository.sauvegarder(remorque);
+  }
+
+  @Transactional
+  public void sortir(
+      UUID id,
+      LocalDate dateSortie,
+      String motifSortie,
+      Integer kilometrageSortie,
+      Integer heuresGroupeFroidSortie) {
+    Remorque remorque = trouverOuEchouer(id);
+    remorque.sortir(dateSortie, motifSortie, kilometrageSortie, heuresGroupeFroidSortie);
     remorqueRepository.sauvegarder(remorque);
   }
 
