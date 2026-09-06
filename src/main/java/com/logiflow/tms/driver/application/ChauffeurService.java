@@ -1,10 +1,12 @@
 package com.logiflow.tms.driver.application;
 
+import com.logiflow.tms.document.api.DocumentApi;
 import com.logiflow.tms.driver.api.ChauffeurApi;
 import com.logiflow.tms.driver.api.dto.ChauffeurSummary;
 import com.logiflow.tms.driver.application.command.CreerChauffeurCommand;
 import com.logiflow.tms.driver.application.command.MajChauffeurCommand;
 import com.logiflow.tms.driver.domain.model.Chauffeur;
+import com.logiflow.tms.driver.domain.model.DisponibiliteChauffeur;
 import com.logiflow.tms.driver.domain.model.StatutChauffeur;
 import com.logiflow.tms.driver.domain.port.out.ChauffeurRepository;
 import com.logiflow.tms.driver.domain.service.DriverDomainService;
@@ -25,8 +27,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ChauffeurService implements ChauffeurApi {
 
+  // Doit correspondre à TypeEntiteDocumentable.CHAUFFEUR du module document (contrat en String pour
+  // ne pas exposer ce type de domaine hors de son module).
+  private static final String TYPE_ENTITE_DOCUMENTABLE = "CHAUFFEUR";
+
   private final ChauffeurRepository chauffeurRepository;
   private final DriverDomainService driverDomainService;
+  private final DocumentApi documentApi;
 
   @Transactional
   public UUID creerChauffeur(CreerChauffeurCommand command) {
@@ -36,7 +43,32 @@ public class ChauffeurService implements ChauffeurApi {
         Chauffeur.creer(
             UUID.randomUUID(),
             command.matricule(),
-            command.nomComplet(),
+            command.nom(),
+            command.prenom(),
+            command.cin(),
+            command.dateNaissance(),
+            command.lieuNaissance(),
+            command.nationalite(),
+            command.telephone(),
+            command.email(),
+            command.adresse(),
+            command.numeroPermis(),
+            command.categoriePermis(),
+            command.dateObtentionPermis(),
+            command.dateExpirationPermis(),
+            command.numeroPasseport(),
+            command.dateDelivrancePasseport(),
+            command.dateExpirationPasseport(),
+            command.paysDelivrancePasseport(),
+            command.numeroVisa(),
+            command.typeVisa(),
+            command.paysVisa(),
+            command.dateDelivranceVisa(),
+            command.dateExpirationVisa(),
+            command.dateEmbauche(),
+            command.typeContrat(),
+            command.experienceAnnees(),
+            command.specialisation(),
             command.habilitations(),
             Duration.ofMinutes(command.soldeTempsConduiteInitialMinutes()));
     return chauffeurRepository.sauvegarder(chauffeur).id();
@@ -45,7 +77,7 @@ public class ChauffeurService implements ChauffeurApi {
   @Transactional
   public void modifierChauffeur(UUID id, MajChauffeurCommand command) {
     Chauffeur chauffeur = trouverOuEchouer(id);
-    chauffeur.renommer(command.nomComplet());
+    chauffeur.renommer(command.nom(), command.prenom());
     chauffeur.mettreAJourHabilitations(command.habilitations());
     chauffeurRepository.sauvegarder(chauffeur);
   }
@@ -54,6 +86,13 @@ public class ChauffeurService implements ChauffeurApi {
   public void changerStatut(UUID id, StatutChauffeur statut) {
     Chauffeur chauffeur = trouverOuEchouer(id);
     chauffeur.changerStatut(statut);
+    chauffeurRepository.sauvegarder(chauffeur);
+  }
+
+  @Transactional
+  public void changerDisponibilite(UUID id, DisponibiliteChauffeur disponibilite) {
+    Chauffeur chauffeur = trouverOuEchouer(id);
+    chauffeur.changerDisponibilite(disponibilite);
     chauffeurRepository.sauvegarder(chauffeur);
   }
 
@@ -88,12 +127,21 @@ public class ChauffeurService implements ChauffeurApi {
         .orElse(false);
   }
 
+  @Override
+  @Transactional(readOnly = true)
+  public boolean documentsValides(UUID chauffeurId, LocalDate date) {
+    return chauffeurRepository.parId(chauffeurId).isPresent()
+        && documentApi.tousValides(TYPE_ENTITE_DOCUMENTABLE, chauffeurId, date);
+  }
+
   private ChauffeurSummary versResume(Chauffeur chauffeur) {
     return new ChauffeurSummary(
         chauffeur.id(),
         chauffeur.matricule(),
-        chauffeur.nomComplet(),
+        chauffeur.nom(),
+        chauffeur.prenom(),
         chauffeur.statut().name(),
+        chauffeur.disponibilite().name(),
         chauffeur.soldeTempsConduite().toMinutes());
   }
 

@@ -19,4 +19,10 @@ public interface ChauffeurApi {
 
   /** Indique si le chauffeur possède une habilitation ADR de base valide à la date donnée. */
   boolean possedeHabilitationAdr(UUID chauffeurId, LocalDate date);
+
+  /**
+   * Indique si tous les documents obligatoires du chauffeur (module {@code document}) sont valides
+   * à la date donnée.
+   */
+  boolean documentsValides(UUID chauffeurId, LocalDate date);
 }

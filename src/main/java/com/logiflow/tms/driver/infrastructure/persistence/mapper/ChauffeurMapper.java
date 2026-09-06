@@ -1,7 +1,9 @@
 package com.logiflow.tms.driver.infrastructure.persistence.mapper;
 
 import com.logiflow.tms.driver.domain.model.Chauffeur;
+import com.logiflow.tms.driver.domain.model.DisponibiliteChauffeur;
 import com.logiflow.tms.driver.domain.model.StatutChauffeur;
+import com.logiflow.tms.driver.domain.model.TypeContrat;
 import com.logiflow.tms.driver.domain.vo.Habilitation;
 import com.logiflow.tms.driver.infrastructure.persistence.entity.ChauffeurEntity;
 import java.time.Duration;
@@ -31,8 +33,34 @@ public class ChauffeurMapper {
     return Chauffeur.reconstituer(
         entity.getId(),
         entity.getMatricule(),
-        entity.getNomComplet(),
+        entity.getNom(),
+        entity.getPrenom(),
+        entity.getCin(),
+        entity.getDateNaissance(),
+        entity.getLieuNaissance(),
+        entity.getNationalite(),
+        entity.getTelephone(),
+        entity.getEmail(),
+        entity.getAdresse(),
+        entity.getNumeroPermis(),
+        entity.getCategoriePermis(),
+        entity.getDateObtentionPermis(),
+        entity.getDateExpirationPermis(),
+        entity.getNumeroPasseport(),
+        entity.getDateDelivrancePasseport(),
+        entity.getDateExpirationPasseport(),
+        entity.getPaysDelivrancePasseport(),
+        entity.getNumeroVisa(),
+        entity.getTypeVisa(),
+        entity.getPaysVisa(),
+        entity.getDateDelivranceVisa(),
+        entity.getDateExpirationVisa(),
+        entity.getDateEmbauche(),
+        entity.getTypeContrat() != null ? TypeContrat.valueOf(entity.getTypeContrat()) : null,
+        entity.getExperienceAnnees(),
+        entity.getSpecialisation(),
         StatutChauffeur.valueOf(entity.getStatut()),
+        DisponibiliteChauffeur.valueOf(entity.getDisponibilite()),
         versHabilitations(entity.getHabilitationsJson()),
         Duration.ofMinutes(entity.getSoldeTempsConduiteMinutes()));
   }
@@ -44,8 +72,34 @@ public class ChauffeurMapper {
     return ChauffeurEntity.builder()
         .id(chauffeur.id())
         .matricule(chauffeur.matricule())
-        .nomComplet(chauffeur.nomComplet())
+        .nom(chauffeur.nom())
+        .prenom(chauffeur.prenom())
+        .cin(chauffeur.cin())
+        .dateNaissance(chauffeur.dateNaissance())
+        .lieuNaissance(chauffeur.lieuNaissance())
+        .nationalite(chauffeur.nationalite())
+        .telephone(chauffeur.telephone())
+        .email(chauffeur.email())
+        .adresse(chauffeur.adresse())
+        .numeroPermis(chauffeur.numeroPermis())
+        .categoriePermis(chauffeur.categoriePermis())
+        .dateObtentionPermis(chauffeur.dateObtentionPermis())
+        .dateExpirationPermis(chauffeur.dateExpirationPermis())
+        .numeroPasseport(chauffeur.numeroPasseport())
+        .dateDelivrancePasseport(chauffeur.dateDelivrancePasseport())
+        .dateExpirationPasseport(chauffeur.dateExpirationPasseport())
+        .paysDelivrancePasseport(chauffeur.paysDelivrancePasseport())
+        .numeroVisa(chauffeur.numeroVisa())
+        .typeVisa(chauffeur.typeVisa())
+        .paysVisa(chauffeur.paysVisa())
+        .dateDelivranceVisa(chauffeur.dateDelivranceVisa())
+        .dateExpirationVisa(chauffeur.dateExpirationVisa())
+        .dateEmbauche(chauffeur.dateEmbauche())
+        .typeContrat(chauffeur.typeContrat() != null ? chauffeur.typeContrat().name() : null)
+        .experienceAnnees(chauffeur.experienceAnnees())
+        .specialisation(chauffeur.specialisation())
         .statut(chauffeur.statut().name())
+        .disponibilite(chauffeur.disponibilite().name())
         .soldeTempsConduiteMinutes(chauffeur.soldeTempsConduite().toMinutes())
         .habilitationsJson(versJson(chauffeur.habilitations()))
         .build();

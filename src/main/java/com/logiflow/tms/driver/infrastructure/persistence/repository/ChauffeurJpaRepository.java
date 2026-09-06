@@ -13,6 +13,7 @@ public interface ChauffeurJpaRepository extends JpaRepository<ChauffeurEntity, U
 
   boolean existsByMatricule(String matricule);
 
-  Page<ChauffeurEntity> findByNomCompletContainingIgnoreCaseOrMatriculeContainingIgnoreCase(
-      String nomComplet, String matricule, Pageable pageable);
+  Page<ChauffeurEntity>
+      findByNomContainingIgnoreCaseOrPrenomContainingIgnoreCaseOrMatriculeContainingIgnoreCase(
+          String nom, String prenom, String matricule, Pageable pageable);
 }

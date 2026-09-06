@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import com.logiflow.tms.document.api.DocumentApi;
 import com.logiflow.tms.driver.application.command.CreerChauffeurCommand;
 import com.logiflow.tms.driver.domain.model.Chauffeur;
 import com.logiflow.tms.driver.domain.port.out.ChauffeurRepository;
@@ -23,18 +24,26 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ChauffeurServiceTest {
 
   @Mock private ChauffeurRepository chauffeurRepository;
+  @Mock private DocumentApi documentApi;
 
   private ChauffeurService chauffeurService;
 
   @BeforeEach
   void setUp() {
-    chauffeurService = new ChauffeurService(chauffeurRepository, new DriverDomainService());
+    chauffeurService =
+        new ChauffeurService(chauffeurRepository, new DriverDomainService(), documentApi);
+  }
+
+  private static CreerChauffeurCommand commandeChauffeur() {
+    return new CreerChauffeurCommand(
+        "CH-001", "Dupont", "Jean", null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        List.of(), 2100);
   }
 
   @Test
   void creerChauffeurEchoueSiLeMatriculeEstDejaUtilise() {
-    CreerChauffeurCommand command =
-        new CreerChauffeurCommand("CH-001", "Jean Dupont", List.of(), 2100);
+    CreerChauffeurCommand command = commandeChauffeur();
     when(chauffeurRepository.existeParMatricule("CH-001")).thenReturn(true);
 
     assertThatThrownBy(() -> chauffeurService.creerChauffeur(command))
@@ -43,8 +52,7 @@ class ChauffeurServiceTest {
 
   @Test
   void creerChauffeurSauvegardeUnNouveauChauffeur() {
-    CreerChauffeurCommand command =
-        new CreerChauffeurCommand("CH-001", "Jean Dupont", List.of(), 2100);
+    CreerChauffeurCommand command = commandeChauffeur();
     when(chauffeurRepository.existeParMatricule("CH-001")).thenReturn(false);
     when(chauffeurRepository.sauvegarder(any(Chauffeur.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));

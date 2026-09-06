@@ -31,13 +31,10 @@ public record Habilitation(
   }
 
   public enum TypeHabilitation {
-    PERMIS_C,
-    PERMIS_CE,
     FIMO_FCO,
     ADR_BASE,
     ADR_CITERNE,
     CARTE_CONDUCTEUR,
-    VISITE_MEDICALE,
-    PASSEPORT
+    VISITE_MEDICALE
   }
 }
