@@ -21,12 +21,9 @@ import lombok.Getter;
     schema = "fleet",
     uniqueConstraints =
         @UniqueConstraint(
-            name = "uq_vehicule_tenant_immat",
-            columnNames = {"tenant_id", "immatriculation"}))
+            name = "uq_vehicule_immat",
+            columnNames = {"immatriculation"}))
 public class VehiculeEntity extends BaseEntity {
-
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
 
   @Column(name = "immatriculation", nullable = false, length = 20)
   private String immatriculation;
@@ -57,7 +54,6 @@ public class VehiculeEntity extends BaseEntity {
   @Builder
   public VehiculeEntity(
       UUID id,
-      UUID tenantId,
       String immatriculation,
       String type,
       double ptacKg,
@@ -67,7 +63,6 @@ public class VehiculeEntity extends BaseEntity {
       String statut,
       String documentsJson) {
     definirId(id);
-    this.tenantId = tenantId;
     this.immatriculation = immatriculation;
     this.type = type;
     this.ptacKg = ptacKg;

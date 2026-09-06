@@ -24,11 +24,6 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class VoyageMapper {
 
-  // TODO vérifier que le tenant courant sera lu depuis le contexte de sécurité une fois le module
-  // iam implémenté ; en attendant, un tenant par défaut est utilisé (application mono-tenant).
-  private static final UUID TENANT_PAR_DEFAUT =
-      UUID.fromString("00000000-0000-0000-0000-000000000000");
-
   private final ObjectMapper objectMapper;
 
   public Voyage versDomaine(VoyageEntity entity) {
@@ -57,7 +52,6 @@ public class VoyageMapper {
     }
     return VoyageEntity.builder()
         .id(voyage.id())
-        .tenantId(TENANT_PAR_DEFAUT)
         .reference(voyage.reference().valeur())
         .typeVoyage(voyage.typeVoyage().name())
         .portee(voyage.portee().name())

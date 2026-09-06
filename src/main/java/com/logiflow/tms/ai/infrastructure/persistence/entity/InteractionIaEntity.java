@@ -17,9 +17,6 @@ import lombok.Getter;
 @Table(name = "interaction_ia", schema = "ai")
 public class InteractionIaEntity extends BaseEntity {
 
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
-
   @Column(name = "type_interaction", nullable = false, length = 20)
   private String typeInteraction;
 
@@ -43,7 +40,6 @@ public class InteractionIaEntity extends BaseEntity {
   @Builder
   public InteractionIaEntity(
       UUID id,
-      UUID tenantId,
       String typeInteraction,
       String utilisateurId,
       boolean succes,
@@ -51,7 +47,6 @@ public class InteractionIaEntity extends BaseEntity {
       String resume,
       String erreur) {
     definirId(id);
-    this.tenantId = tenantId;
     this.typeInteraction = typeInteraction;
     this.utilisateurId = utilisateurId;
     this.succes = succes;

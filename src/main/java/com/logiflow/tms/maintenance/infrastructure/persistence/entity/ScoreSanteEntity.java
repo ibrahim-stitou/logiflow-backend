@@ -14,9 +14,6 @@ import lombok.Getter;
 @Table(name = "score_sante", schema = "maintenance")
 public class ScoreSanteEntity extends BaseEntity {
 
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
-
   @Column(name = "vehicule_id", nullable = false)
   private UUID vehiculeId;
 
@@ -43,7 +40,6 @@ public class ScoreSanteEntity extends BaseEntity {
   @Builder
   public ScoreSanteEntity(
       UUID id,
-      UUID tenantId,
       UUID vehiculeId,
       LocalDate calculeLe,
       double score,
@@ -52,7 +48,6 @@ public class ScoreSanteEntity extends BaseEntity {
       LocalDate dateEcheanceProjetee,
       String recommandation) {
     definirId(id);
-    this.tenantId = tenantId;
     this.vehiculeId = vehiculeId;
     this.calculeLe = calculeLe;
     this.score = score;

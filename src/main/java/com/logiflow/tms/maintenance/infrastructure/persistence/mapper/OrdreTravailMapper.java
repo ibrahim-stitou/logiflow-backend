@@ -6,13 +6,10 @@ import com.logiflow.tms.maintenance.domain.model.TypeIntervention;
 import com.logiflow.tms.maintenance.infrastructure.persistence.entity.OrdreTravailEntity;
 import com.logiflow.tms.shared.domain.vo.Money;
 import java.util.Currency;
-import java.util.UUID;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface OrdreTravailMapper {
-
-  UUID TENANT_PAR_DEFAUT = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   default OrdreTravail versDomaine(OrdreTravailEntity entity) {
     if (entity == null) {
@@ -34,7 +31,6 @@ public interface OrdreTravailMapper {
     }
     return OrdreTravailEntity.builder()
         .id(ordreTravail.id())
-        .tenantId(TENANT_PAR_DEFAUT)
         .vehiculeId(ordreTravail.vehiculeId())
         .typeIntervention(ordreTravail.type().name())
         .statut(ordreTravail.statut().name())

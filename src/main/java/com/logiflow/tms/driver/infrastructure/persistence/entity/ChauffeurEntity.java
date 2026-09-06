@@ -20,12 +20,9 @@ import lombok.Getter;
     schema = "driver",
     uniqueConstraints =
         @UniqueConstraint(
-            name = "uq_chauffeur_tenant_matricule",
-            columnNames = {"tenant_id", "matricule"}))
+            name = "uq_chauffeur_matricule",
+            columnNames = {"matricule"}))
 public class ChauffeurEntity extends BaseEntity {
-
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
 
   @Column(name = "matricule", nullable = false, length = 30)
   private String matricule;
@@ -47,14 +44,12 @@ public class ChauffeurEntity extends BaseEntity {
   @Builder
   public ChauffeurEntity(
       UUID id,
-      UUID tenantId,
       String matricule,
       String nomComplet,
       String statut,
       long soldeTempsConduiteMinutes,
       String habilitationsJson) {
     definirId(id);
-    this.tenantId = tenantId;
     this.matricule = matricule;
     this.nomComplet = nomComplet;
     this.statut = statut;

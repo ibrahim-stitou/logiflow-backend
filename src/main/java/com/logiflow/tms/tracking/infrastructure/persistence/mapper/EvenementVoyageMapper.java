@@ -4,13 +4,10 @@ import com.logiflow.tms.shared.domain.vo.GeoPoint;
 import com.logiflow.tms.tracking.domain.model.EvenementVoyage;
 import com.logiflow.tms.tracking.domain.model.TypeEvenement;
 import com.logiflow.tms.tracking.infrastructure.persistence.entity.EvenementVoyageEntity;
-import java.util.UUID;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface EvenementVoyageMapper {
-
-  UUID TENANT_PAR_DEFAUT = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   default EvenementVoyage versDomaine(EvenementVoyageEntity entity) {
     if (entity == null) {
@@ -35,7 +32,6 @@ public interface EvenementVoyageMapper {
     }
     return EvenementVoyageEntity.builder()
         .id(evenement.id())
-        .tenantId(TENANT_PAR_DEFAUT)
         .voyageId(evenement.voyageId())
         .typeEvenement(evenement.type().name())
         .horodatage(evenement.horodatage())

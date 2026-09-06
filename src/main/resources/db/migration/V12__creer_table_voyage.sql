@@ -1,6 +1,5 @@
 CREATE TABLE planning.voyage (
     id                  uuid            NOT NULL,
-    tenant_id           uuid            NOT NULL,
     reference           varchar(20)     NOT NULL,
     type_voyage         varchar(20)     NOT NULL,
     portee              varchar(20)     NOT NULL,
@@ -19,7 +18,7 @@ CREATE TABLE planning.voyage (
     updated_by          varchar(100)    NOT NULL,
     version             bigint          NOT NULL DEFAULT 0,
     CONSTRAINT pk_voyage PRIMARY KEY (id),
-    CONSTRAINT uq_voyage_tenant_reference UNIQUE (tenant_id, reference),
+    CONSTRAINT uq_voyage_reference UNIQUE (reference),
     CONSTRAINT ck_voyage_taux_remplissage CHECK (taux_remplissage >= 0)
 );
 

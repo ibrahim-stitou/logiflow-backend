@@ -6,7 +6,6 @@ import com.logiflow.tms.referential.domain.vo.ContraintesAcces;
 import com.logiflow.tms.referential.infrastructure.persistence.entity.SiteEntity;
 import com.logiflow.tms.shared.domain.vo.GeoPoint;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -38,10 +37,6 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 public class SiteMapper {
 
-  // TODO vérifier que le tenant courant sera lu depuis le contexte de sécurité une fois le module
-  // iam implémenté ; en attendant, un tenant par défaut est utilisé (application mono-tenant).
-  private static final UUID TENANT_PAR_DEFAUT =
-      UUID.fromString("00000000-0000-0000-0000-000000000000");
   private static final int SRID_WGS84 = 4326;
   private static final GeometryFactory GEOMETRY_FACTORY =
       new GeometryFactory(new PrecisionModel(), SRID_WGS84);
@@ -70,7 +65,6 @@ public class SiteMapper {
     }
     return SiteEntity.builder()
         .id(site.id())
-        .tenantId(TENANT_PAR_DEFAUT)
         .code(site.code())
         .libelle(site.libelle())
         .clientId(site.clientId())

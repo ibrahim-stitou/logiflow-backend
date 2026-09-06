@@ -10,7 +10,6 @@ import com.logiflow.tms.dossier.domain.vo.Segment;
 import com.logiflow.tms.dossier.infrastructure.persistence.entity.DossierEntity;
 import com.logiflow.tms.shared.domain.vo.Reference;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
@@ -24,11 +23,6 @@ import tools.jackson.databind.ObjectMapper;
 @Component
 @RequiredArgsConstructor
 public class DossierMapper {
-
-  // TODO vérifier que le tenant courant sera lu depuis le contexte de sécurité une fois le module
-  // iam implémenté ; en attendant, un tenant par défaut est utilisé (application mono-tenant).
-  private static final UUID TENANT_PAR_DEFAUT =
-      UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   private final ObjectMapper objectMapper;
 
@@ -64,7 +58,6 @@ public class DossierMapper {
     }
     return DossierEntity.builder()
         .id(dossier.id())
-        .tenantId(TENANT_PAR_DEFAUT)
         .reference(dossier.reference().valeur())
         .commandeId(dossier.commandeId())
         .statut(dossier.statut().name())

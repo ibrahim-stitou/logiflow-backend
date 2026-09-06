@@ -20,12 +20,9 @@ import lombok.Getter;
     schema = "iam",
     uniqueConstraints =
         @UniqueConstraint(
-            name = "uq_utilisateur_tenant_login",
-            columnNames = {"tenant_id", "login"}))
+            name = "uq_utilisateur_login",
+            columnNames = {"login"}))
 public class UtilisateurEntity extends BaseEntity {
-
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
 
   @Column(name = "login", nullable = false, length = 100)
   private String login;
@@ -43,9 +40,8 @@ public class UtilisateurEntity extends BaseEntity {
 
   @Builder
   public UtilisateurEntity(
-      UUID id, UUID tenantId, String login, String email, String rolesJson, boolean actif) {
+      UUID id, String login, String email, String rolesJson, boolean actif) {
     definirId(id);
-    this.tenantId = tenantId;
     this.login = login;
     this.email = email;
     this.rolesJson = rolesJson;

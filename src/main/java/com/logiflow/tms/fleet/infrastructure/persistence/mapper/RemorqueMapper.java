@@ -6,14 +6,11 @@ import com.logiflow.tms.fleet.domain.model.TypeCarrosserie;
 import com.logiflow.tms.fleet.infrastructure.persistence.entity.RemorqueEntity;
 import com.logiflow.tms.shared.domain.vo.Capacite;
 import com.logiflow.tms.shared.domain.vo.Immatriculation;
-import java.util.UUID;
 import org.mapstruct.Mapper;
 
 /** Traduit entre le modèle de domaine {@link Remorque} et l'entité JPA {@link RemorqueEntity}. */
 @Mapper(componentModel = "spring")
 public interface RemorqueMapper {
-
-  UUID TENANT_PAR_DEFAUT = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   default Remorque versDomaine(RemorqueEntity entity) {
     if (entity == null) {
@@ -40,7 +37,6 @@ public interface RemorqueMapper {
     Capacite capacite = remorque.capaciteUtile();
     return RemorqueEntity.builder()
         .id(remorque.id())
-        .tenantId(TENANT_PAR_DEFAUT)
         .immatriculation(remorque.immatriculation().valeur())
         .carrosserie(remorque.carrosserie().name())
         .volumeUtileM3(capacite.volumeM3())

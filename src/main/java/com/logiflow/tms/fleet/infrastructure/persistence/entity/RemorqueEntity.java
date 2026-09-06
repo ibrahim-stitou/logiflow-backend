@@ -20,12 +20,9 @@ import lombok.Getter;
     schema = "fleet",
     uniqueConstraints =
         @UniqueConstraint(
-            name = "uq_remorque_tenant_immat",
-            columnNames = {"tenant_id", "immatriculation"}))
+            name = "uq_remorque_immat",
+            columnNames = {"immatriculation"}))
 public class RemorqueEntity extends BaseEntity {
-
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
 
   @Column(name = "immatriculation", nullable = false, length = 20)
   private String immatriculation;
@@ -59,7 +56,6 @@ public class RemorqueEntity extends BaseEntity {
   @Builder
   public RemorqueEntity(
       UUID id,
-      UUID tenantId,
       String immatriculation,
       String carrosserie,
       double volumeUtileM3,
@@ -70,7 +66,6 @@ public class RemorqueEntity extends BaseEntity {
       Double temperatureMax,
       String statut) {
     definirId(id);
-    this.tenantId = tenantId;
     this.immatriculation = immatriculation;
     this.carrosserie = carrosserie;
     this.volumeUtileM3 = volumeUtileM3;

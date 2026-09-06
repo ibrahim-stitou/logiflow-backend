@@ -1,6 +1,5 @@
 CREATE TABLE fleet.vehicule (
     id                uuid            NOT NULL,
-    tenant_id         uuid            NOT NULL,
     immatriculation   varchar(20)     NOT NULL,
     type              varchar(20)     NOT NULL,
     ptac_kg           double precision NOT NULL,
@@ -15,7 +14,7 @@ CREATE TABLE fleet.vehicule (
     updated_by        varchar(100)    NOT NULL,
     version           bigint          NOT NULL DEFAULT 0,
     CONSTRAINT pk_vehicule PRIMARY KEY (id),
-    CONSTRAINT uq_vehicule_tenant_immat UNIQUE (tenant_id, immatriculation),
+    CONSTRAINT uq_vehicule_immat UNIQUE (immatriculation),
     CONSTRAINT ck_vehicule_ptac_positif CHECK (ptac_kg > 0),
     CONSTRAINT ck_vehicule_charge_utile_positive CHECK (charge_utile_kg > 0)
 );

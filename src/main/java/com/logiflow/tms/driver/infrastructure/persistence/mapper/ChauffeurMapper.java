@@ -6,7 +6,6 @@ import com.logiflow.tms.driver.domain.vo.Habilitation;
 import com.logiflow.tms.driver.infrastructure.persistence.entity.ChauffeurEntity;
 import java.time.Duration;
 import java.util.List;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
@@ -22,11 +21,6 @@ import tools.jackson.databind.ObjectMapper;
 @Component
 @RequiredArgsConstructor
 public class ChauffeurMapper {
-
-  // TODO vérifier que le tenant courant sera lu depuis le contexte de sécurité une fois le module
-  // iam implémenté ; en attendant, un tenant par défaut est utilisé (application mono-tenant).
-  private static final UUID TENANT_PAR_DEFAUT =
-      UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   private final ObjectMapper objectMapper;
 
@@ -49,7 +43,6 @@ public class ChauffeurMapper {
     }
     return ChauffeurEntity.builder()
         .id(chauffeur.id())
-        .tenantId(TENANT_PAR_DEFAUT)
         .matricule(chauffeur.matricule())
         .nomComplet(chauffeur.nomComplet())
         .statut(chauffeur.statut().name())

@@ -13,9 +13,6 @@ import lombok.Getter;
 @Table(name = "plan_entretien", schema = "maintenance")
 public class PlanEntretienEntity extends BaseEntity {
 
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
-
   @Column(name = "vehicule_id", nullable = false)
   private UUID vehiculeId;
 
@@ -39,7 +36,6 @@ public class PlanEntretienEntity extends BaseEntity {
   @Builder
   public PlanEntretienEntity(
       UUID id,
-      UUID tenantId,
       UUID vehiculeId,
       String libelle,
       Integer periodiciteKm,
@@ -47,7 +43,6 @@ public class PlanEntretienEntity extends BaseEntity {
       int seuilAlerteKm,
       int dureeEstimeeMin) {
     definirId(id);
-    this.tenantId = tenantId;
     this.vehiculeId = vehiculeId;
     this.libelle = libelle;
     this.periodiciteKm = periodiciteKm;

@@ -18,9 +18,6 @@ import lombok.Getter;
 @Table(name = "evenement_voyage", schema = "tracking")
 public class EvenementVoyageEntity extends BaseEntity {
 
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
-
   @Column(name = "voyage_id", nullable = false)
   private UUID voyageId;
 
@@ -44,7 +41,6 @@ public class EvenementVoyageEntity extends BaseEntity {
   @Builder
   public EvenementVoyageEntity(
       UUID id,
-      UUID tenantId,
       UUID voyageId,
       String typeEvenement,
       Instant horodatage,
@@ -52,7 +48,6 @@ public class EvenementVoyageEntity extends BaseEntity {
       Double longitude,
       String commentaire) {
     definirId(id);
-    this.tenantId = tenantId;
     this.voyageId = voyageId;
     this.typeEvenement = typeEvenement;
     this.horodatage = horodatage;

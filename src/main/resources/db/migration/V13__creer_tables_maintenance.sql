@@ -1,6 +1,5 @@
 CREATE TABLE maintenance.plan_entretien (
     id                  uuid            NOT NULL,
-    tenant_id           uuid            NOT NULL,
     vehicule_id         uuid            NOT NULL,
     libelle             varchar(255)    NOT NULL,
     periodicite_km      integer,
@@ -19,7 +18,6 @@ CREATE INDEX idx_plan_entretien_vehicule ON maintenance.plan_entretien (vehicule
 
 CREATE TABLE maintenance.ordre_travail (
     id                  uuid            NOT NULL,
-    tenant_id           uuid            NOT NULL,
     vehicule_id         uuid            NOT NULL,
     type_intervention   varchar(30)     NOT NULL,
     statut              varchar(20)     NOT NULL,
@@ -40,7 +38,6 @@ CREATE INDEX idx_ordre_travail_statut ON maintenance.ordre_travail (statut);
 
 CREATE TABLE maintenance.score_sante (
     id                          uuid            NOT NULL,
-    tenant_id                   uuid            NOT NULL,
     vehicule_id                 uuid            NOT NULL,
     calcule_le                  date            NOT NULL,
     score                       double precision NOT NULL,
