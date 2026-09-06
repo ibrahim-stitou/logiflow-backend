@@ -27,7 +27,7 @@ public record DossierResponse(
     List<Segment> segments,
     List<DocumentTransport> documents) {
 
-  public static DossierResponse depuis(DossierTransport dossier) {
+  public static DossierResponse depuis(DossierTransport dossier, boolean contientAdr) {
     return new DossierResponse(
         dossier.id(),
         dossier.reference().valeur(),
@@ -41,7 +41,7 @@ public record DossierResponse(
         dossier.familleMarchandise(),
         dossier.carrosserieRequise(),
         dossier.temperatureRequise(),
-        dossier.contientAdr(),
+        contientAdr,
         dossier.lignesMarchandise(),
         dossier.segments(),
         dossier.documents());

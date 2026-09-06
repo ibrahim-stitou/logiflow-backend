@@ -12,8 +12,10 @@ import com.logiflow.tms.dossier.domain.model.TypeTransport;
 import com.logiflow.tms.dossier.domain.vo.LigneMarchandise;
 import com.logiflow.tms.dossier.domain.vo.Segment;
 import com.logiflow.tms.dossier.infrastructure.web.dto.DossierRequest;
+import com.logiflow.tms.order.domain.vo.LigneCommande;
 import com.logiflow.tms.order.infrastructure.web.dto.CommandeRequest;
 import com.logiflow.tms.referential.infrastructure.web.dto.ClientRequest;
+import com.logiflow.tms.referential.infrastructure.web.dto.MarchandiseRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
 import com.logiflow.tms.shared.domain.vo.Money;
 import com.logiflow.tms.shared.domain.vo.TimeWindow;
@@ -59,13 +61,20 @@ class GroupageAdvisorControllerIT extends AbstractIntegrationTest {
             objectMapper.writeValueAsString(
                 new ClientRequest("CLI-IT-IA-" + suffixeClient, "Client IA")),
             "/api/v1/clients");
+    UUID marchandiseId =
+        creerId(
+            objectMapper.writeValueAsString(
+                new MarchandiseRequest(
+                    "MARCH-IT-IA-" + suffixeClient, "Marchandise IA", null, null, null, true)),
+            "/api/v1/marchandises");
     UUID commandeId =
         creerId(
             objectMapper.writeValueAsString(
                 new CommandeRequest(
                     clientId,
                     LocalDate.now().plusDays(3),
-                    new Money(BigDecimal.valueOf(1000), Currency.getInstance("EUR")))),
+                    new Money(BigDecimal.valueOf(1000), Currency.getInstance("EUR")),
+                    List.of(new LigneCommande(marchandiseId, 500, 2.5, 10)))),
             "/api/v1/commandes");
     mockMvc
         .perform(put("/api/v1/commandes/{id}/confirmer", commandeId).with(jwt()))
@@ -82,7 +91,7 @@ class GroupageAdvisorControllerIT extends AbstractIntegrationTest {
                 "Palettes",
                 null,
                 null,
-                List.of(new LigneMarchandise("Palette", 500, 2.5, 10, null, null, true)),
+                List.of(new LigneMarchandise(marchandiseId, 500, 2.5, 10, null, null, true)),
                 List.of(
                     new Segment(
                         TypeSegment.CHARGEMENT,

@@ -1,9 +1,11 @@
 package com.logiflow.tms.order.domain.model;
 
+import com.logiflow.tms.order.domain.vo.LigneCommande;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.vo.Money;
 import com.logiflow.tms.shared.domain.vo.Reference;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -16,6 +18,7 @@ public final class Commande {
   private StatutCommande statut;
   private LocalDate dateSouhaitee;
   private Money prixNegocie;
+  private List<LigneCommande> lignes;
 
   private Commande(
       UUID id,
@@ -23,7 +26,8 @@ public final class Commande {
       UUID clientId,
       StatutCommande statut,
       LocalDate dateSouhaitee,
-      Money prixNegocie) {
+      Money prixNegocie,
+      List<LigneCommande> lignes) {
     this.id = Objects.requireNonNull(id, "L'identifiant de la commande est obligatoire");
     this.reference =
         Objects.requireNonNull(reference, "La référence de la commande est obligatoire");
@@ -31,11 +35,22 @@ public final class Commande {
     this.statut = Objects.requireNonNull(statut, "Le statut est obligatoire");
     this.dateSouhaitee = Objects.requireNonNull(dateSouhaitee, "La date souhaitée est obligatoire");
     this.prixNegocie = Objects.requireNonNull(prixNegocie, "Le prix négocié est obligatoire");
+    this.lignes = List.copyOf(lignes);
+    if (this.lignes.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Une commande doit contenir au moins une ligne de marchandise");
+    }
   }
 
   public static Commande creer(
-      UUID id, Reference reference, UUID clientId, LocalDate dateSouhaitee, Money prixNegocie) {
-    return new Commande(id, reference, clientId, StatutCommande.RECUE, dateSouhaitee, prixNegocie);
+      UUID id,
+      Reference reference,
+      UUID clientId,
+      LocalDate dateSouhaitee,
+      Money prixNegocie,
+      List<LigneCommande> lignes) {
+    return new Commande(
+        id, reference, clientId, StatutCommande.RECUE, dateSouhaitee, prixNegocie, lignes);
   }
 
   public static Commande reconstituer(
@@ -44,8 +59,9 @@ public final class Commande {
       UUID clientId,
       StatutCommande statut,
       LocalDate dateSouhaitee,
-      Money prixNegocie) {
-    return new Commande(id, reference, clientId, statut, dateSouhaitee, prixNegocie);
+      Money prixNegocie,
+      List<LigneCommande> lignes) {
+    return new Commande(id, reference, clientId, statut, dateSouhaitee, prixNegocie, lignes);
   }
 
   public void confirmer() {
@@ -67,6 +83,15 @@ public final class Commande {
 
   public void renegocierPrix(Money nouveauPrix) {
     this.prixNegocie = Objects.requireNonNull(nouveauPrix, "Le prix négocié est obligatoire");
+  }
+
+  public void mettreAJourLignes(List<LigneCommande> lignes) {
+    List<LigneCommande> copie = List.copyOf(lignes);
+    if (copie.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Une commande doit contenir au moins une ligne de marchandise");
+    }
+    this.lignes = copie;
   }
 
   public boolean estConfirmee() {
@@ -95,6 +120,10 @@ public final class Commande {
 
   public Money prixNegocie() {
     return prixNegocie;
+  }
+
+  public List<LigneCommande> lignes() {
+    return lignes;
   }
 
   @Override

@@ -8,8 +8,10 @@ import com.logiflow.tms.dossier.domain.vo.DocumentTransport;
 import com.logiflow.tms.dossier.domain.vo.LigneMarchandise;
 import com.logiflow.tms.dossier.domain.vo.Segment;
 import com.logiflow.tms.dossier.infrastructure.persistence.entity.DossierEntity;
+import com.logiflow.tms.dossier.infrastructure.persistence.entity.LigneMarchandiseEntity;
 import com.logiflow.tms.shared.domain.vo.Reference;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JacksonException;
@@ -26,7 +28,7 @@ public class DossierMapper {
 
   private final ObjectMapper objectMapper;
 
-  public DossierTransport versDomaine(DossierEntity entity) {
+  public DossierTransport versDomaine(DossierEntity entity, List<LigneMarchandiseEntity> lignes) {
     if (entity == null) {
       return null;
     }
@@ -45,11 +47,34 @@ public class DossierMapper {
             ? TypeCarrosserieRequise.valueOf(entity.getCarrosserieRequise())
             : null,
         entity.getTemperatureRequise(),
-        versListe(
-            entity.getLignesMarchandiseJson(), new TypeReference<List<LigneMarchandise>>() {}),
+        lignes.stream().map(this::versLigneDomaine).toList(),
         versListe(entity.getSegmentsJson(), new TypeReference<List<Segment>>() {}),
         versListeOuVide(
             entity.getDocumentsJson(), new TypeReference<List<DocumentTransport>>() {}));
+  }
+
+  public LigneMarchandise versLigneDomaine(LigneMarchandiseEntity entity) {
+    return new LigneMarchandise(
+        entity.getMarchandiseId(),
+        entity.getPoidsKg(),
+        entity.getVolumeM3(),
+        entity.getNbColis(),
+        entity.getClasseAdr(),
+        entity.getNumeroOnu(),
+        entity.getGerbable());
+  }
+
+  public LigneMarchandiseEntity versLigneEntite(UUID dossierId, LigneMarchandise ligne) {
+    return LigneMarchandiseEntity.builder()
+        .dossierId(dossierId)
+        .marchandiseId(ligne.marchandiseId())
+        .poidsKg(ligne.poidsKg())
+        .volumeM3(ligne.volumeM3())
+        .nbColis(ligne.nbColis())
+        .classeAdr(ligne.classeAdr())
+        .numeroOnu(ligne.numeroOnu())
+        .gerbable(ligne.gerbable())
+        .build();
   }
 
   public DossierEntity versEntite(DossierTransport dossier) {
@@ -70,7 +95,6 @@ public class DossierMapper {
         .carrosserieRequise(
             dossier.carrosserieRequise() != null ? dossier.carrosserieRequise().name() : null)
         .temperatureRequise(dossier.temperatureRequise())
-        .lignesMarchandiseJson(versJson(dossier.lignesMarchandise()))
         .segmentsJson(versJson(dossier.segments()))
         .documentsJson(versJson(dossier.documents()))
         .build();

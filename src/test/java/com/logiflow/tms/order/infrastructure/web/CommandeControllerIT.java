@@ -6,13 +6,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.logiflow.tms.order.domain.vo.LigneCommande;
 import com.logiflow.tms.order.infrastructure.web.dto.CommandeRequest;
 import com.logiflow.tms.referential.infrastructure.web.dto.ClientRequest;
+import com.logiflow.tms.referential.infrastructure.web.dto.MarchandiseRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
 import com.logiflow.tms.shared.domain.vo.Money;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Currency;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -26,6 +30,22 @@ class CommandeControllerIT extends AbstractIntegrationTest {
 
   @Autowired private MockMvc mockMvc;
   @Autowired private ObjectMapper objectMapper;
+
+  private UUID creerMarchandiseId(String code) throws Exception {
+    var requete = new MarchandiseRequest(code, "Marchandise de test", null, null, null, true);
+    String reponse =
+        mockMvc
+            .perform(
+                post("/api/v1/marchandises")
+                    .with(jwt())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requete)))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    return UUID.fromString(objectMapper.readTree(reponse).get("id").asText());
+  }
 
   @Test
   void creerPuisConfirmerUneCommande() throws Exception {
@@ -42,12 +62,14 @@ class CommandeControllerIT extends AbstractIntegrationTest {
             .getResponse()
             .getContentAsString();
     String clientId = objectMapper.readTree(reponseClient).get("id").asText();
+    UUID marchandiseId = creerMarchandiseId("MARCH-IT-ORDER-01");
 
     var commandeRequest =
         new CommandeRequest(
             java.util.UUID.fromString(clientId),
             LocalDate.now().plusDays(3),
-            new Money(BigDecimal.valueOf(1500), Currency.getInstance("EUR")));
+            new Money(BigDecimal.valueOf(1500), Currency.getInstance("EUR")),
+            List.of(new LigneCommande(marchandiseId, 500, 2.5, 10)));
 
     String reponseCommande =
         mockMvc
@@ -74,11 +96,13 @@ class CommandeControllerIT extends AbstractIntegrationTest {
 
   @Test
   void creerUneCommandeAvecUnClientInexistantRenvoie404() throws Exception {
+    UUID marchandiseId = creerMarchandiseId("MARCH-IT-ORDER-02");
     var requete =
         new CommandeRequest(
             java.util.UUID.randomUUID(),
             LocalDate.now().plusDays(3),
-            new Money(BigDecimal.TEN, Currency.getInstance("EUR")));
+            new Money(BigDecimal.TEN, Currency.getInstance("EUR")),
+            List.of(new LigneCommande(marchandiseId, 500, 2.5, 10)));
 
     mockMvc
         .perform(

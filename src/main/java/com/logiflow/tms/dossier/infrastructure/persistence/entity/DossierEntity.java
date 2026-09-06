@@ -57,9 +57,6 @@ public class DossierEntity extends BaseEntity {
   @Column(name = "temperature_requise")
   private Double temperatureRequise;
 
-  @Column(name = "lignes_marchandise_json", nullable = false, columnDefinition = "text")
-  private String lignesMarchandiseJson;
-
   @Column(name = "segments_json", nullable = false, columnDefinition = "text")
   private String segmentsJson;
 
@@ -82,7 +79,6 @@ public class DossierEntity extends BaseEntity {
       String familleMarchandise,
       String carrosserieRequise,
       Double temperatureRequise,
-      String lignesMarchandiseJson,
       String segmentsJson,
       String documentsJson) {
     definirId(id);
@@ -97,7 +93,6 @@ public class DossierEntity extends BaseEntity {
     this.familleMarchandise = familleMarchandise;
     this.carrosserieRequise = carrosserieRequise;
     this.temperatureRequise = temperatureRequise;
-    this.lignesMarchandiseJson = lignesMarchandiseJson;
     this.segmentsJson = segmentsJson;
     this.documentsJson = documentsJson;
   }
