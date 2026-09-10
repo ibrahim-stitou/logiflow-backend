@@ -2,6 +2,7 @@ package com.logiflow.tms.planning.application;
 
 import com.logiflow.tms.dossier.api.DossierApi;
 import com.logiflow.tms.dossier.api.dto.DossierSummary;
+import com.logiflow.tms.dossier.domain.model.StatutDossier;
 import com.logiflow.tms.driver.api.ChauffeurApi;
 import com.logiflow.tms.fleet.api.RemorqueApi;
 import com.logiflow.tms.fleet.api.VehiculeApi;
@@ -16,6 +17,7 @@ import com.logiflow.tms.planning.domain.service.ConformiteDomainService;
 import com.logiflow.tms.planning.domain.service.ConformiteDomainService.CriteresConformite;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
+import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import com.logiflow.tms.shared.domain.vo.Capacite;
 import java.time.LocalDate;
@@ -57,6 +59,14 @@ public class VoyageService implements VoyageApi {
                                 new NotFoundException(
                                     "Aucun dossier de transport trouvé pour l'identifiant " + id)))
             .toList();
+    for (DossierSummary dossier : dossiers) {
+      if (!StatutDossier.CREE.name().equals(dossier.statut())) {
+        throw new BusinessException(
+            "Seul un dossier au statut CREE peut être planifié sur un voyage ("
+                + dossier.reference()
+                + ")");
+      }
+    }
     boolean contientAdr = dossiers.stream().anyMatch(DossierSummary::contientAdr);
 
     boolean vehiculeDisponible = vehiculeApi.estDisponible(command.vehiculeId());
@@ -109,7 +119,9 @@ public class VoyageService implements VoyageApi {
             command.trajet(),
             command.affectations(),
             tauxRemplissage);
-    return voyageRepository.sauvegarder(voyage).id();
+    UUID voyageId = voyageRepository.sauvegarder(voyage).id();
+    dossierApi.planifierPourVoyage(command.dossierIds());
+    return voyageId;
   }
 
   private double calculerTauxRemplissage(UUID remorqueId, List<DossierSummary> dossiers) {
@@ -137,6 +149,9 @@ public class VoyageService implements VoyageApi {
     Voyage voyage = trouverOuEchouer(id);
     voyage.changerStatut(statut);
     voyageRepository.sauvegarder(voyage);
+    if (statut == StatutVoyage.ANNULE) {
+      dossierApi.replanifierApresAnnulationVoyage(voyage.dossierIds());
+    }
   }
 
   @Transactional(readOnly = true)
@@ -147,6 +162,11 @@ public class VoyageService implements VoyageApi {
   @Transactional(readOnly = true)
   public Page<Voyage> listerVoyages(PageRequest pageRequest) {
     return voyageRepository.rechercher(pageRequest);
+  }
+
+  @Transactional(readOnly = true)
+  public List<Voyage> listerParDossier(UUID dossierId) {
+    return voyageRepository.parDossierId(dossierId);
   }
 
   @Override

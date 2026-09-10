@@ -129,8 +129,7 @@ class DossierControllerIT extends AbstractIntegrationTest {
     mockMvc
         .perform(
             put("/api/v1/dossiers/{id}/statut", dossierId).with(jwt()).param("valeur", "PLANIFIE"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.statut").value("PLANIFIE"));
+        .andExpect(status().isUnprocessableEntity());
   }
 
   @Test

@@ -16,6 +16,7 @@ spring:
     basename: messages
     encoding: UTF-8
     fallback-to-system-locale: false
+    use-code-as-default-message: true
 
   jpa:
     open-in-view: false
@@ -72,6 +73,7 @@ logiflow:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   security:
     permissive-local-profile: false
+    anonymous-local-access: false
   ai-service:
     # Service interne (application Flask, dépôt séparé) : jamais exposé au frontend.
     # Voir docs/integration-ia.md.

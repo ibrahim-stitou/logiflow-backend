@@ -2,7 +2,9 @@ package com.logiflow.tms.planning.domain.port.out;
 
 import com.logiflow.tms.planning.domain.model.Voyage;
 import com.logiflow.tms.shared.application.Page;
+import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,4 +18,6 @@ public interface VoyageRepository {
   Optional<Voyage> parReference(String reference);
 
   Page<Voyage> rechercher(PageRequest pageRequest);
+
+  List<Voyage> parDossierId(UUID dossierId);
 }

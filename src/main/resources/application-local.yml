@@ -12,6 +12,7 @@ spring:
 logiflow:
   security:
     permissive-local-profile: true
+    anonymous-local-access: true
 
 management:
   endpoint:

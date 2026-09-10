@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.logiflow.tms.dossier.api.DossierApi;
@@ -139,5 +140,6 @@ class VoyageServiceTest {
     UUID id = voyageService.creerVoyage(commandeType(dossierId, vehiculeId, chauffeurId));
 
     assertThat(id).isNotNull();
+    verify(dossierApi).planifierPourVoyage(List.of(dossierId));
   }
 }

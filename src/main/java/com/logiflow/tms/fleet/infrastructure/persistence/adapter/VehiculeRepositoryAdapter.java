@@ -21,8 +21,16 @@ public class VehiculeRepositoryAdapter implements VehiculeRepository {
 
   @Override
   public Vehicule sauvegarder(Vehicule vehicule) {
-    var entite = jpaRepository.save(mapper.versEntite(vehicule));
-    return mapper.versDomaine(entite);
+    VehiculeEntity entite =
+        jpaRepository
+            .findById(vehicule.id())
+            .map(
+                existante -> {
+                  mapper.mettreAJour(existante, vehicule);
+                  return existante;
+                })
+            .orElseGet(() -> mapper.versEntite(vehicule));
+    return mapper.versDomaine(jpaRepository.save(entite));
   }
 
   @Override

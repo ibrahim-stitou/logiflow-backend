@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LogiFlow TMS Backend — How it works</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --bg-2: #161d26;
+      --bg-3: #1c2734;
+      --ink: #e8edf2;
+      --muted: #8b9aab;
+      --line: #2a3848;
+      --amber: #e8a838;
+      --teal: #3ecfb0;
+      --rose: #e06b6b;
+      --blue: #6ea8ff;
+      --code-bg: #0b1117;
+      --ok: #3ecfb0;
+      --warn: #e8a838;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "IBM Plex Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.55;
+      font-size: 16.5px;
+    }
+    a { color: var(--teal); }
+    a:hover { color: #7ee8cf; }
+    code, kbd, pre {
+      font-family: "Cascadia Code", "Consolas", "Courier New", monospace;
+      font-size: 0.88em;
+    }
+    code {
+      background: var(--code-bg);
+      border: 1px solid var(--line);
+      padding: 0.08em 0.38em;
+      border-radius: 4px;
+      color: #d4e4f5;
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 1rem 1.1rem;
+      overflow-x: auto;
+      line-height: 1.45;
+      color: #d4e4f5;
+    }
+    pre code { border: 0; padding: 0; background: none; }
+    kbd {
+      background: var(--bg-3);
+      border: 1px solid var(--line);
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 100vh;
+    }
+    nav {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: var(--bg-2);
+      border-right: 1px solid var(--line);
+      padding: 1.25rem 0.9rem 2rem;
+    }
+    nav .brand {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--amber);
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+    nav h1 {
+      font-size: 1.05rem;
+      margin: 0 0 1.1rem;
+      font-weight: 650;
+    }
+    nav a {
+      display: block;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.28rem 0.45rem;
+      border-radius: 5px;
+      font-size: 0.86rem;
+    }
+    nav a:hover, nav a:focus { background: var(--bg-3); color: var(--ink); }
+    nav .grp {
+      margin-top: 0.85rem;
+      padding-top: 0.55rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--amber);
+      font-weight: 700;
+    }
+
+    main { max-width: 920px; padding: 2rem 2.2rem 4rem; }
+    h2 {
+      font-size: 1.7rem;
+      margin: 2.4rem 0 0.7rem;
+      padding-top: 0.4rem;
+      border-top: 1px solid var(--line);
+    }
+    h2:first-of-type { border-top: 0; margin-top: 0; }
+    h3 { font-size: 1.2rem; margin: 1.6rem 0 0.5rem; color: #f3f4f6; }
+    h4 { font-size: 1.02rem; margin: 1.2rem 0 0.4rem; color: var(--teal); }
+    p { margin: 0.55rem 0; }
+    ul, ol { padding-left: 1.3rem; }
+    li { margin: 0.28rem 0; }
+    .muted { color: var(--muted); }
+    .hero {
+      background: linear-gradient(135deg, #1a2430 0%, #12241f 100%);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 1.4rem 1.5rem 1.2rem;
+      margin-bottom: 1.6rem;
+    }
+    .hero h2 { border: 0; margin: 0 0 0.4rem; padding: 0; }
+    .pill {
+      display: inline-block;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #2a2a12;
+      color: var(--amber);
+      border: 1px solid #6a5018;
+      padding: 0.18rem 0.5rem;
+      border-radius: 999px;
+      margin-bottom: 0.6rem;
+    }
+    .card {
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 1rem 1.15rem;
+      margin: 0.9rem 0;
+    }
+    .edit {
+      border-left: 3px solid var(--amber);
+      background: #1a1810;
+    }
+    .edit strong { color: var(--amber); }
+    .ok { border-left: 3px solid var(--teal); }
+    .warn { border-left: 3px solid var(--rose); }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      nav { position: relative; height: auto; }
+      .grid { grid-template-columns: 1fr; }
+      main { padding: 1.2rem 1rem 3rem; }
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      margin: 0.8rem 0 1.1rem;
+    }
+    th, td {
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      padding: 0.45rem 0.5rem;
+      vertical-align: top;
+    }
+    th { color: var(--muted); font-weight: 600; font-size: 0.8rem; }
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+      margin: 0.8rem 0;
+    }
+    .flow span {
+      background: var(--bg-3);
+      border: 1px solid var(--line);
+      padding: 0.35rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .flow .arr { background: none; border: 0; color: var(--amber); padding: 0 0.1rem; }
+    .mod {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 0.4rem 1rem;
+      align-items: start;
+    }
+    .mod .tag {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--amber);
+      padding-top: 0.15rem;
+    }
+    footer {
+      margin-top: 3rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+<nav>
+  <div class="brand">LogiFlow TMS</div>
+  <h1>Backend guide</h1>
+  <a href="#start">1. Open this + run it</a>
+  <a href="#what">2. What this app is</a>
+  <a href="#map">3. Folder map</a>
+  <div class="grp">Architecture</div>
+  <a href="#hex">Hexagonal layers</a>
+  <a href="#modules">Modules</a>
+  <a href="#request">One request, end to end</a>
+  <div class="grp">Each module</div>
+  <a href="#shared">shared</a>
+  <a href="#iam">iam</a>
+  <a href="#referential">referential</a>
+  <a href="#fleet">fleet</a>
+  <a href="#driver">driver</a>
+  <a href="#order">order</a>
+  <a href="#dossier">dossier</a>
+  <a href="#planning">planning</a>
+  <a href="#maintenance">maintenance</a>
+  <a href="#tracking">tracking</a>
+  <a href="#ai">ai</a>
+  <div class="grp">How to edit</div>
+  <a href="#edit-api">Add / change an API</a>
+  <a href="#edit-rule">Change a business rule</a>
+  <a href="#edit-db">Change the database</a>
+  <a href="#config">Config &amp; security</a>
+  <a href="#run">Run, test, format</a>
+  <a href="#dont">Rules that will break the build</a>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="pill">Java 24 · Spring Boot 4.1 · PostgreSQL + PostGIS</div>
+    <h2>LogiFlow TMS backend</h2>
+    <p>
+      Transport Management System for road freight: clients and sites, fleet and drivers,
+      orders, transport dossiers, voyage planning, maintenance, live tracking, and an AI façade.
+    </p>
+    <p class="muted">
+      This file is a map of the code so you can find the right place before you edit.
+      Open it in a browser. Jump with the left menu.
+    </p>
+  </div>
+
+  <h2 id="start">1. Do this first (about 5 minutes)</h2>
+  <ol>
+    <li>Need: <strong>JDK 24+</strong> (CI uses 25), <strong>Docker Desktop</strong>, Git Bash or any bash.</li>
+    <li>In the project root, copy env: <code>cp .env.example .env</code></li>
+    <li>Start Postgres + pgAdmin: <code>make up</code></li>
+    <li>Start the API: <code>./mvnw spring-boot:run -Dspring-boot.run.profiles=local</code>
+      <br /><span class="muted">or</span> <code>make run</code></li>
+    <li>Open <a href="http://localhost:8080/swagger-ui.html">http://localhost:8080/swagger-ui.html</a>
+      and <a href="http://localhost:8080/actuator/health">/actuator/health</a></li>
+  </ol>
+  <div class="card ok">
+    <strong>Local security is permissive.</strong> Profile <code>local</code> sets
+    <code>logiflow.security.permissive-local-profile: true</code>.
+    Swagger and health are public. Business APIs still say “authenticated” in config, but there is
+    no JWT decoder, so you call them from Swagger / integration tests with a mock JWT.
+    Production (<code>dev</code> profile) requires a real Keycloak issuer.
+  </div>
+  <p>Useful URLs after start:</p>
+  <table>
+    <tr><th>What</th><th>URL</th></tr>
+    <tr><td>API</td><td><code>http://localhost:8080</code></td></tr>
+    <tr><td>Swagger</td><td><code>http://localhost:8080/swagger-ui.html</code></td></tr>
+    <tr><td>Health</td><td><code>http://localhost:8080/actuator/health</code></td></tr>
+    <tr><td>Postgres</td><td><code>localhost:5433</code> (not 5432 — avoids Windows Postgres conflict)</td></tr>
+    <tr><td>pgAdmin</td><td><code>http://localhost:5050</code> — see <code>.env</code> for login</td></tr>
+    <tr><td>Angular (separate repo)</td><td><code>http://localhost:4200</code> — CORS already allows it</td></tr>
+    <tr><td>AI Flask (separate repo, optional)</td><td><code>http://localhost:8000</code></td></tr>
+  </table>
+
+  <h2 id="what">2. What this app is</h2>
+  <p>
+    One Spring Boot JAR. Not microservices. Internally it is a <strong>modular monolith</strong>
+    (Spring Modulith): each business area is a Java package with a locked public API.
+  </p>
+  <p>The real-world flow the product models:</p>
+  <div class="flow">
+    <span>Client + Site</span><span class="arr">→</span>
+    <span>Commande (order)</span><span class="arr">→</span>
+    <span>Dossier transport</span><span class="arr">→</span>
+    <span>Voyage (truck + driver)</span><span class="arr">→</span>
+    <span>Events on the road</span>
+  </div>
+  <p>
+    The frontend is a <strong>separate Angular 18</strong> project. This repo is only the backend.
+    Angular must never call the Flask AI service. Spring is the only public API.
+  </p>
+  <p>Stack in one line:</p>
+  <ul>
+    <li>Spring Web + Validation + Security (JWT resource server)</li>
+    <li>JPA / Hibernate Spatial + Flyway (schema owned by SQL, not Hibernate)</li>
+    <li>MapStruct (domain ↔ JPA entity), Lombok only on a short allow-list</li>
+    <li>springdoc OpenAPI, Actuator, Spring Modulith, ArchUnit tests</li>
+  </ul>
+
+  <h2 id="map">3. Folder map</h2>
+<pre><code>logiflow-backend/
+  pom.xml                          Maven + plugins (Spotless, JaCoCo, Failsafe)
+  Makefile                         up / down / run / test / format / db-reset
+  .env.example                     copy to .env  — never commit .env
+  docker/
+    docker-compose.yml             Postgres (PostGIS+pgvector) + pgAdmin
+    postgres/                      custom Postgres image
+    Dockerfile                     app image (used by CI)
+  docs/                            architecture.md, conventions.md, this guide
+  src/main/java/com/logiflow/tms/
+    LogiflowApplication.java        @SpringBootApplication + @Modulithic
+    config/                        Security, CORS, JPA, OpenAPI, Jackson
+    shared/ iam/ referential/ ...  one folder per module (see below)
+  src/main/resources/
+    application.yml                common config
+    application-local.yml         your machine (port 5433, permissive security, seed data)
+    application-dev.yml            real JWT issuer required
+    db/migration/                  Flyway V1…V16
+    db/migration/seed/             demo data (local/dev only)
+  src/test/java/                   unit + IT + ArchUnit + Modulith
+</code></pre>
+  <div class="card edit">
+    <strong>Where to look first when editing</strong>
+    <ul>
+      <li>New HTTP route → <code>&lt;module&gt;/infrastructure/web/*Controller.java</code></li>
+      <li>Business rule / status transition → <code>&lt;module&gt;/domain/model/</code></li>
+      <li>Orchestration + transactions → <code>&lt;module&gt;/application/</code></li>
+      <li>SQL table → <code>src/main/resources/db/migration/</code> (new <code>V17__….sql</code>)</li>
+      <li>Port, CORS, AI URL, DB → <code>.env</code> + <code>application-*.yml</code></li>
+    </ul>
+  </div>
+
+  <h2 id="hex">Hexagonal layers (inside every module)</h2>
+  <p>
+    Every module uses the same 4 folders. Dependencies only point inward.
+    Tests in <code>HexagonalArchitectureTest</code> fail the build if you break this.
+  </p>
+  <table>
+    <tr>
+      <th>Layer</th>
+      <th>Job</th>
+      <th>You may put</th>
+      <th>You must not put</th>
+    </tr>
+    <tr>
+      <td><code>api/</code></td>
+      <td>Public contract other modules may import</td>
+      <td>Interfaces like <code>SiteApi</code>, records like <code>SiteSummary</code></td>
+      <td>JPA entities, REST DTOs, Spring controllers</td>
+    </tr>
+    <tr>
+      <td><code>domain/</code></td>
+      <td>Pure business. No Spring, JPA, Jackson, Lombok</td>
+      <td>Entities, enums, value objects, ports (interfaces), domain services</td>
+      <td><code>@Entity</code>, <code>@Service</code>, REST, SQL</td>
+    </tr>
+    <tr>
+      <td><code>application/</code></td>
+      <td>Use cases. Owns <code>@Transactional</code></td>
+      <td>Services, <code>*Command</code> records, implements <code>*Api</code></td>
+      <td>HTTP, JPA, MapStruct. Never import <code>infrastructure</code></td>
+    </tr>
+    <tr>
+      <td><code>infrastructure/</code></td>
+      <td>Adapters: REST + Postgres + HTTP clients</td>
+      <td>Controllers, JPA entities, adapters, mappers</td>
+      <td>Business rules (keep those in domain)</td>
+    </tr>
+  </table>
+  <p>Typical file names (copy this pattern — <code>referential</code> is the template):</p>
+<pre><code>referential/
+  api/SiteApi.java                          ← other modules call only this
+  api/dto/SiteSummary.java
+  domain/model/Site.java                    ← Site.creer() / modifier() / desactiver()
+  domain/port/out/SiteRepository.java          ← interface, no Spring
+  domain/service/SiteDomainService.java
+  application/SiteService.java               ← @Transactional, implements SiteApi
+  application/command/CreerSiteCommand.java
+  infrastructure/web/SiteController.java    ← /api/v1/sites
+  infrastructure/web/dto/SiteRequest.java   ← REST in
+  infrastructure/web/dto/SiteResponse.java    ← REST out
+  infrastructure/persistence/entity/SiteEntity.java
+  infrastructure/persistence/repository/SiteJpaRepository.java
+  infrastructure/persistence/adapter/SiteRepositoryAdapter.java
+  infrastructure/persistence/mapper/SiteMapper.java   ← MapStruct
+</code></pre>
+  <p>Domain entities always have two factories:</p>
+  <ul>
+    <li><code>creer(...)</code> — new object, applies creation rules</li>
+    <li><code>reconstituer(...)</code> — rebuild from DB, skip creation rules</li>
+  </ul>
+  <p>
+    JPA <code>*Entity</code> never leaves persistence. Controllers never return domain objects
+    to HTTP — they map to <code>*Response</code>.
+  </p>
+
+  <h2 id="modules">Modules and who may call whom</h2>
+  <p>
+    A module may only import another module’s <code>api</code> package (plus <code>shared</code>,
+    which is OPEN). Importing another module’s <code>domain</code> or <code>infrastructure</code>
+    fails <code>ModularityTest</code>.
+  </p>
+  <pre><code>shared (OPEN — anyone can use any package)
+
+iam ──────────────► shared
+referential ──────► shared
+fleet ────────────► shared
+driver ───────────► shared
+order ────────────► shared + referential.api
+dossier ──────────► shared + order.api + referential.api
+planning ─────────► shared + referential + fleet + driver + dossier  (all .api)
+maintenance ──────► shared + fleet.api
+tracking ─────────► shared + planning.api
+ai ───────────────► shared + (other modules only via their api, e.g. dossier summaries)
+</code></pre>
+  <p>
+    <code>iam</code> is not called by other modules for “who is logged in”.
+    Auth context lives in <code>shared.infrastructure.security</code> (JWT).
+  </p>
+  <p>PostgreSQL schemas match modules. The <code>order</code> module uses schema <code>commande</code> because <code>ORDER</code> is a SQL keyword.</p>
+  <p>Migrations:</p>
+  <table>
+    <tr><th>File</th><th>Creates</th></tr>
+    <tr><td>V1</td><td>Extensions: PostGIS, pg_trgm, pgcrypto, pgvector</td></tr>
+    <tr><td>V2</td><td>Schemas: iam, referential, fleet, driver, commande, dossier, planning, maintenance, tracking</td></tr>
+    <tr><td>V3–V4</td><td>client, site</td></tr>
+    <tr><td>V5 (seed)</td><td>Demo referential data (loaded only on local/dev)</td></tr>
+    <tr><td>V6–V8</td><td>vehicule, remorque, chauffeur</td></tr>
+    <tr><td>V9</td><td>utilisateur</td></tr>
+    <tr><td>V10–V12</td><td>commande, dossier, voyage</td></tr>
+    <tr><td>V13</td><td>maintenance tables</td></tr>
+    <tr><td>V14</td><td>evenement_voyage</td></tr>
+    <tr><td>V15</td><td>schema <code>ai</code> + interaction_ia</td></tr>
+    <tr><td>V16</td><td>Spring Modulith event_publication</td></tr>
+  </table>
+  <p><code>hibernate.ddl-auto: validate</code> — Hibernate never creates tables. If Java and SQL disagree, the app refuses to start.</p>
+
+  <h2 id="request">One request, end to end (edit this mental model)</h2>
+  <p>Example: <code>POST /api/v1/sites</code></p>
+  <ol>
+    <li><code>SiteController.creer</code> validates <code>SiteRequest</code> (Bean Validation).</li>
+    <li>Maps it to <code>CreerSiteCommand</code> (application command, not HTTP).</li>
+    <li><code>SiteService.creerSite</code> (<code>@Transactional</code>) asks
+        <code>SiteDomainService</code> if the code is free, then <code>Site.creer(...)</code>.</li>
+    <li><code>SiteRepository</code> is a domain port. The real class is
+        <code>SiteRepositoryAdapter</code>: MapStruct → <code>SiteEntity</code> → JPA save.</li>
+    <li>Controller loads the site again and returns <code>SiteResponse</code> with HTTP 201 + Location.</li>
+    <li>If something throws, <code>GlobalExceptionHandler</code> turns it into RFC 7807 JSON:
+        404, 409, 422, 400, 503, 500 — never a raw stack trace.</li>
+  </ol>
+  <div class="card edit">
+    <strong>To change “what a site is”</strong> edit <code>Site.java</code>.
+    <strong>To change “how we save it”</strong> edit adapter + mapper + SQL.
+    <strong>To change “the JSON the frontend sends”</strong> edit <code>SiteRequest</code> / <code>SiteResponse</code>.
+  </div>
+
+  <h2 id="shared">Module <code>shared</code> — technical kernel</h2>
+  <p>OPEN module. Other modules import it freely. No business of its own.</p>
+  <ul>
+    <li>Value objects: <code>GeoPoint</code>, <code>Money</code>, <code>Reference</code>, <code>Capacite</code></li>
+    <li>Exceptions: <code>BusinessException</code> (422), <code>NotFoundException</code> (404),
+        <code>ConflictException</code> (409), <code>ValidationException</code> (400),
+        <code>ServiceIndisponibleException</code> (503)</li>
+    <li><code>GlobalExceptionHandler</code> + i18n <code>messages_fr.properties</code> / <code>messages_en.properties</code></li>
+    <li><code>BaseEntity</code>: UUID id, audit columns, optimistic lock <code>version</code></li>
+    <li>Pagination types, security context helper</li>
+  </ul>
+  <div class="card edit">
+    <strong>Edit here when:</strong> you need a new shared VO, a new error type, or a change to error JSON.
+    Do not put “voyage” or “camion” rules here.
+  </div>
+
+  <h2 id="iam">Module <code>iam</code> — users</h2>
+  <p>Application users (not Keycloak itself). Entity <code>Utilisateur</code>: login, email, roles, active flag.</p>
+  <p>Roles: <code>EXPLOITANT</code>, <code>RESPONSABLE_EXPLOITATION</code>, <code>ATELIER</code>,
+     <code>COMMERCIAL</code>, <code>CHAUFFEUR</code>, <code>ADMINISTRATEUR</code>.</p>
+  <table>
+    <tr><th>HTTP</th><th>Does</th></tr>
+    <tr><td><code>POST /api/v1/utilisateurs</code></td><td>Create</td></tr>
+    <tr><td><code>GET /api/v1/utilisateurs/{id}</code></td><td>Get one</td></tr>
+    <tr><td><code>GET /api/v1/utilisateurs</code></td><td>List</td></tr>
+    <tr><td><code>PUT /api/v1/utilisateurs/{id}</code></td><td>Update</td></tr>
+    <tr><td><code>DELETE /api/v1/utilisateurs/{id}</code></td><td>Deactivate</td></tr>
+  </table>
+  <div class="card edit">
+    <strong>Add a role:</strong> add a value to <code>RoleUtilisateur.java</code>, then check DB check constraints on
+    <code>iam.utilisateur</code> (V9) and any frontend enum.
+  </div>
+
+  <h2 id="referential">Module <code>referential</code> — clients &amp; sites</h2>
+  <p>Reference data. <strong>Copy this module</strong> when you add a new resource — it is the template.</p>
+  <ul>
+    <li><code>Client</code> — commercial customer</li>
+    <li><code>Site</code> — geolocated loading/unloading point, hours, access constraints (weight, HGV ban)</li>
+  </ul>
+  <table>
+    <tr><th>HTTP</th><th>Does</th></tr>
+    <tr><td><code>POST/GET/PUT/DELETE /api/v1/sites</code></td><td>Sites (delete = deactivate)</td></tr>
+    <tr><td><code>GET /api/v1/sites?q=&amp;page=&amp;size=</code></td><td>Search</td></tr>
+    <tr><td><code>POST/GET/DELETE /api/v1/clients</code></td><td>Clients</td></tr>
+  </table>
+  <p>Other modules see only <code>SiteApi.consulter</code> / <code>estActif</code> and <code>SiteSummary</code> (id, code, label, lat/lng, active).</p>
+  <div class="card edit">
+    <strong>Change access rules</strong> (e.g. max vehicle weight): <code>Site.accessiblePour</code>
+    and <code>ContraintesAcces</code>. Planning should call <code>SiteApi</code>, not <code>Site</code> directly.
+  </div>
+
+  <h2 id="fleet">Module <code>fleet</code> — vehicles &amp; trailers</h2>
+  <p>Entities: <code>Vehicule</code>, <code>Remorque</code>. Shared status enum:</p>
+  <p><code>DISPONIBLE → RESERVE → EN_VOYAGE / EN_MAINTENANCE / IMMOBILISE / HORS_SERVICE</code></p>
+  <table>
+    <tr><th>HTTP</th><th>Does</th></tr>
+    <tr><td><code>POST/GET /api/v1/vehicules</code></td><td>Create / get / list</td></tr>
+    <tr><td><code>PUT /api/v1/vehicules/{id}/documents</code></td><td>Papers (insurance, etc.)</td></tr>
+    <tr><td><code>PUT /api/v1/vehicules/{id}/compteurs</code></td><td>Odometer / counters</td></tr>
+    <tr><td><code>POST/GET /api/v1/remorques</code></td><td>Trailers</td></tr>
+  </table>
+  <div class="card edit">
+    <strong>Change “can this truck go on a trip?”</strong> → domain status methods on <code>Vehicule</code>,
+    then whatever <code>planning</code> already reads via <code>VehiculeApi</code>.
+  </div>
+
+  <h2 id="driver">Module <code>driver</code> — drivers</h2>
+  <p><code>Chauffeur</code>: identity, status, qualifications, availability. Used by planning when assigning a voyage.</p>
+  <table>
+    <tr><th>HTTP</th><th>Does</th></tr>
+    <tr><td><code>POST/GET/PUT /api/v1/chauffeurs</code></td><td>CRUD-ish (list + update)</td></tr>
+  </table>
+
+  <h2 id="order">Module <code>order</code> — commercial orders</h2>
+  <p><code>Commande</code>: a customer’s request to move goods. Status: <code>RECUE → CONFIRMEE / ANNULEE</code>.</p>
+  <p>Has a <code>Reference</code> (human-readable code) from <code>SequenceReferenceGenerator</code>.</p>
+  <table>
+    <tr><th>HTTP</th><th>Does</th></tr>
+    <tr><td><code>POST /api/v1/commandes</code></td><td>Create (status RECUE)</td></tr>
+    <tr><td><code>GET /api/v1/commandes</code></td><td>Get / list</td></tr>
+    <tr><td><code>PUT …/confirmer</code> and <code>…/annuler</code></td><td>Status changes</td></tr>
+  </table>
+  <p>A commande is not a truck trip. After confirmation, you create <code>DossierTransport</code> records from it.</p>
+  <div class="card edit">
+    <strong>Add a status</strong> (e.g. FACTUREE): update <code>StatutCommande</code>, the transition map
+    inside <code>Commande</code>, the SQL check constraint, OpenAPI, and tests in
+    <code>CommandeTest</code> / <code>CommandeServiceTest</code>.
+  </div>
+
+  <h2 id="dossier">Module <code>dossier</code> — transport files</h2>
+  <p>
+    <code>DossierTransport</code> is the billable, movable unit: goods lines, segments
+    (load → unload), documents, weight / volume / pallets, ADR (dangerous goods),
+    required body type and temperature.
+  </p>
+  <p>Status machine:</p>
+  <pre><code>CREE → PLANIFIE → EN_CHARGEMENT → CHARGE → EN_TRANSIT → EN_LIVRAISON → LIVRE → CLOTURE
+                      ↘ ANNULE                    ↘ INCIDENT ↩ EN_TRANSIT
+PLANIFIE can go back to CREE</code></pre>
+  <table>
+    <tr><th>HTTP</th><th>Does</th></tr>
+    <tr><td><code>POST /api/v1/dossiers</code></td><td>Create from a commande</td></tr>
+    <tr><td><code>GET /api/v1/dossiers</code></td><td>Get / list</td></tr>
+    <tr><td><code>PUT /api/v1/dossiers/{id}/statut</code></td><td>Advance / change status</td></tr>
+  </table>
+  <p>
+    Hard grouping rules live in <code>DossierTransport.estGroupableAvec</code>:
+    both must be groupable, same <code>TypeTransport</code>, compatible body type and temperature.
+    Geography / money scoring is <em>not</em> here — that is AI + planning.
+  </p>
+  <div class="card edit">
+    <strong>Change grouping compatibility</strong> → <code>estGroupableAvec</code> +
+    <code>DossierTransportTest</code>. The AI module must not import this class; it uses
+    <code>CandidatDossier</code> + <code>DossierApi</code> summaries instead.
+  </div>
+
+  <h2 id="planning">Module <code>planning</code> — voyages</h2>
+  <p>
+    <code>Voyage</code> = one physical run: vehicle + optional trailer + driver assignment(s)
+    carrying 1..n dossiers. Also holds <code>Trajet</code> (ordered steps) and fill rate.
+  </p>
+  <p>Status: <code>BROUILLON → PLANIFIE → AFFECTE → EN_COURS → TERMINE → CLOTURE</code> (or <code>ANNULE</code> from early states).</p>
+  <p><code>ConformiteDomainService</code> is the compliance engine (can this assignment legally / physically run).</p>
+  <table>
+    <tr><th>HTTP</th><th>Does</th></tr>
+    <tr><td><code>POST /api/v1/voyages</code></td><td>Create</td></tr>
+    <tr><td><code>GET /api/v1/voyages</code></td><td>Get / list</td></tr>
+    <tr><td><code>PUT /api/v1/voyages/{id}/statut</code></td><td>Transition</td></tr>
+  </table>
+  <p>Voyage rows store some nested structures as JSON text (<code>trajet_json</code>, <code>affectations_json</code>, <code>dossier_ids_json</code>) — see V12.</p>
+  <div class="card edit">
+    <strong>Illegal status jump?</strong> Map is in <code>Voyage.java</code> field
+    <code>TRANSITIONS_AUTORISEES</code>. Change the map, then tests in <code>VoyageTest</code>.
+  </div>
+
+  <h2 id="maintenance">Module <code>maintenance</code> — workshop</h2>
+  <p>Three aggregates:</p>
+  <ul>
+    <li><code>PlanEntretien</code> — scheduled maintenance plan for a vehicle</li>
+    <li><code>OrdreTravail</code> — work order (create + change status)</li>
+    <li><code>ScoreSante</code> — health score used later by predictive AI (Flask contract documented, not wired yet)</li>
+  </ul>
+  <table>
+    <tr><th>HTTP</th><th>Does</th></tr>
+    <tr><td><code>POST/GET /api/v1/plans-entretien</code></td><td>Plans</td></tr>
+    <tr><td><code>POST/GET /api/v1/ordres-travail</code> + <code>PUT …/statut</code></td><td>Work orders</td></tr>
+    <tr><td><code>POST/GET /api/v1/scores-sante</code></td><td>Health scores</td></tr>
+  </table>
+
+  <h2 id="tracking">Module <code>tracking</code> — execution events</h2>
+  <p><code>EvenementVoyage</code>: something that happened on a voyage (position, load, incident, …).</p>
+  <table>
+    <tr><th>HTTP</th><th>Does</th></tr>
+    <tr><td><code>POST /api/v1/evenements-voyage</code></td><td>Declare an event</td></tr>
+    <tr><td><code>GET /api/v1/evenements-voyage/{id}</code></td><td>One event</td></tr>
+    <tr><td><code>GET /api/v1/voyages/{voyageId}/evenements</code></td><td>Timeline of a voyage</td></tr>
+  </table>
+
+  <h2 id="ai">Module <code>ai</code> — façade, not the models</h2>
+  <p>
+    No LLM code here. Spring authenticates the user, builds a payload from other modules’ APIs,
+    calls Flask with header <code>X-Internal-Api-Key</code>, logs <code>InteractionIa</code>,
+    returns a ready-made JSON to Angular.
+  </p>
+  <p>If Flask is down:</p>
+  <ul>
+    <li>Copilot and itinerary → HTTP 503</li>
+    <li>Groupage → deterministic fallback (pairs from hard rules, neutral score, message that AI was unavailable)</li>
+  </ul>
+  <table>
+    <tr><th>Frontend (Spring)</th><th>Flask (internal)</th></tr>
+    <tr><td><code>POST /api/v1/ia/copilote/questions</code></td><td><code>/internal/ai/v1/copilot/ask</code></td></tr>
+    <tr><td><code>POST /api/v1/ia/groupage/propositions</code></td><td><code>/internal/ai/v1/groupage/analyser</code></td></tr>
+    <tr><td><code>POST /api/v1/ia/itineraires/calcul</code></td><td><code>/internal/ai/v1/itinerary/calculer</code></td></tr>
+    <tr><td>Predictive maintenance</td><td>Documented, not implemented</td></tr>
+  </table>
+  <p>Key classes:</p>
+  <ul>
+    <li><code>AiServiceClientPort</code> — domain port</li>
+    <li><code>AiServiceHttpAdapter</code> — RestClient implementation</li>
+    <li><code>AiServiceProperties</code> — base-url, api-key, timeouts</li>
+    <li><code>CandidatDossier</code> — AI’s own view of a dossier (must not import dossier.domain)</li>
+    <li><code>InteractionIa</code> — audit log row</li>
+  </ul>
+  <div class="card edit">
+    <strong>Flask JSON field renamed?</strong> Change records in
+    <code>ai/infrastructure/client/dto/</code> only. Do not leak Flask DTOs into controllers.
+    <br /><strong>AI URL / key:</strong> <code>AI_SERVICE_BASE_URL</code> and <code>AI_SERVICE_API_KEY</code> in <code>.env</code>.
+  </div>
+  <p>Full contract: <code>docs/integration-ia.md</code>.</p>
+
+  <h2 id="edit-api">How to add or change an API (recipe)</h2>
+  <p>Example: add a field <code>commentaire</code> on a site.</p>
+  <ol>
+    <li>SQL: new file <code>src/main/resources/db/migration/V17__site_commentaire.sql</code>
+        — <code>ALTER TABLE referential.site ADD COLUMN …</code></li>
+    <li>Domain: field + validation on <code>Site.java</code> (<code>creer</code> / <code>modifier</code> / <code>reconstituer</code>)</li>
+    <li>JPA: column on <code>SiteEntity</code></li>
+    <li>MapStruct: <code>SiteMapper</code> (often automatic if names match)</li>
+    <li>Command: <code>CreerSiteCommand</code> / <code>MajSiteCommand</code></li>
+    <li>REST: <code>SiteRequest</code> + <code>SiteResponse</code></li>
+    <li>If other modules need it: <code>SiteSummary</code> + <code>SiteApi</code></li>
+    <li>Tests: <code>SiteTest</code> (domain) and/or <code>SiteControllerIT</code></li>
+    <li><code>make format</code> then <code>./mvnw test</code></li>
+  </ol>
+  <p>Controller rules (enforced by convention + ArchUnit):</p>
+  <ul>
+    <li>No business logic. Validate DTO → call application service → map response.</li>
+    <li>Constructor injection only (Lombok <code>@RequiredArgsConstructor</code> is allowed).</li>
+    <li>Path style: <code>/api/v1/&lt;resource&gt;</code> in French kebab-case matching existing APIs.</li>
+  </ul>
+
+  <h2 id="edit-rule">How to change a business rule</h2>
+  <ol>
+    <li>Find the domain class (e.g. <code>Voyage.java</code>, <code>DossierTransport.java</code>).</li>
+    <li>Change the method or the transition map. Throw <code>BusinessException</code> for “user did something illegal”.</li>
+    <li>Add/adjust a test next to it: <code>src/test/java/.../domain/*Test.java</code> — no Spring needed.</li>
+    <li>If the rule needs data from another module, go through that module’s <code>*Api</code>, from the <em>application</code> layer.</li>
+  </ol>
+  <div class="card warn">
+    <strong>Do not</strong> put the rule in the controller or in a JPA entity.
+    Domain coverage is measured by JaCoCo (target 80% on <code>*.domain.*</code>).
+  </div>
+
+  <h2 id="edit-db">How to change the database</h2>
+  <ol>
+    <li>Never edit an already-applied <code>V1</code>…<code>Vn</code> on a shared DB. Add <code>V(n+1)__description.sql</code>.</li>
+    <li>Tables: <code>snake_case</code> singular. PK <code>id</code>. FKs <code>&lt;table&gt;_id</code>.
+        Named constraints: <code>pk_</code> <code>fk_</code> <code>uq_</code> <code>idx_</code> <code>ck_</code>.</li>
+    <li>Local wipe (destroys data): <code>make db-reset</code> then restart the app so Flyway replays everything including seed.</li>
+    <li>Hibernate only <em>validates</em>. If you add a Java field without a column, startup fails.</li>
+  </ol>
+  <p>Every persisted row also has <code>tenant_id</code>, audit, and <code>version</code> from <code>BaseEntity</code>.</p>
+
+  <h2 id="config">Config, security, profiles</h2>
+  <div class="grid">
+    <div class="card">
+      <h4>Files</h4>
+      <ul>
+        <li><code>application.yml</code> — port 8080, Flyway, Jackson, Actuator, AI defaults, CORS</li>
+        <li><code>application-local.yml</code> — DB on 5433, seed migrations, permissive security, DEBUG logs</li>
+        <li><code>application-dev.yml</code> — real OAuth2 issuer, no permissive mode</li>
+        <li><code>application-test.yml</code> — tests / Testcontainers</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Security</h4>
+      <ul>
+        <li>Stateless, CSRF off, CORS from <code>CORS_ALLOWED_ORIGINS</code></li>
+        <li>Public: health, info, swagger, api-docs</li>
+        <li>Everything else: authenticated</li>
+        <li>JWT roles from claim <code>roles</code> or Keycloak <code>realm_access.roles</code> → <code>ROLE_*</code></li>
+      </ul>
+    </div>
+  </div>
+  <p>App-level properties: prefix <code>logiflow.*</code> in <code>LogiflowProperties</code> (CORS + permissive flag). AI has its own <code>AiServiceProperties</code>.</p>
+  <p>Cross-cutting Spring beans live in <code>com.logiflow.tms.config</code>, not inside a business module:</p>
+  <ul>
+    <li><code>SecurityConfig</code>, <code>CorsConfig</code>, <code>JpaConfig</code>, <code>OpenApiConfig</code>, <code>JacksonConfig</code>, <code>AsyncConfig</code></li>
+  </ul>
+
+  <h2 id="run">Run, test, format</h2>
+  <table>
+    <tr><th>Command</th><th>What</th><th>Time (ballpark)</th></tr>
+    <tr><td><code>make up</code></td><td>Docker Postgres + pgAdmin</td><td>~20 s first pull, then ~5 s</td></tr>
+    <tr><td><code>make run</code></td><td>Spring Boot local</td><td>~15–40 s to listen on 8080</td></tr>
+    <tr><td><code>make build</code></td><td>Package, skip tests</td><td>~20–40 s</td></tr>
+    <tr><td><code>./mvnw test</code></td><td>Unit tests only (no <code>*IT</code>)</td><td>~30–90 s</td></tr>
+    <tr><td><code>make test</code> / <code>./mvnw verify</code></td><td>Unit + ArchUnit + Modulith + Testcontainers IT + Spotless check</td><td>several minutes (Docker for Postgres)</td></tr>
+    <tr><td><code>make format</code></td><td>Google Java Format via Spotless</td><td>~10 s</td></tr>
+    <tr><td><code>make down</code></td><td>Stop containers</td><td>~5 s</td></tr>
+    <tr><td><code>make db-reset</code></td><td>Delete volume + recreate DB</td><td>~15 s — destroys local data</td></tr>
+    <tr><td><code>make logs</code></td><td>Follow Postgres logs</td><td>—</td></tr>
+  </table>
+  <p>On Windows use Git Bash so <code>./mvnw</code> and <code>make</code> work. There is also <code>mvnw.cmd</code> if you stay in cmd/PowerShell: <code>mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=local</code>.</p>
+  <p>Test types:</p>
+  <ul>
+    <li><code>*Test.java</code> under domain/application — fast, no DB</li>
+    <li><code>*IT.java</code> — HTTP + real Postgres via Testcontainers (Failsafe plugin)</li>
+    <li><code>architecture/HexagonalArchitectureTest</code> — layer rules</li>
+    <li><code>architecture/ModularityTest</code> — Spring Modulith <code>verify()</code></li>
+    <li><code>architecture/CodingRulesTest</code> — extra coding rules</li>
+  </ul>
+  <p>CI (<code>.github/workflows/ci.yml</code>): Spotless → compile → <code>verify</code> → Docker image to GHCR on <code>main</code>.</p>
+  <p>Git: Conventional Commits, e.g. <code>feat(referential): add site search</code>. Branches <code>feat/…</code> <code>fix/…</code>. No direct commits on <code>main</code>.</p>
+
+  <h2 id="dont">Rules that will break the build if you ignore them</h2>
+  <ol>
+    <li><strong>Domain stays pure.</strong> No Spring/JPA/Jackson/Lombok in <code>*.domain.*</code>.</li>
+    <li><strong>Application never imports infrastructure.</strong></li>
+    <li><strong>Other modules only import <code>….api</code></strong> (except open <code>shared</code>).</li>
+    <li><strong>No cycles</strong> between modules (e.g. dossier must not import planning).</li>
+    <li><strong>Spotless</strong> must pass — run <code>make format</code> before you push.</li>
+    <li><strong>Lombok allow-list:</strong> <code>@RequiredArgsConstructor</code>, <code>@Getter</code>, <code>@Slf4j</code>, <code>@Builder</code>.
+        Forbidden: <code>@Data</code>, <code>@Setter</code> on entities, <code>@AllArgsConstructor</code> on JPA entities.</li>
+    <li><strong>Language:</strong> technical names in English; business terms that the team kept in French stay French everywhere
+        (<code>Voyage</code>, <code>DossierTransport</code>, <code>Horaires</code>…). Comments and user-facing errors in French.</li>
+    <li><strong>Records</strong> for DTOs, commands, VOs. Collections returned immutable.</li>
+    <li><strong>Optional</strong> only as a return type, never a field or parameter.</li>
+  </ol>
+
+  <div class="card ok" style="margin-top:1.6rem">
+    <strong>Next 2-minute action:</strong> start Docker, run <code>make up</code>, then
+    <code>make run</code>, then click through Swagger
+    <a href="http://localhost:8080/swagger-ui.html">/swagger-ui.html</a>.
+    Pick one resource (sites is the simplest) and create + get it.
+  </div>
+
+  <footer>
+    Generated from this repository’s code and docs (architecture.md, conventions.md, integration-ia.md, ADR 0001).
+    If the code and this page disagree, trust the code and ArchUnit tests.
+  </footer>
+</main>
+</div>
+</body>
+</html>

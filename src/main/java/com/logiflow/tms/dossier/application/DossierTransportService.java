@@ -68,9 +68,45 @@ public class DossierTransportService implements DossierApi {
 
   @Transactional
   public void changerStatut(UUID id, StatutDossier statut) {
+    if (statut == StatutDossier.PLANIFIE) {
+      throw new BusinessException(
+          "Le statut PLANIFIE est réservé à la planification d'un voyage");
+    }
     DossierTransport dossier = trouverOuEchouer(id);
+    if (dossier.statut() == StatutDossier.PLANIFIE && statut == StatutDossier.CREE) {
+      throw new BusinessException(
+          "Le retour à CREE depuis PLANIFIE est réservé à l'annulation du voyage");
+    }
     dossier.changerStatut(statut);
     dossierRepository.sauvegarder(dossier);
+  }
+
+  @Override
+  @Transactional
+  public void planifierPourVoyage(List<UUID> dossierIds) {
+    for (UUID dossierId : dossierIds) {
+      DossierTransport dossier = trouverOuEchouer(dossierId);
+      if (dossier.statut() != StatutDossier.CREE) {
+        throw new BusinessException(
+            "Seul un dossier au statut CREE peut être planifié sur un voyage ("
+                + dossier.reference().valeur()
+                + ")");
+      }
+      dossier.changerStatut(StatutDossier.PLANIFIE);
+      dossierRepository.sauvegarder(dossier);
+    }
+  }
+
+  @Override
+  @Transactional
+  public void replanifierApresAnnulationVoyage(List<UUID> dossierIds) {
+    for (UUID dossierId : dossierIds) {
+      DossierTransport dossier = trouverOuEchouer(dossierId);
+      if (dossier.statut() == StatutDossier.PLANIFIE) {
+        dossier.changerStatut(StatutDossier.CREE);
+        dossierRepository.sauvegarder(dossier);
+      }
+    }
   }
 
   @Transactional(readOnly = true)

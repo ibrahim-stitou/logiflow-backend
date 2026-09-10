@@ -66,6 +66,18 @@ public class VehiculeMapper {
         .build();
   }
 
+  public void mettreAJour(VehiculeEntity entity, Vehicule vehicule) {
+    entity.ecraserEtatMetier(
+        vehicule.immatriculation().valeur(),
+        vehicule.type().name(),
+        vehicule.ptac().kg(),
+        vehicule.chargeUtile().kg(),
+        vehicule.kilometrage(),
+        vehicule.heuresMoteur(),
+        vehicule.statut().name(),
+        versJson(vehicule.documents()));
+  }
+
   private String versJson(Object valeur) {
     try {
       return objectMapper.writeValueAsString(valeur);

@@ -21,8 +21,16 @@ public class DossierRepositoryAdapter implements DossierTransportRepository {
 
   @Override
   public DossierTransport sauvegarder(DossierTransport dossier) {
-    var entite = jpaRepository.save(mapper.versEntite(dossier));
-    return mapper.versDomaine(entite);
+    var entite =
+        jpaRepository
+            .findById(dossier.id())
+            .map(
+                existante -> {
+                  mapper.mettreAJour(existante, dossier);
+                  return existante;
+                })
+            .orElseGet(() -> mapper.versEntite(dossier));
+    return mapper.versDomaine(jpaRepository.save(entite));
   }
 
   @Override

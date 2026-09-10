@@ -15,8 +15,10 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
  * Traduction centralisée des exceptions en réponses RFC 7807 ({@link ProblemDetail}). Aucun détail
@@ -105,6 +107,28 @@ public class GlobalExceptionHandler {
         request);
   }
 
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ProblemDetail gererParametreManquant(
+      MissingServletRequestParameterException ex, HttpServletRequest request) {
+    return ApiError.of(
+        HttpStatus.BAD_REQUEST,
+        "parametre-manquant",
+        "Requête invalide",
+        ex.getMessage(),
+        request);
+  }
+
+  @ExceptionHandler(NoResourceFoundException.class)
+  public ProblemDetail gererRessourceAbsente(
+      NoResourceFoundException ex, HttpServletRequest request) {
+    return ApiError.of(
+        HttpStatus.NOT_FOUND,
+        "ressource-introuvable",
+        "Ressource introuvable",
+        messageDe("error.notfound.generic"),
+        request);
+  }
+
   @ExceptionHandler(ServiceIndisponibleException.class)
   public ProblemDetail gererServiceIndisponible(
       ServiceIndisponibleException ex, HttpServletRequest request) {
@@ -145,6 +169,6 @@ public class GlobalExceptionHandler {
   }
 
   private String messageDe(String code) {
-    return messageSource.getMessage(code, null, LocaleContextHolder.getLocale());
+    return messageSource.getMessage(code, null, code, LocaleContextHolder.getLocale());
   }
 }

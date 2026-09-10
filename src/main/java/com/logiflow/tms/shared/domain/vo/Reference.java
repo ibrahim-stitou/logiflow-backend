@@ -29,4 +29,14 @@ public record Reference(String valeur) {
     return new Reference(
         "%s-%04d-%06d".formatted(prefixe.toUpperCase(Locale.ROOT), annee, sequence));
   }
+
+  /** Extrait la séquence numérique d'une référence au format {@code PREFIXE-AAAA-999999}. */
+  public static long extraireSequence(String reference) {
+    Objects.requireNonNull(reference, "La référence est obligatoire");
+    int lastDash = reference.lastIndexOf('-');
+    if (lastDash < 0 || lastDash == reference.length() - 1) {
+      throw new IllegalArgumentException("Référence sans séquence : " + reference);
+    }
+    return Long.parseLong(reference.substring(lastDash + 1));
+  }
 }

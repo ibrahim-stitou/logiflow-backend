@@ -6,6 +6,7 @@ import com.logiflow.tms.planning.infrastructure.persistence.mapper.VoyageMapper;
 import com.logiflow.tms.planning.infrastructure.persistence.repository.VoyageJpaRepository;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -41,5 +42,11 @@ public class VoyageRepositoryAdapter implements VoyageRepository {
     var pageJpa = jpaRepository.findAll(pageable);
     var contenu = pageJpa.getContent().stream().map(mapper::versDomaine).toList();
     return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
+  }
+
+  @Override
+  public List<Voyage> parDossierId(UUID dossierId) {
+    String fragment = "[\"" + dossierId + "\"]";
+    return jpaRepository.findByDossierId(fragment).stream().map(mapper::versDomaine).toList();
   }
 }

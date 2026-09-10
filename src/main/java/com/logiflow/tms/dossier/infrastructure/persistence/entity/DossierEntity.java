@@ -106,4 +106,32 @@ public class DossierEntity extends BaseEntity {
     this.segmentsJson = segmentsJson;
     this.documentsJson = documentsJson;
   }
+
+  /** Met à jour l'état métier sans toucher à l'identifiant ni au verrou optimiste. */
+  public void ecraserEtatMetier(
+      String statut,
+      String typeTransport,
+      boolean groupable,
+      double poidsBrutKg,
+      double volumeM3,
+      int nbPalettes,
+      String familleMarchandise,
+      String carrosserieRequise,
+      Double temperatureRequise,
+      String lignesMarchandiseJson,
+      String segmentsJson,
+      String documentsJson) {
+    this.statut = statut;
+    this.typeTransport = typeTransport;
+    this.groupable = groupable;
+    this.poidsBrutKg = poidsBrutKg;
+    this.volumeM3 = volumeM3;
+    this.nbPalettes = nbPalettes;
+    this.familleMarchandise = familleMarchandise;
+    this.carrosserieRequise = carrosserieRequise;
+    this.temperatureRequise = temperatureRequise;
+    this.lignesMarchandiseJson = lignesMarchandiseJson;
+    this.segmentsJson = segmentsJson;
+    this.documentsJson = documentsJson;
+  }
 }

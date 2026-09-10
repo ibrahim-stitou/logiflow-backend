@@ -1,11 +1,11 @@
 package com.logiflow.tms.config;
 
+import jakarta.servlet.DispatcherType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -28,10 +29,12 @@ import org.springframework.web.cors.CorsConfigurationSource;
  * spring.security.oauth2.resourceserver.jwt.*}), mais l'application démarre sans fournisseur
  * d'identité en profil {@code local}/{@code test} ({@code logiflow.security.permissive-local-
  * profile=true}) : la configuration {@code oauth2ResourceServer().jwt()} est alors entièrement
- * omise (aucun {@code JwtDecoder} n'est requis) et les endpoints protégés restent inaccessibles
- * sans authentification injectée autrement (ex. {@code SecurityMockMvcRequestPostProcessors.jwt()}
- * dans les tests). Dès qu'un IdP est configuré (profil {@code dev}/prod), le JWT redevient
- * obligatoire pour toute route non publique.
+ * omise (aucun {@code JwtDecoder} n'est requis). En profil {@code local} uniquement, {@code
+ * logiflow.security.anonymous-local-access=true} installe un filtre qui authentifie un utilisateur
+ * fictif pour que le frontend Angular puisse appeler l'API. Les tests (profil {@code test})
+ * n'activent pas ce filtre et injectent un JWT via {@code
+ * SecurityMockMvcRequestPostProcessors.jwt()}. Dès qu'un IdP est configuré (profil {@code
+ * dev}/prod), le JWT redevient obligatoire pour toute route non publique.
  *
  * <p>DSL lambda et {@link JwtGrantedAuthoritiesConverter} vérifiés compatibles avec Spring Security
  * 7.1.0 (Spring Boot 4.1) par compilation effective face aux artefacts réels.
@@ -53,8 +56,15 @@ public class SecurityConfig {
   public SecurityFilterChain securityFilterChain(
       HttpSecurity http,
       CorsConfigurationSource corsConfigurationSource,
-      @Value("${logiflow.security.permissive-local-profile:false}") boolean permissiveLocalProfile)
+      LogiflowProperties properties)
       throws Exception {
+    boolean permissiveLocalProfile = properties.security().permissiveLocalProfile();
+
+    if (properties.security().anonymousLocalAccess()) {
+      http.addFilterBefore(
+          new LocalDevAuthenticationFilter(), AnonymousAuthenticationFilter.class);
+    }
+
     http.cors(cors -> cors.configurationSource(corsConfigurationSource))
         .csrf(csrf -> csrf.disable())
         .sessionManagement(
@@ -62,6 +72,12 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             authorize ->
                 authorize
+                    // STATELESS : le SecurityContext ne survit pas au dispatch ERROR/FORWARD vers
+                    // /error. Sans ceci, toute exception MVC (validation, 404, etc.) rebondit en
+                    // 403 vide au lieu du ProblemDetail.
+                    .dispatcherTypeMatchers(
+                        DispatcherType.FORWARD, DispatcherType.ERROR, DispatcherType.INCLUDE)
+                    .permitAll()
                     .requestMatchers(PUBLIC_ENDPOINTS)
                     .permitAll()
                     .anyRequest()

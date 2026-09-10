@@ -13,4 +13,10 @@ public record PageResponse<T>(
     return new PageResponse<>(
         contenu, page.numero(), page.taille(), page.totalElements(), page.totalPages());
   }
+
+  /** Réponse non paginée pour les filtres (ex. par commande ou par dossier). */
+  public static <T> PageResponse<T> ofList(List<T> content) {
+    int size = content.size();
+    return new PageResponse<>(content, 0, Math.max(size, 1), size, size == 0 ? 0 : 1);
+  }
 }

@@ -77,4 +77,23 @@ public class VehiculeEntity extends BaseEntity {
     this.statut = statut;
     this.documentsJson = documentsJson;
   }
+
+  public void ecraserEtatMetier(
+      String immatriculation,
+      String type,
+      double ptacKg,
+      double chargeUtileKg,
+      int kilometrage,
+      int heuresMoteur,
+      String statut,
+      String documentsJson) {
+    this.immatriculation = immatriculation;
+    this.type = type;
+    this.ptacKg = ptacKg;
+    this.chargeUtileKg = chargeUtileKg;
+    this.kilometrage = kilometrage;
+    this.heuresMoteur = heuresMoteur;
+    this.statut = statut;
+    this.documentsJson = documentsJson;
+  }
 }

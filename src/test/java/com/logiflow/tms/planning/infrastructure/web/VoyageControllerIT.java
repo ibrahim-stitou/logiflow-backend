@@ -116,7 +116,7 @@ class VoyageControllerIT extends AbstractIntegrationTest {
     UUID vehiculeId =
         creerId(
             objectMapper.writeValueAsString(
-                new VehiculeRequest("VO-IT-001", TypeVehicule.PORTEUR, 19000, 9000, List.of())),
+                new VehiculeRequest("AB-123-CD", TypeVehicule.PORTEUR, 19000, 9000, List.of())),
             "/api/v1/vehicules");
 
     UUID chauffeurId =
@@ -165,6 +165,11 @@ class VoyageControllerIT extends AbstractIntegrationTest {
                 .content(objectMapper.writeValueAsString(voyageRequest)))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.statut").value("BROUILLON"));
+
+    mockMvc
+        .perform(get("/api/v1/dossiers/{id}", dossierId).with(jwt()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.statut").value("PLANIFIE"));
   }
 
   @Test

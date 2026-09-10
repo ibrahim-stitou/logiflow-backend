@@ -17,6 +17,10 @@ public record LogiflowProperties(@NotNull @Valid Cors cors, @NotNull @Valid Secu
   /** Configuration CORS de l'API exposée au frontend Angular. */
   public record Cors(@NotEmpty List<String> allowedOrigins) {}
 
-  /** Bascule de sécurité permissive réservée au profil local (jamais en dev/prod). */
-  public record Security(boolean permissiveLocalProfile) {}
+  /**
+   * {@code permissiveLocalProfile} : démarre sans JwtDecoder (pas d'IdP). {@code
+   * anonymousLocalAccess} : authentifie un utilisateur fictif pour que le frontend local puisse
+   * appeler l'API. Les deux restent à {@code false} hors profil {@code local}.
+   */
+  public record Security(boolean permissiveLocalProfile, boolean anonymousLocalAccess) {}
 }

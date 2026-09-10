@@ -83,6 +83,22 @@ public class DossierMapper {
         .build();
   }
 
+  public void mettreAJour(DossierEntity entity, DossierTransport dossier) {
+    entity.ecraserEtatMetier(
+        dossier.statut().name(),
+        dossier.typeTransport().name(),
+        dossier.groupable(),
+        dossier.poidsBrutKg(),
+        dossier.volumeM3(),
+        dossier.nbPalettes(),
+        dossier.familleMarchandise(),
+        dossier.carrosserieRequise() != null ? dossier.carrosserieRequise().name() : null,
+        dossier.temperatureRequise(),
+        versJson(dossier.lignesMarchandise()),
+        versJson(dossier.segments()),
+        versJson(dossier.documents()));
+  }
+
   private String versJson(Object valeur) {
     try {
       return objectMapper.writeValueAsString(valeur);
