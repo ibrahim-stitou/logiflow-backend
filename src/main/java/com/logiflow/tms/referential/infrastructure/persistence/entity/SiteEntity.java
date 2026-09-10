@@ -21,12 +21,9 @@ import org.locationtech.jts.geom.Point;
     schema = "referential",
     uniqueConstraints =
         @UniqueConstraint(
-            name = "uq_site_tenant_code",
-            columnNames = {"tenant_id", "code"}))
+            name = "uq_site_code",
+            columnNames = {"code"}))
 public class SiteEntity extends BaseEntity {
-
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
 
   @Column(name = "code", nullable = false, length = 50)
   private String code;
@@ -57,7 +54,6 @@ public class SiteEntity extends BaseEntity {
   @Builder
   public SiteEntity(
       UUID id,
-      UUID tenantId,
       String code,
       String libelle,
       UUID clientId,
@@ -67,7 +63,6 @@ public class SiteEntity extends BaseEntity {
       String contraintesAccesJson,
       boolean actif) {
     definirId(id);
-    this.tenantId = tenantId;
     this.code = code;
     this.libelle = libelle;
     this.clientId = clientId;

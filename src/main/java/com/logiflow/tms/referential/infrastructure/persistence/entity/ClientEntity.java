@@ -20,12 +20,9 @@ import lombok.Getter;
     schema = "referential",
     uniqueConstraints =
         @UniqueConstraint(
-            name = "uq_client_tenant_code",
-            columnNames = {"tenant_id", "code"}))
+            name = "uq_client_code",
+            columnNames = {"code"}))
 public class ClientEntity extends BaseEntity {
-
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
 
   @Column(name = "code", nullable = false, length = 50)
   private String code;
@@ -39,9 +36,8 @@ public class ClientEntity extends BaseEntity {
   protected ClientEntity() {}
 
   @Builder
-  public ClientEntity(UUID id, UUID tenantId, String code, String raisonSociale, boolean actif) {
+  public ClientEntity(UUID id, String code, String raisonSociale, boolean actif) {
     definirId(id);
-    this.tenantId = tenantId;
     this.code = code;
     this.raisonSociale = raisonSociale;
     this.actif = actif;

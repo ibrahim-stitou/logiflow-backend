@@ -12,8 +12,10 @@ import com.logiflow.tms.dossier.domain.model.TypeTransport;
 import com.logiflow.tms.dossier.domain.vo.LigneMarchandise;
 import com.logiflow.tms.dossier.domain.vo.Segment;
 import com.logiflow.tms.dossier.infrastructure.web.dto.DossierRequest;
+import com.logiflow.tms.order.domain.vo.LigneCommande;
 import com.logiflow.tms.order.infrastructure.web.dto.CommandeRequest;
 import com.logiflow.tms.referential.infrastructure.web.dto.ClientRequest;
+import com.logiflow.tms.referential.infrastructure.web.dto.MarchandiseRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
 import com.logiflow.tms.shared.domain.vo.Money;
 import com.logiflow.tms.shared.domain.vo.TimeWindow;
@@ -41,7 +43,23 @@ class DossierControllerIT extends AbstractIntegrationTest {
   @Autowired private MockMvc mockMvc;
   @Autowired private ObjectMapper objectMapper;
 
-  private UUID creerCommandeConfirmee() throws Exception {
+  private UUID creerMarchandiseId(String code) throws Exception {
+    var requete = new MarchandiseRequest(code, "Marchandise de test", null, null, null, true);
+    String reponse =
+        mockMvc
+            .perform(
+                post("/api/v1/marchandises")
+                    .with(jwt())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requete)))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    return UUID.fromString(objectMapper.readTree(reponse).get("id").asText());
+  }
+
+  private UUID creerCommandeConfirmee(UUID marchandiseId) throws Exception {
     var clientRequest = new ClientRequest("CLI-IT-DOSSIER-01", "Client de test dossier");
     String reponseClient =
         mockMvc
@@ -60,7 +78,8 @@ class DossierControllerIT extends AbstractIntegrationTest {
         new CommandeRequest(
             clientId,
             LocalDate.now().plusDays(3),
-            new Money(BigDecimal.valueOf(1500), Currency.getInstance("EUR")));
+            new Money(BigDecimal.valueOf(1500), Currency.getInstance("EUR")),
+            List.of(new LigneCommande(marchandiseId, 500, 2.5, 10)));
     String reponseCommande =
         mockMvc
             .perform(
@@ -82,7 +101,8 @@ class DossierControllerIT extends AbstractIntegrationTest {
 
   @Test
   void creerPuisConsulterUnDossierPourUneCommandeConfirmee() throws Exception {
-    UUID commandeId = creerCommandeConfirmee();
+    UUID marchandiseId = creerMarchandiseId("MARCH-IT-DOSSIER-01");
+    UUID commandeId = creerCommandeConfirmee(marchandiseId);
     Instant maintenant = Instant.now();
 
     var dossierRequest =
@@ -94,7 +114,7 @@ class DossierControllerIT extends AbstractIntegrationTest {
             "Palettes standard",
             null,
             null,
-            List.of(new LigneMarchandise("Palettes de conserves", 500, 2.5, 10, null, null, true)),
+            List.of(new LigneMarchandise(marchandiseId, 500, 2.5, 10, null, null, true)),
             List.of(
                 new Segment(
                     TypeSegment.CHARGEMENT,
@@ -134,6 +154,7 @@ class DossierControllerIT extends AbstractIntegrationTest {
 
   @Test
   void creerUnDossierPourUneCommandeNonConfirmeeEchoueAvec422() throws Exception {
+    UUID marchandiseId = creerMarchandiseId("MARCH-IT-DOSSIER-02");
     var clientRequest = new ClientRequest("CLI-IT-DOSSIER-02", "Client dossier non confirme");
     String reponseClient =
         mockMvc
@@ -152,7 +173,8 @@ class DossierControllerIT extends AbstractIntegrationTest {
         new CommandeRequest(
             clientId,
             LocalDate.now().plusDays(3),
-            new Money(BigDecimal.TEN, Currency.getInstance("EUR")));
+            new Money(BigDecimal.TEN, Currency.getInstance("EUR")),
+            List.of(new LigneCommande(marchandiseId, 500, 2.5, 10)));
     String reponseCommande =
         mockMvc
             .perform(
@@ -176,7 +198,7 @@ class DossierControllerIT extends AbstractIntegrationTest {
             "Palettes",
             null,
             null,
-            List.of(new LigneMarchandise("Palette", 500, 2.5, 10, null, null, true)),
+            List.of(new LigneMarchandise(marchandiseId, 500, 2.5, 10, null, null, true)),
             List.of(
                 new Segment(
                     TypeSegment.CHARGEMENT,

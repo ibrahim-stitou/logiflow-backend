@@ -2,7 +2,6 @@ CREATE SCHEMA IF NOT EXISTS ai;
 
 CREATE TABLE ai.interaction_ia (
     id                  uuid            NOT NULL,
-    tenant_id           uuid            NOT NULL,
     type_interaction    varchar(20)     NOT NULL,
     utilisateur_id      varchar(100),
     succes              boolean         NOT NULL,

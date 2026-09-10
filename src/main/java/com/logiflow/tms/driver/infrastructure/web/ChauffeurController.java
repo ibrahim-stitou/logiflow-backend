@@ -34,7 +34,32 @@ public class ChauffeurController {
         chauffeurService.creerChauffeur(
             new CreerChauffeurCommand(
                 request.matricule(),
-                request.nomComplet(),
+                request.nom(),
+                request.prenom(),
+                request.cin(),
+                request.dateNaissance(),
+                request.lieuNaissance(),
+                request.nationalite(),
+                request.telephone(),
+                request.email(),
+                request.adresse(),
+                request.numeroPermis(),
+                request.categoriePermis(),
+                request.dateObtentionPermis(),
+                request.dateExpirationPermis(),
+                request.numeroPasseport(),
+                request.dateDelivrancePasseport(),
+                request.dateExpirationPasseport(),
+                request.paysDelivrancePasseport(),
+                request.numeroVisa(),
+                request.typeVisa(),
+                request.paysVisa(),
+                request.dateDelivranceVisa(),
+                request.dateExpirationVisa(),
+                request.dateEmbauche(),
+                request.typeContrat(),
+                request.experienceAnnees(),
+                request.specialisation(),
                 request.habilitations(),
                 request.soldeTempsConduiteInitialMinutes()));
     ChauffeurResponse reponse = ChauffeurResponse.depuis(chauffeurService.consulterChauffeur(id));
@@ -61,7 +86,7 @@ public class ChauffeurController {
   public ChauffeurResponse modifier(
       @PathVariable UUID id, @Valid @RequestBody ChauffeurRequest request) {
     chauffeurService.modifierChauffeur(
-        id, new MajChauffeurCommand(request.nomComplet(), request.habilitations()));
+        id, new MajChauffeurCommand(request.nom(), request.prenom(), request.habilitations()));
     return ChauffeurResponse.depuis(chauffeurService.consulterChauffeur(id));
   }
 }

@@ -16,6 +16,7 @@ import com.logiflow.tms.dossier.domain.port.out.SequenceReferenceGenerator;
 import com.logiflow.tms.dossier.domain.vo.LigneMarchandise;
 import com.logiflow.tms.dossier.domain.vo.Segment;
 import com.logiflow.tms.order.api.CommandeApi;
+import com.logiflow.tms.referential.api.MarchandiseApi;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.vo.Reference;
 import com.logiflow.tms.shared.domain.vo.TimeWindow;
@@ -35,13 +36,14 @@ class DossierTransportServiceTest {
   @Mock private DossierTransportRepository dossierRepository;
   @Mock private SequenceReferenceGenerator referenceGenerator;
   @Mock private CommandeApi commandeApi;
+  @Mock private MarchandiseApi marchandiseApi;
 
   private DossierTransportService dossierService;
 
   @BeforeEach
   void setUp() {
     dossierService =
-        new DossierTransportService(dossierRepository, referenceGenerator, commandeApi);
+        new DossierTransportService(dossierRepository, referenceGenerator, commandeApi, marchandiseApi);
   }
 
   private CreerDossierCommand commandeType(UUID commandeId) {
@@ -54,7 +56,7 @@ class DossierTransportServiceTest {
         "Palettes",
         null,
         null,
-        List.of(new LigneMarchandise("Palette", 500, 2.5, 10, null, null, true)),
+        List.of(new LigneMarchandise(UUID.randomUUID(), 500, 2.5, 10, null, null, true)),
         List.of(
             new Segment(
                 TypeSegment.CHARGEMENT,
@@ -86,6 +88,7 @@ class DossierTransportServiceTest {
   void creerDossierSauvegardeUnNouveauDossier() {
     UUID commandeId = UUID.randomUUID();
     when(commandeApi.estConfirmee(commandeId)).thenReturn(true);
+    when(marchandiseApi.estActif(any())).thenReturn(true);
     when(referenceGenerator.generer(anyString(), anyInt()))
         .thenReturn(Reference.generer("DT", 2026, 1));
     when(dossierRepository.sauvegarder(any(DossierTransport.class)))

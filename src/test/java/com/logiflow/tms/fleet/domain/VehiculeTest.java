@@ -6,12 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.logiflow.tms.fleet.domain.model.StatutVehicule;
 import com.logiflow.tms.fleet.domain.model.TypeVehicule;
 import com.logiflow.tms.fleet.domain.model.Vehicule;
-import com.logiflow.tms.fleet.domain.vo.DocumentVehicule;
-import com.logiflow.tms.fleet.domain.vo.DocumentVehicule.TypeDocumentVehicule;
 import com.logiflow.tms.shared.domain.vo.Immatriculation;
 import com.logiflow.tms.shared.domain.vo.Poids;
-import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -22,13 +18,7 @@ class VehiculeTest {
   @Test
   void creerUnVehiculeEstDisponibleParDefaut() {
     Vehicule vehicule =
-        Vehicule.creer(
-            UUID.randomUUID(),
-            IMMAT,
-            TypeVehicule.PORTEUR,
-            new Poids(19000),
-            new Poids(9000),
-            List.of());
+        Vehicule.creer(UUID.randomUUID(), IMMAT, TypeVehicule.PORTEUR, new Poids(19000), new Poids(9000));
 
     assertThat(vehicule.estDisponible()).isTrue();
     assertThat(vehicule.statut()).isEqualTo(StatutVehicule.DISPONIBLE);
@@ -38,13 +28,7 @@ class VehiculeTest {
   @Test
   void relerverUnKilometrageInferieurEchoue() {
     Vehicule vehicule =
-        Vehicule.creer(
-            UUID.randomUUID(),
-            IMMAT,
-            TypeVehicule.PORTEUR,
-            new Poids(19000),
-            new Poids(9000),
-            List.of());
+        Vehicule.creer(UUID.randomUUID(), IMMAT, TypeVehicule.PORTEUR, new Poids(19000), new Poids(9000));
     vehicule.relever(1000, 50);
 
     assertThatThrownBy(() -> vehicule.relever(500, 60))
@@ -54,13 +38,7 @@ class VehiculeTest {
   @Test
   void changerStatutMetAJourLaDisponibilite() {
     Vehicule vehicule =
-        Vehicule.creer(
-            UUID.randomUUID(),
-            IMMAT,
-            TypeVehicule.TRACTEUR,
-            new Poids(19000),
-            new Poids(9000),
-            List.of());
+        Vehicule.creer(UUID.randomUUID(), IMMAT, TypeVehicule.TRACTEUR, new Poids(19000), new Poids(9000));
 
     vehicule.changerStatut(StatutVehicule.EN_MAINTENANCE);
 
@@ -68,34 +46,13 @@ class VehiculeTest {
   }
 
   @Test
-  void unDocumentExpireRendLeVehiculeNonConforme() {
-    DocumentVehicule assuranceExpiree =
-        new DocumentVehicule(TypeDocumentVehicule.ASSURANCE, "ASS-001", LocalDate.of(2020, 1, 1));
+  void sortirDuParcMetLeVehiculeHorsService() {
     Vehicule vehicule =
-        Vehicule.creer(
-            UUID.randomUUID(),
-            IMMAT,
-            TypeVehicule.PORTEUR,
-            new Poids(19000),
-            new Poids(9000),
-            List.of(assuranceExpiree));
+        Vehicule.creer(UUID.randomUUID(), IMMAT, TypeVehicule.TRACTEUR, new Poids(19000), new Poids(9000));
 
-    assertThat(vehicule.documentsValides(LocalDate.of(2026, 1, 1))).isFalse();
-  }
+    vehicule.sortir(java.time.LocalDate.of(2026, 1, 1), "Réforme", 300000, 15000);
 
-  @Test
-  void sansDocumentExpireLeVehiculeEstConforme() {
-    DocumentVehicule assuranceValide =
-        new DocumentVehicule(TypeDocumentVehicule.ASSURANCE, "ASS-002", LocalDate.of(2030, 1, 1));
-    Vehicule vehicule =
-        Vehicule.creer(
-            UUID.randomUUID(),
-            IMMAT,
-            TypeVehicule.PORTEUR,
-            new Poids(19000),
-            new Poids(9000),
-            List.of(assuranceValide));
-
-    assertThat(vehicule.documentsValides(LocalDate.of(2026, 1, 1))).isTrue();
+    assertThat(vehicule.statut()).isEqualTo(StatutVehicule.HORS_SERVICE);
+    assertThat(vehicule.dateSortie()).isEqualTo(java.time.LocalDate.of(2026, 1, 1));
   }
 }

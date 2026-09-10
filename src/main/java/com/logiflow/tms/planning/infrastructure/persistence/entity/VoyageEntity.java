@@ -21,12 +21,9 @@ import lombok.Getter;
     schema = "planning",
     uniqueConstraints =
         @UniqueConstraint(
-            name = "uq_voyage_tenant_reference",
-            columnNames = {"tenant_id", "reference"}))
+            name = "uq_voyage_reference",
+            columnNames = {"reference"}))
 public class VoyageEntity extends BaseEntity {
-
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
 
   @Column(name = "reference", nullable = false, length = 20)
   private String reference;
@@ -69,7 +66,6 @@ public class VoyageEntity extends BaseEntity {
   @Builder
   public VoyageEntity(
       UUID id,
-      UUID tenantId,
       String reference,
       String typeVoyage,
       String portee,
@@ -83,7 +79,6 @@ public class VoyageEntity extends BaseEntity {
       String affectationsJson,
       double tauxRemplissage) {
     definirId(id);
-    this.tenantId = tenantId;
     this.reference = reference;
     this.typeVoyage = typeVoyage;
     this.portee = portee;

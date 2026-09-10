@@ -1,38 +1,20 @@
 package com.logiflow.tms.fleet.infrastructure.persistence.mapper;
 
+import com.logiflow.tms.fleet.domain.model.Energie;
 import com.logiflow.tms.fleet.domain.model.StatutVehicule;
+import com.logiflow.tms.fleet.domain.model.TypeCarrosserie;
 import com.logiflow.tms.fleet.domain.model.TypeVehicule;
 import com.logiflow.tms.fleet.domain.model.Vehicule;
-import com.logiflow.tms.fleet.domain.vo.DocumentVehicule;
 import com.logiflow.tms.fleet.infrastructure.persistence.entity.VehiculeEntity;
 import com.logiflow.tms.shared.domain.vo.Immatriculation;
 import com.logiflow.tms.shared.domain.vo.Poids;
-import java.util.List;
-import java.util.UUID;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import tools.jackson.core.JacksonException;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
+import org.mapstruct.Mapper;
 
-/**
- * Traduit entre le modèle de domaine {@link Vehicule} et l'entité JPA {@link VehiculeEntity}.
- *
- * <p>Écrit à la main plutôt que via MapStruct, pour les mêmes raisons que {@code SiteMapper} :
- * fabriques statiques du domaine et sérialisation JSON des documents.
- */
-@Component
-@RequiredArgsConstructor
-public class VehiculeMapper {
+/** Traduit entre le modèle de domaine {@link Vehicule} et l'entité JPA {@link VehiculeEntity}. */
+@Mapper(componentModel = "spring")
+public interface VehiculeMapper {
 
-  // TODO vérifier que le tenant courant sera lu depuis le contexte de sécurité une fois le module
-  // iam implémenté ; en attendant, un tenant par défaut est utilisé (application mono-tenant).
-  private static final UUID TENANT_PAR_DEFAUT =
-      UUID.fromString("00000000-0000-0000-0000-000000000000");
-
-  private final ObjectMapper objectMapper;
-
-  public Vehicule versDomaine(VehiculeEntity entity) {
+  default Vehicule versDomaine(VehiculeEntity entity) {
     if (entity == null) {
       return null;
     }
@@ -40,60 +22,72 @@ public class VehiculeMapper {
         entity.getId(),
         new Immatriculation(entity.getImmatriculation()),
         TypeVehicule.valueOf(entity.getType()),
+        entity.getNumeroParc(),
+        entity.getVin(),
+        entity.getMarque(),
+        entity.getModele(),
+        entity.getAnneeMiseEnCirculation(),
+        entity.getEnergie() != null ? Energie.valueOf(entity.getEnergie()) : null,
         new Poids(entity.getPtacKg()),
+        entity.getPoidsVideKg() != null ? new Poids(entity.getPoidsVideKg()) : null,
         new Poids(entity.getChargeUtileKg()),
+        entity.getLongueurM(),
+        entity.getLargeurM(),
+        entity.getHauteurM(),
+        entity.getVolumeUtileM3(),
+        entity.getNbPositionsPalettes(),
+        entity.getTypeCarrosserie() != null ? TypeCarrosserie.valueOf(entity.getTypeCarrosserie()) : null,
+        entity.isGroupeFroid(),
+        entity.getTemperatureMin(),
+        entity.getTemperatureMax(),
         entity.getKilometrage(),
         entity.getHeuresMoteur(),
         StatutVehicule.valueOf(entity.getStatut()),
-        versDocuments(entity.getDocumentsJson()));
+        entity.getDatePremiereMiseCirculation(),
+        entity.getDateAcquisition(),
+        entity.getDateMiseEnService(),
+        entity.getDateSortie(),
+        entity.getMotifSortie(),
+        entity.getKilometrageSortie(),
+        entity.getHeuresMoteurSortie());
   }
 
-  public VehiculeEntity versEntite(Vehicule vehicule) {
+  default VehiculeEntity versEntite(Vehicule vehicule) {
     if (vehicule == null) {
       return null;
     }
     return VehiculeEntity.builder()
         .id(vehicule.id())
-        .tenantId(TENANT_PAR_DEFAUT)
         .immatriculation(vehicule.immatriculation().valeur())
         .type(vehicule.type().name())
+        .numeroParc(vehicule.numeroParc())
+        .vin(vehicule.vin())
+        .marque(vehicule.marque())
+        .modele(vehicule.modele())
+        .anneeMiseEnCirculation(vehicule.anneeMiseEnCirculation())
+        .energie(vehicule.energie() != null ? vehicule.energie().name() : null)
         .ptacKg(vehicule.ptac().kg())
+        .poidsVideKg(vehicule.poidsVide() != null ? vehicule.poidsVide().kg() : null)
         .chargeUtileKg(vehicule.chargeUtile().kg())
+        .longueurM(vehicule.longueurM())
+        .largeurM(vehicule.largeurM())
+        .hauteurM(vehicule.hauteurM())
+        .volumeUtileM3(vehicule.volumeUtileM3())
+        .nbPositionsPalettes(vehicule.nbPositionsPalettes())
+        .typeCarrosserie(vehicule.typeCarrosserie() != null ? vehicule.typeCarrosserie().name() : null)
+        .groupeFroid(vehicule.groupeFroid())
+        .temperatureMin(vehicule.temperatureMin())
+        .temperatureMax(vehicule.temperatureMax())
         .kilometrage(vehicule.kilometrage())
         .heuresMoteur(vehicule.heuresMoteur())
         .statut(vehicule.statut().name())
-        .documentsJson(versJson(vehicule.documents()))
+        .datePremiereMiseCirculation(vehicule.datePremiereMiseCirculation())
+        .dateAcquisition(vehicule.dateAcquisition())
+        .dateMiseEnService(vehicule.dateMiseEnService())
+        .dateSortie(vehicule.dateSortie())
+        .motifSortie(vehicule.motifSortie())
+        .kilometrageSortie(vehicule.kilometrageSortie())
+        .heuresMoteurSortie(vehicule.heuresMoteurSortie())
         .build();
-  }
-
-  public void mettreAJour(VehiculeEntity entity, Vehicule vehicule) {
-    entity.ecraserEtatMetier(
-        vehicule.immatriculation().valeur(),
-        vehicule.type().name(),
-        vehicule.ptac().kg(),
-        vehicule.chargeUtile().kg(),
-        vehicule.kilometrage(),
-        vehicule.heuresMoteur(),
-        vehicule.statut().name(),
-        versJson(vehicule.documents()));
-  }
-
-  private String versJson(Object valeur) {
-    try {
-      return objectMapper.writeValueAsString(valeur);
-    } catch (JacksonException e) {
-      throw new IllegalStateException("Échec de sérialisation JSON en persistance", e);
-    }
-  }
-
-  private List<DocumentVehicule> versDocuments(String json) {
-    if (json == null || json.isBlank()) {
-      return List.of();
-    }
-    try {
-      return objectMapper.readValue(json, new TypeReference<List<DocumentVehicule>>() {});
-    } catch (JacksonException e) {
-      throw new IllegalStateException("Échec de désérialisation des documents véhicule", e);
-    }
   }
 }

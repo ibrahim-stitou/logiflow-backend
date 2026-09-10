@@ -2,7 +2,6 @@ package com.logiflow.tms.referential.infrastructure.persistence.mapper;
 
 import com.logiflow.tms.referential.domain.model.Client;
 import com.logiflow.tms.referential.infrastructure.persistence.entity.ClientEntity;
-import java.util.UUID;
 import org.mapstruct.Mapper;
 
 /**
@@ -14,10 +13,6 @@ import org.mapstruct.Mapper;
  */
 @Mapper(componentModel = "spring")
 public interface ClientMapper {
-
-  // TODO vérifier que le tenant courant sera lu depuis le contexte de sécurité une fois le module
-  // iam implémenté ; en attendant, un tenant par défaut est utilisé (application mono-tenant).
-  UUID TENANT_PAR_DEFAUT = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   default Client versDomaine(ClientEntity entity) {
     if (entity == null) {
@@ -33,7 +28,6 @@ public interface ClientMapper {
     }
     return ClientEntity.builder()
         .id(client.id())
-        .tenantId(TENANT_PAR_DEFAUT)
         .code(client.code())
         .raisonSociale(client.raisonSociale())
         .actif(client.estActif())

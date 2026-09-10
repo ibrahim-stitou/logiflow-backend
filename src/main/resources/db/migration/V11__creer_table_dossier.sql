@@ -1,6 +1,5 @@
 CREATE TABLE dossier.dossier_transport (
     id                          uuid            NOT NULL,
-    tenant_id                   uuid            NOT NULL,
     reference                   varchar(20)     NOT NULL,
     commande_id                 uuid            NOT NULL,
     statut                      varchar(20)     NOT NULL,
@@ -21,7 +20,7 @@ CREATE TABLE dossier.dossier_transport (
     updated_by                  varchar(100)    NOT NULL,
     version                     bigint          NOT NULL DEFAULT 0,
     CONSTRAINT pk_dossier_transport PRIMARY KEY (id),
-    CONSTRAINT uq_dossier_tenant_reference UNIQUE (tenant_id, reference)
+    CONSTRAINT uq_dossier_reference UNIQUE (reference)
 );
 
 CREATE INDEX idx_dossier_commande ON dossier.dossier_transport (commande_id);

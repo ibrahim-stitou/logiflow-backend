@@ -44,7 +44,8 @@ public class DossierController {
                 request.lignesMarchandise(),
                 request.segments(),
                 request.documents() != null ? request.documents() : List.of()));
-    DossierResponse reponse = DossierResponse.depuis(dossierService.consulterDossier(id));
+    var dossier = dossierService.consulterDossier(id);
+    DossierResponse reponse = DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier));
     URI location =
         ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(id).toUri();
     return ResponseEntity.created(location).body(reponse);
@@ -52,7 +53,8 @@ public class DossierController {
 
   @GetMapping("/api/v1/dossiers/{id}")
   public DossierResponse consulter(@PathVariable UUID id) {
-    return DossierResponse.depuis(dossierService.consulterDossier(id));
+    var dossier = dossierService.consulterDossier(id);
+    return DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier));
   }
 
   @GetMapping("/api/v1/dossiers")
@@ -66,12 +68,14 @@ public class DossierController {
           dossiers.stream().map(DossierResponse::depuis).toList());
     }
     var resultats = dossierService.listerDossiers(new PageRequest(page, size));
-    return PageResponse.of(resultats, DossierResponse::depuis);
+    return PageResponse.of(
+        resultats, dossier -> DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier)));
   }
 
   @PutMapping("/api/v1/dossiers/{id}/statut")
   public DossierResponse changerStatut(@PathVariable UUID id, @RequestParam StatutDossier valeur) {
     dossierService.changerStatut(id, valeur);
-    return DossierResponse.depuis(dossierService.consulterDossier(id));
+    var dossier = dossierService.consulterDossier(id);
+    return DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier));
   }
 }

@@ -23,12 +23,9 @@ import lombok.Getter;
     schema = "commande",
     uniqueConstraints =
         @UniqueConstraint(
-            name = "uq_commande_tenant_reference",
-            columnNames = {"tenant_id", "reference"}))
+            name = "uq_commande_reference",
+            columnNames = {"reference"}))
 public class CommandeEntity extends BaseEntity {
-
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
 
   @Column(name = "reference", nullable = false, length = 20)
   private String reference;
@@ -53,7 +50,6 @@ public class CommandeEntity extends BaseEntity {
   @Builder
   public CommandeEntity(
       UUID id,
-      UUID tenantId,
       String reference,
       UUID clientId,
       String statut,
@@ -61,7 +57,6 @@ public class CommandeEntity extends BaseEntity {
       BigDecimal prixMontant,
       String prixDevise) {
     definirId(id);
-    this.tenantId = tenantId;
     this.reference = reference;
     this.clientId = clientId;
     this.statut = statut;

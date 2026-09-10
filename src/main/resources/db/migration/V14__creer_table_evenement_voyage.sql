@@ -1,6 +1,5 @@
 CREATE TABLE tracking.evenement_voyage (
     id                  uuid            NOT NULL,
-    tenant_id           uuid            NOT NULL,
     voyage_id           uuid            NOT NULL,
     type_evenement      varchar(30)     NOT NULL,
     horodatage          timestamptz     NOT NULL,

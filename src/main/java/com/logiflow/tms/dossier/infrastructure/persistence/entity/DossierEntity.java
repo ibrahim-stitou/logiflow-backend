@@ -20,12 +20,9 @@ import lombok.Getter;
     schema = "dossier",
     uniqueConstraints =
         @UniqueConstraint(
-            name = "uq_dossier_tenant_reference",
-            columnNames = {"tenant_id", "reference"}))
+            name = "uq_dossier_reference",
+            columnNames = {"reference"}))
 public class DossierEntity extends BaseEntity {
-
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
 
   @Column(name = "reference", nullable = false, length = 20)
   private String reference;
@@ -60,9 +57,6 @@ public class DossierEntity extends BaseEntity {
   @Column(name = "temperature_requise")
   private Double temperatureRequise;
 
-  @Column(name = "lignes_marchandise_json", nullable = false, columnDefinition = "text")
-  private String lignesMarchandiseJson;
-
   @Column(name = "segments_json", nullable = false, columnDefinition = "text")
   private String segmentsJson;
 
@@ -74,7 +68,6 @@ public class DossierEntity extends BaseEntity {
   @Builder
   public DossierEntity(
       UUID id,
-      UUID tenantId,
       String reference,
       UUID commandeId,
       String statut,
@@ -86,11 +79,9 @@ public class DossierEntity extends BaseEntity {
       String familleMarchandise,
       String carrosserieRequise,
       Double temperatureRequise,
-      String lignesMarchandiseJson,
       String segmentsJson,
       String documentsJson) {
     definirId(id);
-    this.tenantId = tenantId;
     this.reference = reference;
     this.commandeId = commandeId;
     this.statut = statut;
@@ -102,7 +93,6 @@ public class DossierEntity extends BaseEntity {
     this.familleMarchandise = familleMarchandise;
     this.carrosserieRequise = carrosserieRequise;
     this.temperatureRequise = temperatureRequise;
-    this.lignesMarchandiseJson = lignesMarchandiseJson;
     this.segmentsJson = segmentsJson;
     this.documentsJson = documentsJson;
   }

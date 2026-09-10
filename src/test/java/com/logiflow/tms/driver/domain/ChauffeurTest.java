@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.logiflow.tms.driver.domain.model.Chauffeur;
-import com.logiflow.tms.driver.domain.model.StatutChauffeur;
+import com.logiflow.tms.driver.domain.model.DisponibiliteChauffeur;
 import com.logiflow.tms.driver.domain.vo.Habilitation;
 import com.logiflow.tms.driver.domain.vo.Habilitation.TypeHabilitation;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
@@ -20,7 +20,7 @@ class ChauffeurTest {
   void creerUnChauffeurEstDisponibleParDefaut() {
     Chauffeur chauffeur =
         Chauffeur.creer(
-            UUID.randomUUID(), "CH-001", "Jean Dupont", List.of(), Duration.ofHours(35));
+            UUID.randomUUID(), "CH-001", "Dupont", "Jean", List.of(), Duration.ofHours(35));
 
     assertThat(chauffeur.estDisponible()).isTrue();
     assertThat(chauffeur.matricule()).isEqualTo("CH-001");
@@ -29,7 +29,8 @@ class ChauffeurTest {
   @Test
   void consommerPlusDeTempsQueLeSoldeDisponibleEchoue() {
     Chauffeur chauffeur =
-        Chauffeur.creer(UUID.randomUUID(), "CH-001", "Jean Dupont", List.of(), Duration.ofHours(2));
+        Chauffeur.creer(
+            UUID.randomUUID(), "CH-001", "Dupont", "Jean", List.of(), Duration.ofHours(2));
 
     assertThatThrownBy(() -> chauffeur.consommerTempsConduite(Duration.ofHours(3)))
         .isInstanceOf(BusinessException.class);
@@ -39,7 +40,7 @@ class ChauffeurTest {
   void consommerPuisCrediterAjusteLeSolde() {
     Chauffeur chauffeur =
         Chauffeur.creer(
-            UUID.randomUUID(), "CH-001", "Jean Dupont", List.of(), Duration.ofHours(10));
+            UUID.randomUUID(), "CH-001", "Dupont", "Jean", List.of(), Duration.ofHours(10));
 
     chauffeur.consommerTempsConduite(Duration.ofHours(4));
     assertThat(chauffeur.soldeTempsConduite()).isEqualTo(Duration.ofHours(6));
@@ -58,7 +59,7 @@ class ChauffeurTest {
             LocalDate.of(2027, 1, 1));
     Chauffeur chauffeur =
         Chauffeur.creer(
-            UUID.randomUUID(), "CH-001", "Jean Dupont", List.of(adr), Duration.ofHours(10));
+            UUID.randomUUID(), "CH-001", "Dupont", "Jean", List.of(adr), Duration.ofHours(10));
 
     assertThat(chauffeur.possedeHabilitation(TypeHabilitation.ADR_BASE, LocalDate.of(2026, 1, 1)))
         .isTrue();
@@ -70,11 +71,11 @@ class ChauffeurTest {
   }
 
   @Test
-  void changerStatutMetAJourLaDisponibilite() {
+  void changerDisponibiliteMetAJourLaDisponibilite() {
     Chauffeur chauffeur =
-        Chauffeur.creer(UUID.randomUUID(), "CH-001", "Jean Dupont", List.of(), Duration.ZERO);
+        Chauffeur.creer(UUID.randomUUID(), "CH-001", "Dupont", "Jean", List.of(), Duration.ZERO);
 
-    chauffeur.changerStatut(StatutChauffeur.EN_CONGE);
+    chauffeur.changerDisponibilite(DisponibiliteChauffeur.EN_CONGE);
 
     assertThat(chauffeur.estDisponible()).isFalse();
   }

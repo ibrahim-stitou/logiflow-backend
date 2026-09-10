@@ -1,6 +1,5 @@
 CREATE TABLE commande.commande (
     id               uuid            NOT NULL,
-    tenant_id        uuid            NOT NULL,
     reference        varchar(20)     NOT NULL,
     client_id        uuid            NOT NULL,
     statut           varchar(20)     NOT NULL,
@@ -13,7 +12,7 @@ CREATE TABLE commande.commande (
     updated_by       varchar(100)    NOT NULL,
     version          bigint          NOT NULL DEFAULT 0,
     CONSTRAINT pk_commande PRIMARY KEY (id),
-    CONSTRAINT uq_commande_tenant_reference UNIQUE (tenant_id, reference),
+    CONSTRAINT uq_commande_reference UNIQUE (reference),
     CONSTRAINT ck_commande_prix_positif CHECK (prix_montant >= 0)
 );
 

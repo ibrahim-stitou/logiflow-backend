@@ -187,8 +187,15 @@ public final class DossierTransport {
     return new Capacite((int) Math.round(poidsBrutKg), volumeM3, nbPalettes);
   }
 
-  public boolean contientAdr() {
-    return lignesMarchandise.stream().anyMatch(LigneMarchandise::estMatiereDangereuse);
+  /**
+   * Indique si le dossier contient une matière dangereuse, en résolvant pour chaque ligne sans
+   * surcharge le classement par défaut de sa marchandise via le prédicat fourni (module {@code
+   * referential}).
+   */
+  public boolean contientAdr(java.util.function.Predicate<UUID> marchandiseEstDangereuse) {
+    return lignesMarchandise.stream()
+        .anyMatch(
+            ligne -> ligne.estMatiereDangereuse(marchandiseEstDangereuse.test(ligne.marchandiseId())));
   }
 
   /**

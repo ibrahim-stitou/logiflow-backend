@@ -3,13 +3,10 @@ package com.logiflow.tms.maintenance.infrastructure.persistence.mapper;
 import com.logiflow.tms.maintenance.domain.model.ScoreSante;
 import com.logiflow.tms.maintenance.domain.model.StatutSante;
 import com.logiflow.tms.maintenance.infrastructure.persistence.entity.ScoreSanteEntity;
-import java.util.UUID;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface ScoreSanteMapper {
-
-  UUID TENANT_PAR_DEFAUT = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
   default ScoreSante versDomaine(ScoreSanteEntity entity) {
     if (entity == null) {
@@ -32,7 +29,6 @@ public interface ScoreSanteMapper {
     }
     return ScoreSanteEntity.builder()
         .id(scoreSante.id())
-        .tenantId(TENANT_PAR_DEFAUT)
         .vehiculeId(scoreSante.vehiculeId())
         .calculeLe(scoreSante.calculeLe())
         .score(scoreSante.score())

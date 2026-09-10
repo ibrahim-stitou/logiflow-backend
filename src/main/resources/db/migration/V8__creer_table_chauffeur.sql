@@ -1,9 +1,34 @@
 CREATE TABLE driver.chauffeur (
     id                              uuid            NOT NULL,
-    tenant_id                       uuid            NOT NULL,
     matricule                       varchar(30)     NOT NULL,
-    nom_complet                     varchar(255)    NOT NULL,
-    statut                          varchar(20)     NOT NULL,
+    nom                             varchar(100)    NOT NULL,
+    prenom                          varchar(100)    NOT NULL,
+    cin                             varchar(30),
+    date_naissance                  date,
+    lieu_naissance                  varchar(100),
+    nationalite                     varchar(50),
+    telephone                       varchar(30),
+    email                           varchar(150),
+    adresse                         text,
+    numero_permis                   varchar(50),
+    categorie_permis                varchar(50),
+    date_obtention_permis           date,
+    date_expiration_permis          date,
+    numero_passeport                varchar(50),
+    date_delivrance_passeport       date,
+    date_expiration_passeport       date,
+    pays_delivrance_passeport       varchar(100),
+    numero_visa                     varchar(50),
+    type_visa                       varchar(50),
+    pays_visa                       varchar(100),
+    date_delivrance_visa            date,
+    date_expiration_visa            date,
+    date_embauche                   date,
+    type_contrat                    varchar(30),
+    experience_annees               integer,
+    specialisation                  varchar(100),
+    statut                          varchar(30)     NOT NULL,
+    disponibilite                   varchar(30)     NOT NULL,
     solde_temps_conduite_minutes    bigint          NOT NULL DEFAULT 0,
     habilitations_json              text,
     created_at                      timestamptz     NOT NULL,
@@ -12,9 +37,11 @@ CREATE TABLE driver.chauffeur (
     updated_by                      varchar(100)    NOT NULL,
     version                         bigint          NOT NULL DEFAULT 0,
     CONSTRAINT pk_chauffeur PRIMARY KEY (id),
-    CONSTRAINT uq_chauffeur_tenant_matricule UNIQUE (tenant_id, matricule),
+    CONSTRAINT uq_chauffeur_matricule UNIQUE (matricule),
     CONSTRAINT ck_chauffeur_solde_positif CHECK (solde_temps_conduite_minutes >= 0)
 );
 
 CREATE INDEX idx_chauffeur_statut ON driver.chauffeur (statut);
-CREATE INDEX idx_chauffeur_nom_complet_trgm ON driver.chauffeur USING gin (nom_complet gin_trgm_ops);
+CREATE INDEX idx_chauffeur_disponibilite ON driver.chauffeur (disponibilite);
+CREATE INDEX idx_chauffeur_nom_trgm ON driver.chauffeur USING gin (nom gin_trgm_ops);
+CREATE INDEX idx_chauffeur_prenom_trgm ON driver.chauffeur USING gin (prenom gin_trgm_ops);

@@ -23,9 +23,16 @@ class ChauffeurControllerIT extends AbstractIntegrationTest {
   @Autowired private MockMvc mockMvc;
   @Autowired private ObjectMapper objectMapper;
 
+  private static ChauffeurRequest requeteMinimale(String matricule) {
+    return new ChauffeurRequest(
+        matricule, "Dupont", "Jean", null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+        List.of(), 2100);
+  }
+
   @Test
   void creerPuisConsulterUnChauffeur() throws Exception {
-    var requete = new ChauffeurRequest("CH-IT-01", "Jean Dupont", List.of(), 2100);
+    var requete = requeteMinimale("CH-IT-01");
 
     String reponseCreation =
         mockMvc
@@ -45,14 +52,15 @@ class ChauffeurControllerIT extends AbstractIntegrationTest {
     mockMvc
         .perform(get("/api/v1/chauffeurs/{id}", id).with(jwt()))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.statut").value("DISPONIBLE"));
+        .andExpect(jsonPath("$.statut").value("ACTIF"))
+        .andExpect(jsonPath("$.disponibilite").value("DISPONIBLE"));
   }
 
   @Test
   void creerUnChauffeurAvecUnMatriculeVideRenvoie400() throws Exception {
     String corpsInvalide =
         """
-        {"matricule": "", "nomComplet": "", "habilitations": [], "soldeTempsConduiteInitialMinutes": 0}
+        {"matricule": "", "nom": "Dupont", "prenom": "Jean", "habilitations": [], "soldeTempsConduiteInitialMinutes": 0}
         """;
 
     mockMvc

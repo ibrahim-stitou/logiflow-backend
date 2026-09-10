@@ -1,6 +1,5 @@
 CREATE TABLE referential.site (
     id                       uuid                     NOT NULL,
-    tenant_id                uuid                     NOT NULL,
     code                     varchar(50)              NOT NULL,
     libelle                  varchar(255)             NOT NULL,
     client_id                uuid,
@@ -15,7 +14,7 @@ CREATE TABLE referential.site (
     updated_by               varchar(100)             NOT NULL,
     version                  bigint                   NOT NULL DEFAULT 0,
     CONSTRAINT pk_site PRIMARY KEY (id),
-    CONSTRAINT uq_site_tenant_code UNIQUE (tenant_id, code),
+    CONSTRAINT uq_site_code UNIQUE (code),
     CONSTRAINT fk_site_client FOREIGN KEY (client_id)
         REFERENCES referential.client (id) ON DELETE SET NULL
 );

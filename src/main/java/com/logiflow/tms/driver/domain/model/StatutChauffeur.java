@@ -1,10 +1,8 @@
 package com.logiflow.tms.driver.domain.model;
 
-/** Cycle de vie d'un chauffeur. */
+/** Statut administratif du chauffeur (situation d'emploi), distinct de sa disponibilité opérationnelle ({@link DisponibiliteChauffeur}). */
 public enum StatutChauffeur {
-  DISPONIBLE,
-  EN_VOYAGE,
-  EN_REPOS,
-  EN_CONGE,
-  INDISPONIBLE
+  ACTIF,
+  INACTIF,
+  SUSPENDU
 }

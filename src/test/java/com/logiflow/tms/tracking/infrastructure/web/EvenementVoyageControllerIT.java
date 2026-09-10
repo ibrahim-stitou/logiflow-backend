@@ -15,6 +15,7 @@ import com.logiflow.tms.dossier.infrastructure.web.dto.DossierRequest;
 import com.logiflow.tms.driver.infrastructure.web.dto.ChauffeurRequest;
 import com.logiflow.tms.fleet.domain.model.TypeVehicule;
 import com.logiflow.tms.fleet.infrastructure.web.dto.VehiculeRequest;
+import com.logiflow.tms.order.domain.vo.LigneCommande;
 import com.logiflow.tms.order.infrastructure.web.dto.CommandeRequest;
 import com.logiflow.tms.planning.domain.model.Portee;
 import com.logiflow.tms.planning.domain.model.RoleChauffeur;
@@ -25,6 +26,7 @@ import com.logiflow.tms.planning.domain.vo.Etape;
 import com.logiflow.tms.planning.domain.vo.Trajet;
 import com.logiflow.tms.planning.infrastructure.web.dto.VoyageRequest;
 import com.logiflow.tms.referential.infrastructure.web.dto.ClientRequest;
+import com.logiflow.tms.referential.infrastructure.web.dto.MarchandiseRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
 import com.logiflow.tms.shared.domain.vo.GeoPoint;
 import com.logiflow.tms.shared.domain.vo.Money;
@@ -71,13 +73,19 @@ class EvenementVoyageControllerIT extends AbstractIntegrationTest {
         creerId(
             objectMapper.writeValueAsString(new ClientRequest("CLI-IT-TRACK", "Client tracking")),
             "/api/v1/clients");
+    UUID marchandiseId =
+        creerId(
+            objectMapper.writeValueAsString(
+                new MarchandiseRequest("MARCH-IT-TRACK", "Marchandise tracking", null, null, null, true)),
+            "/api/v1/marchandises");
     UUID commandeId =
         creerId(
             objectMapper.writeValueAsString(
                 new CommandeRequest(
                     clientId,
                     LocalDate.now().plusDays(3),
-                    new Money(BigDecimal.valueOf(1800), Currency.getInstance("EUR")))),
+                    new Money(BigDecimal.valueOf(1800), Currency.getInstance("EUR")),
+                    List.of(new LigneCommande(marchandiseId, 500, 2.5, 10)))),
             "/api/v1/commandes");
     mockMvc
         .perform(put("/api/v1/commandes/{id}/confirmer", commandeId).with(jwt()))
@@ -95,7 +103,7 @@ class EvenementVoyageControllerIT extends AbstractIntegrationTest {
                     "Palettes",
                     null,
                     null,
-                    List.of(new LigneMarchandise("Palette", 500, 2.5, 10, null, null, true)),
+                    List.of(new LigneMarchandise(marchandiseId, 500, 2.5, 10, null, null, true)),
                     List.of(
                         new Segment(
                             TypeSegment.CHARGEMENT,
@@ -117,12 +125,18 @@ class EvenementVoyageControllerIT extends AbstractIntegrationTest {
     UUID vehiculeId =
         creerId(
             objectMapper.writeValueAsString(
-                new VehiculeRequest("TR-IT-001", TypeVehicule.PORTEUR, 19000, 9000, List.of())),
+                new VehiculeRequest(
+                    "TR-IT-001", TypeVehicule.PORTEUR, null, null, null, null, null, null, 19000,
+                    null, 9000, null, null, null, null, null, null, false, null, null, null, null,
+                    null)),
             "/api/v1/vehicules");
     UUID chauffeurId =
         creerId(
             objectMapper.writeValueAsString(
-                new ChauffeurRequest("CH-IT-TRACK", "Jean Tracking", List.of(), 2100)),
+                new ChauffeurRequest(
+                    "CH-IT-TRACK", "Tracking", "Jean", null, null, null, null, null, null, null,
+                    null, null, null, null, null, null, null, null, null, null, null, null, null,
+                    null, null, null, null, List.of(), 2100)),
             "/api/v1/chauffeurs");
 
     Trajet trajet =

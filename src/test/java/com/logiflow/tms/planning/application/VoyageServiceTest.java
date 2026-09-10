@@ -107,7 +107,8 @@ class VoyageServiceTest {
         .when(chauffeurApi.consulter(chauffeurId))
         .thenReturn(
             Optional.of(
-                new ChauffeurSummary(chauffeurId, "CH-001", "Jean Dupont", "DISPONIBLE", 600)));
+                new ChauffeurSummary(
+                    chauffeurId, "CH-001", "Dupont", "Jean", "ACTIF", "DISPONIBLE", 600)));
 
     assertThatThrownBy(
             () -> voyageService.creerVoyage(commandeType(dossierId, vehiculeId, chauffeurId)))
@@ -131,7 +132,8 @@ class VoyageServiceTest {
     when(chauffeurApi.consulter(chauffeurId))
         .thenReturn(
             Optional.of(
-                new ChauffeurSummary(chauffeurId, "CH-001", "Jean Dupont", "DISPONIBLE", 600)));
+                new ChauffeurSummary(
+                    chauffeurId, "CH-001", "Dupont", "Jean", "ACTIF", "DISPONIBLE", 600)));
     when(referenceGenerator.generer(anyString(), anyInt()))
         .thenReturn(Reference.generer("VOY", 2026, 1));
     when(voyageRepository.sauvegarder(any(Voyage.class)))

@@ -9,6 +9,7 @@ import com.logiflow.tms.dossier.domain.port.out.DossierTransportRepository;
 import com.logiflow.tms.dossier.domain.port.out.SequenceReferenceGenerator;
 import com.logiflow.tms.dossier.domain.vo.LigneMarchandise;
 import com.logiflow.tms.order.api.CommandeApi;
+import com.logiflow.tms.referential.api.MarchandiseApi;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
@@ -31,6 +32,7 @@ public class DossierTransportService implements DossierApi {
   private final DossierTransportRepository dossierRepository;
   private final SequenceReferenceGenerator referenceGenerator;
   private final CommandeApi commandeApi;
+  private final MarchandiseApi marchandiseApi;
 
   @Transactional
   public UUID creerDossier(CreerDossierCommand command) {
@@ -39,6 +41,12 @@ public class DossierTransportService implements DossierApi {
           "Seule une commande confirmée peut générer un dossier de transport (commande "
               + command.commandeId()
               + ")");
+    }
+    for (LigneMarchandise ligne : command.lignesMarchandise()) {
+      if (!marchandiseApi.estActif(ligne.marchandiseId())) {
+        throw new NotFoundException(
+            "Aucune marchandise active trouvée pour l'identifiant " + ligne.marchandiseId());
+      }
     }
 
     double poidsBrutKg =
@@ -130,6 +138,12 @@ public class DossierTransportService implements DossierApi {
     return dossierRepository.parId(dossierId).map(this::versResume);
   }
 
+  /** Résout la conformité ADR du dossier via le catalogue référentiel des marchandises. */
+  @Transactional(readOnly = true)
+  public boolean dossierContientAdr(DossierTransport dossier) {
+    return dossier.contientAdr(marchandiseApi::estDangereuse);
+  }
+
   private DossierSummary versResume(DossierTransport dossier) {
     return new DossierSummary(
         dossier.id(),
@@ -139,7 +153,7 @@ public class DossierTransportService implements DossierApi {
         dossier.poidsBrutKg(),
         dossier.volumeM3(),
         dossier.nbPalettes(),
-        dossier.contientAdr());
+        dossierContientAdr(dossier));
   }
 
   private DossierTransport trouverOuEchouer(UUID id) {

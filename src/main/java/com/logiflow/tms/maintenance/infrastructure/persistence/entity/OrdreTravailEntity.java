@@ -15,9 +15,6 @@ import lombok.Getter;
 @Table(name = "ordre_travail", schema = "maintenance")
 public class OrdreTravailEntity extends BaseEntity {
 
-  @Column(name = "tenant_id", nullable = false)
-  private UUID tenantId;
-
   @Column(name = "vehicule_id", nullable = false)
   private UUID vehiculeId;
 
@@ -44,7 +41,6 @@ public class OrdreTravailEntity extends BaseEntity {
   @Builder
   public OrdreTravailEntity(
       UUID id,
-      UUID tenantId,
       UUID vehiculeId,
       String typeIntervention,
       String statut,
@@ -53,7 +49,6 @@ public class OrdreTravailEntity extends BaseEntity {
       BigDecimal coutMontant,
       String coutDevise) {
     definirId(id);
-    this.tenantId = tenantId;
     this.vehiculeId = vehiculeId;
     this.typeIntervention = typeIntervention;
     this.statut = statut;
