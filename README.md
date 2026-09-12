@@ -57,8 +57,10 @@ de branches, definition of done.
 ## Documentation
 
 - [docs/architecture.md](docs/architecture.md) — architecture modulaire + hexagonale, schéma des dépendances
+- [docs/security.md](docs/security.md) — sécurité Spring Security, OAuth2/OIDC (Keycloak) et MFA
 - [docs/conventions.md](docs/conventions.md) — conventions de code et de collaboration
 - [docs/adr/0001-monolithe-modulaire.md](docs/adr/0001-monolithe-modulaire.md) — décision d'architecture
+- [docs/adr/0002-connexion-mfa-keycloak.md](docs/adr/0002-connexion-mfa-keycloak.md) — décision MFA
 
 ## Commandes utiles (`Makefile`)
 

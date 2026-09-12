@@ -17,6 +17,30 @@ public record LogiflowProperties(@NotNull @Valid Cors cors, @NotNull @Valid Secu
   /** Configuration CORS de l'API exposée au frontend Angular. */
   public record Cors(@NotEmpty List<String> allowedOrigins) {}
 
-  /** Bascule de sécurité permissive réservée au profil local (jamais en dev/prod). */
-  public record Security(boolean permissiveLocalProfile) {}
+  /**
+   * Bascule de sécurité permissive réservée au profil local (jamais en dev/prod) et exigence MFA.
+   */
+  public record Security(boolean permissiveLocalProfile, Mfa mfa) {
+
+    public Security {
+      if (mfa == null) {
+        mfa = new Mfa(false, null, null);
+      }
+    }
+
+    /**
+     * Exigence d'une authentification multi-facteurs (MFA) sur les jetons JWT des IdP (Keycloak).
+     */
+    public record Mfa(boolean required, List<String> amrMethods, List<String> acrValues) {
+
+      public Mfa {
+        if (amrMethods == null || amrMethods.isEmpty()) {
+          amrMethods = List.of("mfa", "otp", "totp", "webauthn");
+        } else {
+          amrMethods = List.copyOf(amrMethods);
+        }
+        acrValues = acrValues == null ? List.of() : List.copyOf(acrValues);
+      }
+    }
+  }
 }
