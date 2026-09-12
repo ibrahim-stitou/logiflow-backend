@@ -46,8 +46,10 @@ public class CommandeController {
 
   @GetMapping("/api/v1/commandes")
   public PageResponse<CommandeResponse> lister(
-      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
-    var resultats = commandeService.listerCommandes(new PageRequest(page, size));
+      @RequestParam(required = false) String q,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size) {
+    var resultats = commandeService.listerCommandes(q, new PageRequest(page, size));
     return PageResponse.of(resultats, CommandeResponse::depuis);
   }
 

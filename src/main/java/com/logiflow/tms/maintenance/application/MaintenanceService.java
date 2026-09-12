@@ -13,6 +13,8 @@ import com.logiflow.tms.maintenance.domain.model.StatutOT;
 import com.logiflow.tms.maintenance.domain.port.out.OrdreTravailRepository;
 import com.logiflow.tms.maintenance.domain.port.out.PlanEntretienRepository;
 import com.logiflow.tms.maintenance.domain.port.out.ScoreSanteRepository;
+import com.logiflow.tms.shared.application.Page;
+import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -87,6 +89,11 @@ public class MaintenanceService implements MaintenanceApi {
   @Transactional(readOnly = true)
   public OrdreTravail consulterOrdreTravail(UUID id) {
     return trouverOrdreTravailOuEchouer(id);
+  }
+
+  @Transactional(readOnly = true)
+  public Page<OrdreTravail> listerOrdresTravail(PageRequest pageRequest) {
+    return ordreTravailRepository.rechercher(pageRequest);
   }
 
   @Transactional(readOnly = true)

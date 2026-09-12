@@ -15,5 +15,5 @@ public interface CommandeRepository {
 
   Optional<Commande> parReference(String reference);
 
-  Page<Commande> rechercher(PageRequest pageRequest);
+  Page<Commande> rechercher(String texteRecherche, PageRequest pageRequest);
 }

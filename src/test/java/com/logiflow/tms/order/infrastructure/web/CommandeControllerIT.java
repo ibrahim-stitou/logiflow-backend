@@ -3,6 +3,7 @@ package com.logiflow.tms.order.infrastructure.web;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -92,6 +93,55 @@ class CommandeControllerIT extends AbstractIntegrationTest {
                 .with(jwt()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.statut").value("CONFIRMEE"));
+  }
+
+  @Test
+  void listerAvecRechercheParReference() throws Exception {
+    var clientRequest = new ClientRequest("CLI-IT-ORDER-Q", "Client recherche commande");
+    String reponseClient =
+        mockMvc
+            .perform(
+                post("/api/v1/clients")
+                    .with(jwt())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(clientRequest)))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    String clientId = objectMapper.readTree(reponseClient).get("id").asText();
+    UUID marchandiseId = creerMarchandiseId("MARCH-IT-ORDER-Q");
+
+    var commandeRequest =
+        new CommandeRequest(
+            java.util.UUID.fromString(clientId),
+            LocalDate.now().plusDays(3),
+            new Money(BigDecimal.valueOf(1500), Currency.getInstance("EUR")),
+            List.of(new LigneCommande(marchandiseId, 500, 2.5, 10)));
+
+    String reponseCommande =
+        mockMvc
+            .perform(
+                post("/api/v1/commandes")
+                    .with(jwt())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(commandeRequest)))
+            .andExpect(status().isCreated())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    String reference = objectMapper.readTree(reponseCommande).get("reference").asText();
+
+    mockMvc
+        .perform(
+            get("/api/v1/commandes")
+                .with(jwt())
+                .param("q", reference.substring(0, 6))
+                .param("page", "0")
+                .param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements", greaterThanOrEqualTo(1)))
+        .andExpect(jsonPath("$.content[0].reference").value(reference));
   }
 
   @Test

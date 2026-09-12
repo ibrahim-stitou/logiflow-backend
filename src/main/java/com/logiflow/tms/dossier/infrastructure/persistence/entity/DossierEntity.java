@@ -108,7 +108,6 @@ public class DossierEntity extends BaseEntity {
       String familleMarchandise,
       String carrosserieRequise,
       Double temperatureRequise,
-      String lignesMarchandiseJson,
       String segmentsJson,
       String documentsJson) {
     this.statut = statut;
@@ -120,7 +119,6 @@ public class DossierEntity extends BaseEntity {
     this.familleMarchandise = familleMarchandise;
     this.carrosserieRequise = carrosserieRequise;
     this.temperatureRequise = temperatureRequise;
-    this.lignesMarchandiseJson = lignesMarchandiseJson;
     this.segmentsJson = segmentsJson;
     this.documentsJson = documentsJson;
   }

@@ -128,8 +128,8 @@ public class DossierTransportService implements DossierApi {
   }
 
   @Transactional(readOnly = true)
-  public Page<DossierTransport> listerDossiers(PageRequest pageRequest) {
-    return dossierRepository.rechercher(pageRequest);
+  public Page<DossierTransport> listerDossiers(String texteRecherche, PageRequest pageRequest) {
+    return dossierRepository.rechercher(texteRecherche, pageRequest);
   }
 
   @Override

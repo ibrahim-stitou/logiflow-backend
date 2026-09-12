@@ -55,6 +55,7 @@ public class VoyageController {
 
   @GetMapping("/api/v1/voyages")
   public PageResponse<VoyageResponse> lister(
+      @RequestParam(required = false) String q,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size,
       @RequestParam(required = false) UUID dossierId) {
@@ -62,7 +63,7 @@ public class VoyageController {
       var voyages = voyageService.listerParDossier(dossierId);
       return PageResponse.ofList(voyages.stream().map(VoyageResponse::depuis).toList());
     }
-    var resultats = voyageService.listerVoyages(new PageRequest(page, size));
+    var resultats = voyageService.listerVoyages(q, new PageRequest(page, size));
     return PageResponse.of(resultats, VoyageResponse::depuis);
   }
 

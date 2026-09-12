@@ -59,15 +59,18 @@ public class DossierController {
 
   @GetMapping("/api/v1/dossiers")
   public PageResponse<DossierResponse> lister(
+      @RequestParam(required = false) String q,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size,
       @RequestParam(required = false) UUID commandeId) {
     if (commandeId != null) {
       var dossiers = dossierService.listerParCommande(commandeId);
       return PageResponse.ofList(
-          dossiers.stream().map(DossierResponse::depuis).toList());
+          dossiers.stream()
+              .map(dossier -> DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier)))
+              .toList());
     }
-    var resultats = dossierService.listerDossiers(new PageRequest(page, size));
+    var resultats = dossierService.listerDossiers(q, new PageRequest(page, size));
     return PageResponse.of(
         resultats, dossier -> DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier)));
   }

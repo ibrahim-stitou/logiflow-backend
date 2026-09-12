@@ -18,5 +18,5 @@ public interface DossierTransportRepository {
 
   List<DossierTransport> parCommandeId(UUID commandeId);
 
-  Page<DossierTransport> rechercher(PageRequest pageRequest);
+  Page<DossierTransport> rechercher(String texteRecherche, PageRequest pageRequest);
 }

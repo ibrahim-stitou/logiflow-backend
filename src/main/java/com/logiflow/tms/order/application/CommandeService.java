@@ -80,8 +80,8 @@ public class CommandeService implements CommandeApi {
   }
 
   @Transactional(readOnly = true)
-  public Page<Commande> listerCommandes(PageRequest pageRequest) {
-    return commandeRepository.rechercher(pageRequest);
+  public Page<Commande> listerCommandes(String texteRecherche, PageRequest pageRequest) {
+    return commandeRepository.rechercher(texteRecherche, pageRequest);
   }
 
   @Override

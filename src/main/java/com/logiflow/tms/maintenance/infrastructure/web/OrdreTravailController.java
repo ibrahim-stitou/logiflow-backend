@@ -5,6 +5,8 @@ import com.logiflow.tms.maintenance.application.command.CreerOrdreTravailCommand
 import com.logiflow.tms.maintenance.domain.model.StatutOT;
 import com.logiflow.tms.maintenance.infrastructure.web.dto.OrdreTravailRequest;
 import com.logiflow.tms.maintenance.infrastructure.web.dto.OrdreTravailResponse;
+import com.logiflow.tms.shared.application.PageRequest;
+import com.logiflow.tms.shared.infrastructure.web.PageResponse;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.UUID;
@@ -40,6 +42,13 @@ public class OrdreTravailController {
     URI location =
         ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(id).toUri();
     return ResponseEntity.created(location).body(reponse);
+  }
+
+  @GetMapping("/api/v1/ordres-travail")
+  public PageResponse<OrdreTravailResponse> lister(
+      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+    var resultats = maintenanceService.listerOrdresTravail(new PageRequest(page, size));
+    return PageResponse.of(resultats, OrdreTravailResponse::depuis);
   }
 
   @GetMapping("/api/v1/ordres-travail/{id}")

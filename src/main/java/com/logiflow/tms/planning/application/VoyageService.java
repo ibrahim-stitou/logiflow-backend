@@ -160,8 +160,8 @@ public class VoyageService implements VoyageApi {
   }
 
   @Transactional(readOnly = true)
-  public Page<Voyage> listerVoyages(PageRequest pageRequest) {
-    return voyageRepository.rechercher(pageRequest);
+  public Page<Voyage> listerVoyages(String texteRecherche, PageRequest pageRequest) {
+    return voyageRepository.rechercher(texteRecherche, pageRequest);
   }
 
   @Transactional(readOnly = true)

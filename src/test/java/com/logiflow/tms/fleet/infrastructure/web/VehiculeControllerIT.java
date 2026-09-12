@@ -26,8 +26,29 @@ class VehiculeControllerIT extends AbstractIntegrationTest {
 
   private static VehiculeRequest requeteMinimale(String immatriculation, TypeVehicule type) {
     return new VehiculeRequest(
-        immatriculation, type, null, null, null, null, null, null, 19000, null, 9000, null, null,
-        null, null, null, null, false, null, null, null, null, null);
+        immatriculation,
+        type,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        19000,
+        null,
+        9000,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        false,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 
   @Test
@@ -56,9 +77,8 @@ class VehiculeControllerIT extends AbstractIntegrationTest {
   }
 
   @Test
-  void mettreAJourDocumentsPuisReleverCompteurs() throws Exception {
-    var creation =
-        new VehiculeRequest("LF-441-TM", TypeVehicule.TRACTEUR, 19000, 9000, List.of());
+  void releverCompteursApresCreation() throws Exception {
+    var creation = requeteMinimale("LF-441-TM", TypeVehicule.TRACTEUR);
     String id =
         objectMapper
             .readTree(
@@ -75,25 +95,6 @@ class VehiculeControllerIT extends AbstractIntegrationTest {
             .get("id")
             .asText();
 
-    var documents =
-        new VehiculeRequest(
-            "LF-441-TM",
-            TypeVehicule.TRACTEUR,
-            19000,
-            9000,
-            List.of(
-                new DocumentVehicule(
-                    TypeDocumentVehicule.CARTE_GRISE, "CG-LF-441", LocalDate.of(2027, 6, 30))));
-
-    mockMvc
-        .perform(
-            put("/api/v1/vehicules/{id}/documents", id)
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(documents)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.documents[0].reference").value("CG-LF-441"));
-
     mockMvc
         .perform(
             put("/api/v1/vehicules/{id}/compteurs", id)
@@ -109,7 +110,7 @@ class VehiculeControllerIT extends AbstractIntegrationTest {
   void creerUnVehiculeAvecUneImmatriculationVideRenvoie400() throws Exception {
     String corpsInvalide =
         """
-        {"immatriculation": "", "type": "TRACTEUR", "ptacKg": 19000, "chargeUtileKg": 9000, "documents": []}
+        {"immatriculation": "", "type": "TRACTEUR", "ptacKg": 19000, "chargeUtileKg": 9000}
         """;
 
     mockMvc

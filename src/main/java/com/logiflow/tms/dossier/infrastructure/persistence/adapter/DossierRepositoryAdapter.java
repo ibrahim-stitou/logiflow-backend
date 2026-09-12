@@ -60,10 +60,13 @@ public class DossierRepositoryAdapter implements DossierTransportRepository {
   }
 
   @Override
-  public Page<DossierTransport> rechercher(PageRequest pageRequest) {
+  public Page<DossierTransport> rechercher(String texteRecherche, PageRequest pageRequest) {
     var pageable =
         org.springframework.data.domain.PageRequest.of(pageRequest.numero(), pageRequest.taille());
-    var pageJpa = jpaRepository.findAll(pageable);
+    org.springframework.data.domain.Page<DossierEntity> pageJpa =
+        (texteRecherche == null || texteRecherche.isBlank())
+            ? jpaRepository.findAll(pageable)
+            : jpaRepository.findByReferenceContainingIgnoreCase(texteRecherche, pageable);
     var contenu =
         pageJpa.getContent().stream()
             .map(

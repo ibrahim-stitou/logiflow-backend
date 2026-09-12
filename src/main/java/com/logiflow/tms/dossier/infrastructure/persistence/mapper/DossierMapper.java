@@ -111,7 +111,6 @@ public class DossierMapper {
         dossier.familleMarchandise(),
         dossier.carrosserieRequise() != null ? dossier.carrosserieRequise().name() : null,
         dossier.temperatureRequise(),
-        versJson(dossier.lignesMarchandise()),
         versJson(dossier.segments()),
         versJson(dossier.documents()));
   }

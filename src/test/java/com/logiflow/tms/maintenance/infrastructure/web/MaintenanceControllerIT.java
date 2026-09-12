@@ -3,6 +3,7 @@ package com.logiflow.tms.maintenance.infrastructure.web;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -68,6 +69,35 @@ class MaintenanceControllerIT extends AbstractIntegrationTest {
                 .content(objectMapper.writeValueAsString(requete)))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.statut").value("PLANIFIE"));
+  }
+
+  @Test
+  void listerLesOrdresDeTravail() throws Exception {
+    UUID vehiculeId = creerVehicule();
+    var requete =
+        new OrdreTravailRequest(
+            vehiculeId,
+            TypeIntervention.REPARATION,
+            LocalDateTime.now(),
+            new Money(BigDecimal.valueOf(180), Currency.getInstance("EUR")));
+
+    mockMvc
+        .perform(
+            post("/api/v1/ordres-travail")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requete)))
+        .andExpect(status().isCreated());
+
+    mockMvc
+        .perform(
+            get("/api/v1/ordres-travail")
+                .with(jwt())
+                .param("page", "0")
+                .param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements", greaterThanOrEqualTo(1)))
+        .andExpect(jsonPath("$.content[0].statut").value("PLANIFIE"));
   }
 
   @Test

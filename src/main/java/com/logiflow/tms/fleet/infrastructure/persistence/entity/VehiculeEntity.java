@@ -185,22 +185,67 @@ public class VehiculeEntity extends BaseEntity {
     this.heuresMoteurSortie = heuresMoteurSortie;
   }
 
+  /** Met à jour l'état métier sans toucher à l'identifiant ni au verrou optimiste. */
   public void ecraserEtatMetier(
       String immatriculation,
       String type,
+      String numeroParc,
+      String vin,
+      String marque,
+      String modele,
+      Integer anneeMiseEnCirculation,
+      String energie,
       double ptacKg,
+      Double poidsVideKg,
       double chargeUtileKg,
+      Double longueurM,
+      Double largeurM,
+      Double hauteurM,
+      Double volumeUtileM3,
+      Integer nbPositionsPalettes,
+      String typeCarrosserie,
+      boolean groupeFroid,
+      Double temperatureMin,
+      Double temperatureMax,
       int kilometrage,
       int heuresMoteur,
       String statut,
-      String documentsJson) {
+      LocalDate datePremiereMiseCirculation,
+      LocalDate dateAcquisition,
+      LocalDate dateMiseEnService,
+      LocalDate dateSortie,
+      String motifSortie,
+      Integer kilometrageSortie,
+      Integer heuresMoteurSortie) {
     this.immatriculation = immatriculation;
     this.type = type;
+    this.numeroParc = numeroParc;
+    this.vin = vin;
+    this.marque = marque;
+    this.modele = modele;
+    this.anneeMiseEnCirculation = anneeMiseEnCirculation;
+    this.energie = energie;
     this.ptacKg = ptacKg;
+    this.poidsVideKg = poidsVideKg;
     this.chargeUtileKg = chargeUtileKg;
+    this.longueurM = longueurM;
+    this.largeurM = largeurM;
+    this.hauteurM = hauteurM;
+    this.volumeUtileM3 = volumeUtileM3;
+    this.nbPositionsPalettes = nbPositionsPalettes;
+    this.typeCarrosserie = typeCarrosserie;
+    this.groupeFroid = groupeFroid;
+    this.temperatureMin = temperatureMin;
+    this.temperatureMax = temperatureMax;
     this.kilometrage = kilometrage;
     this.heuresMoteur = heuresMoteur;
     this.statut = statut;
-    this.documentsJson = documentsJson;
+    this.datePremiereMiseCirculation = datePremiereMiseCirculation;
+    this.dateAcquisition = dateAcquisition;
+    this.dateMiseEnService = dateMiseEnService;
+    this.dateSortie = dateSortie;
+    this.motifSortie = motifSortie;
+    this.kilometrageSortie = kilometrageSortie;
+    this.heuresMoteurSortie = heuresMoteurSortie;
   }
 }

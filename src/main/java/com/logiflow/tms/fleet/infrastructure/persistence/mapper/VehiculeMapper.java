@@ -90,4 +90,42 @@ public interface VehiculeMapper {
         .heuresMoteurSortie(vehicule.heuresMoteurSortie())
         .build();
   }
+
+  /** Met à jour une entité gérée à partir du domaine, sans remplacer l'identité JPA. */
+  default void mettreAJour(VehiculeEntity entity, Vehicule vehicule) {
+    if (entity == null || vehicule == null) {
+      return;
+    }
+    entity.ecraserEtatMetier(
+        vehicule.immatriculation().valeur(),
+        vehicule.type().name(),
+        vehicule.numeroParc(),
+        vehicule.vin(),
+        vehicule.marque(),
+        vehicule.modele(),
+        vehicule.anneeMiseEnCirculation(),
+        vehicule.energie() != null ? vehicule.energie().name() : null,
+        vehicule.ptac().kg(),
+        vehicule.poidsVide() != null ? vehicule.poidsVide().kg() : null,
+        vehicule.chargeUtile().kg(),
+        vehicule.longueurM(),
+        vehicule.largeurM(),
+        vehicule.hauteurM(),
+        vehicule.volumeUtileM3(),
+        vehicule.nbPositionsPalettes(),
+        vehicule.typeCarrosserie() != null ? vehicule.typeCarrosserie().name() : null,
+        vehicule.groupeFroid(),
+        vehicule.temperatureMin(),
+        vehicule.temperatureMax(),
+        vehicule.kilometrage(),
+        vehicule.heuresMoteur(),
+        vehicule.statut().name(),
+        vehicule.datePremiereMiseCirculation(),
+        vehicule.dateAcquisition(),
+        vehicule.dateMiseEnService(),
+        vehicule.dateSortie(),
+        vehicule.motifSortie(),
+        vehicule.kilometrageSortie(),
+        vehicule.heuresMoteurSortie());
+  }
 }

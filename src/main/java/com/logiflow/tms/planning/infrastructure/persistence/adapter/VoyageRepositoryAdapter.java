@@ -2,6 +2,7 @@ package com.logiflow.tms.planning.infrastructure.persistence.adapter;
 
 import com.logiflow.tms.planning.domain.model.Voyage;
 import com.logiflow.tms.planning.domain.port.out.VoyageRepository;
+import com.logiflow.tms.planning.infrastructure.persistence.entity.VoyageEntity;
 import com.logiflow.tms.planning.infrastructure.persistence.mapper.VoyageMapper;
 import com.logiflow.tms.planning.infrastructure.persistence.repository.VoyageJpaRepository;
 import com.logiflow.tms.shared.application.Page;
@@ -36,10 +37,13 @@ public class VoyageRepositoryAdapter implements VoyageRepository {
   }
 
   @Override
-  public Page<Voyage> rechercher(PageRequest pageRequest) {
+  public Page<Voyage> rechercher(String texteRecherche, PageRequest pageRequest) {
     var pageable =
         org.springframework.data.domain.PageRequest.of(pageRequest.numero(), pageRequest.taille());
-    var pageJpa = jpaRepository.findAll(pageable);
+    org.springframework.data.domain.Page<VoyageEntity> pageJpa =
+        (texteRecherche == null || texteRecherche.isBlank())
+            ? jpaRepository.findAll(pageable)
+            : jpaRepository.findByReferenceContainingIgnoreCase(texteRecherche, pageable);
     var contenu = pageJpa.getContent().stream().map(mapper::versDomaine).toList();
     return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
   }

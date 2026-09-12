@@ -46,10 +46,13 @@ public class CommandeRepositoryAdapter implements CommandeRepository {
   }
 
   @Override
-  public Page<Commande> rechercher(PageRequest pageRequest) {
+  public Page<Commande> rechercher(String texteRecherche, PageRequest pageRequest) {
     var pageable =
         org.springframework.data.domain.PageRequest.of(pageRequest.numero(), pageRequest.taille());
-    var pageJpa = jpaRepository.findAll(pageable);
+    org.springframework.data.domain.Page<CommandeEntity> pageJpa =
+        (texteRecherche == null || texteRecherche.isBlank())
+            ? jpaRepository.findAll(pageable)
+            : jpaRepository.findByReferenceContainingIgnoreCase(texteRecherche, pageable);
     var contenu =
         pageJpa.getContent().stream()
             .map(
