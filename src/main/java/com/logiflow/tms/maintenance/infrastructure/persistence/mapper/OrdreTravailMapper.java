@@ -40,4 +40,15 @@ public interface OrdreTravailMapper {
         .coutDevise(ordreTravail.cout().devise().getCurrencyCode())
         .build();
   }
+
+  default void mettreAJour(OrdreTravailEntity entity, OrdreTravail ordreTravail) {
+    if (entity == null || ordreTravail == null) {
+      return;
+    }
+    entity.ecraserEtatMetier(
+        ordreTravail.statut().name(),
+        ordreTravail.dureeReelleMin(),
+        ordreTravail.cout().montant(),
+        ordreTravail.cout().devise().getCurrencyCode());
+  }
 }

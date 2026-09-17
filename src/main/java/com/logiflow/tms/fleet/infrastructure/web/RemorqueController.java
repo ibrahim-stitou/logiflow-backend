@@ -4,6 +4,8 @@ import com.logiflow.tms.fleet.application.RemorqueService;
 import com.logiflow.tms.fleet.application.command.CreerRemorqueCommand;
 import com.logiflow.tms.fleet.infrastructure.web.dto.RemorqueRequest;
 import com.logiflow.tms.fleet.infrastructure.web.dto.RemorqueResponse;
+import com.logiflow.tms.shared.application.PageRequest;
+import com.logiflow.tms.shared.infrastructure.web.PageResponse;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.time.LocalDate;
@@ -61,6 +63,15 @@ public class RemorqueController {
   @GetMapping("/api/v1/remorques/{id}")
   public RemorqueResponse consulter(@PathVariable UUID id) {
     return RemorqueResponse.depuis(remorqueService.consulterRemorque(id));
+  }
+
+  @GetMapping("/api/v1/remorques")
+  public PageResponse<RemorqueResponse> lister(
+      @RequestParam(required = false) String q,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size) {
+    var resultats = remorqueService.listerRemorques(q, new PageRequest(page, size));
+    return PageResponse.of(resultats, RemorqueResponse::depuis);
   }
 
   @PutMapping("/api/v1/remorques/{id}/compteurs")

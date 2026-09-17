@@ -15,5 +15,5 @@ public interface OrdreTravailRepository {
 
   List<OrdreTravail> parVehiculeId(UUID vehiculeId);
 
-  Page<OrdreTravail> rechercher(PageRequest pageRequest);
+  Page<OrdreTravail> rechercher(UUID vehiculeId, PageRequest pageRequest);
 }

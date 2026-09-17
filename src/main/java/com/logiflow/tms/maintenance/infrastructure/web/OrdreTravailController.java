@@ -46,8 +46,11 @@ public class OrdreTravailController {
 
   @GetMapping("/api/v1/ordres-travail")
   public PageResponse<OrdreTravailResponse> lister(
-      @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
-    var resultats = maintenanceService.listerOrdresTravail(new PageRequest(page, size));
+      @RequestParam(required = false) UUID vehiculeId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size) {
+    var resultats =
+        maintenanceService.listerOrdresTravail(vehiculeId, new PageRequest(page, size));
     return PageResponse.of(resultats, OrdreTravailResponse::depuis);
   }
 

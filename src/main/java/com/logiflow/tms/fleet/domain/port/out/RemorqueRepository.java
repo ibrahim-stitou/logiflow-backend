@@ -17,5 +17,5 @@ public interface RemorqueRepository {
 
   boolean existeParImmatriculation(String immatriculation);
 
-  Page<Remorque> rechercher(PageRequest pageRequest);
+  Page<Remorque> rechercher(String texteRecherche, PageRequest pageRequest);
 }

@@ -92,8 +92,13 @@ public class MaintenanceService implements MaintenanceApi {
   }
 
   @Transactional(readOnly = true)
-  public Page<OrdreTravail> listerOrdresTravail(PageRequest pageRequest) {
-    return ordreTravailRepository.rechercher(pageRequest);
+  public Page<OrdreTravail> listerOrdresTravail(UUID vehiculeId, PageRequest pageRequest) {
+    return ordreTravailRepository.rechercher(vehiculeId, pageRequest);
+  }
+
+  @Transactional(readOnly = true)
+  public Page<PlanEntretien> listerPlansEntretien(UUID vehiculeId, PageRequest pageRequest) {
+    return planEntretienRepository.rechercher(vehiculeId, pageRequest);
   }
 
   @Transactional(readOnly = true)
@@ -110,6 +115,11 @@ public class MaintenanceService implements MaintenanceApi {
         .parId(id)
         .orElseThrow(
             () -> new NotFoundException("Aucun score de santé trouvé pour l'identifiant " + id));
+  }
+
+  @Transactional(readOnly = true)
+  public Optional<ScoreSante> consulterDernierScoreSante(UUID vehiculeId) {
+    return scoreSanteRepository.dernierParVehiculeId(vehiculeId);
   }
 
   @Override

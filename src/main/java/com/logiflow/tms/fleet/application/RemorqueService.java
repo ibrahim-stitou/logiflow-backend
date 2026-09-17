@@ -94,8 +94,8 @@ public class RemorqueService implements RemorqueApi {
   }
 
   @Transactional(readOnly = true)
-  public Page<Remorque> listerRemorques(PageRequest pageRequest) {
-    return remorqueRepository.rechercher(pageRequest);
+  public Page<Remorque> listerRemorques(String texteRecherche, PageRequest pageRequest) {
+    return remorqueRepository.rechercher(texteRecherche, pageRequest);
   }
 
   @Override

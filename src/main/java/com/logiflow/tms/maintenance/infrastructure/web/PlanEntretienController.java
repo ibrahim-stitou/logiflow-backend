@@ -4,6 +4,8 @@ import com.logiflow.tms.maintenance.application.MaintenanceService;
 import com.logiflow.tms.maintenance.application.command.CreerPlanEntretienCommand;
 import com.logiflow.tms.maintenance.infrastructure.web.dto.PlanEntretienRequest;
 import com.logiflow.tms.maintenance.infrastructure.web.dto.PlanEntretienResponse;
+import com.logiflow.tms.shared.application.PageRequest;
+import com.logiflow.tms.shared.infrastructure.web.PageResponse;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.UUID;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -39,6 +42,16 @@ public class PlanEntretienController {
     URI location =
         ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(id).toUri();
     return ResponseEntity.created(location).body(reponse);
+  }
+
+  @GetMapping("/api/v1/plans-entretien")
+  public PageResponse<PlanEntretienResponse> lister(
+      @RequestParam(required = false) UUID vehiculeId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size) {
+    var resultats =
+        maintenanceService.listerPlansEntretien(vehiculeId, new PageRequest(page, size));
+    return PageResponse.of(resultats, PlanEntretienResponse::depuis);
   }
 
   @GetMapping("/api/v1/plans-entretien/{id}")

@@ -57,4 +57,13 @@ public class OrdreTravailEntity extends BaseEntity {
     this.coutMontant = coutMontant;
     this.coutDevise = coutDevise;
   }
+
+  /** Met à jour l'état métier mutable sans remplacer l'identité JPA. */
+  public void ecraserEtatMetier(
+      String statut, int dureeReelleMin, BigDecimal coutMontant, String coutDevise) {
+    this.statut = statut;
+    this.dureeReelleMin = dureeReelleMin;
+    this.coutMontant = coutMontant;
+    this.coutDevise = coutDevise;
+  }
 }

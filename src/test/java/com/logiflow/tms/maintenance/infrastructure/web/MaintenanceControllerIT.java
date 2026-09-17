@@ -11,6 +11,7 @@ import com.logiflow.tms.fleet.domain.model.TypeVehicule;
 import com.logiflow.tms.fleet.infrastructure.web.dto.VehiculeRequest;
 import com.logiflow.tms.maintenance.domain.model.TypeIntervention;
 import com.logiflow.tms.maintenance.infrastructure.web.dto.OrdreTravailRequest;
+import com.logiflow.tms.maintenance.infrastructure.web.dto.PlanEntretienRequest;
 import com.logiflow.tms.maintenance.infrastructure.web.dto.ScoreSanteRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
 import com.logiflow.tms.shared.domain.vo.Money;
@@ -98,6 +99,96 @@ class MaintenanceControllerIT extends AbstractIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.totalElements", greaterThanOrEqualTo(1)))
         .andExpect(jsonPath("$.content[0].statut").value("PLANIFIE"));
+  }
+
+  @Test
+  void listerLesOrdresDeTravailParVehicule() throws Exception {
+    UUID vehiculeA = creerVehicule();
+    UUID vehiculeB = creerVehicule();
+    var ordreA =
+        new OrdreTravailRequest(
+            vehiculeA,
+            TypeIntervention.ENTRETIEN_PREVENTIF,
+            LocalDateTime.now(),
+            new Money(BigDecimal.valueOf(120), Currency.getInstance("EUR")));
+    var ordreB =
+        new OrdreTravailRequest(
+            vehiculeB,
+            TypeIntervention.REPARATION,
+            LocalDateTime.now(),
+            new Money(BigDecimal.valueOf(300), Currency.getInstance("EUR")));
+
+    mockMvc
+        .perform(
+            post("/api/v1/ordres-travail")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(ordreA)))
+        .andExpect(status().isCreated());
+    mockMvc
+        .perform(
+            post("/api/v1/ordres-travail")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(ordreB)))
+        .andExpect(status().isCreated());
+
+    mockMvc
+        .perform(
+            get("/api/v1/ordres-travail")
+                .with(jwt())
+                .param("vehiculeId", vehiculeA.toString())
+                .param("page", "0")
+                .param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements").value(1))
+        .andExpect(jsonPath("$.content[0].vehiculeId").value(vehiculeA.toString()));
+  }
+
+  @Test
+  void listerLesPlansEntretien() throws Exception {
+    UUID vehiculeId = creerVehicule();
+    var requete = new PlanEntretienRequest(vehiculeId, "Vidange moteur", 30_000, 12, 500, 60);
+
+    mockMvc
+        .perform(
+            post("/api/v1/plans-entretien")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requete)))
+        .andExpect(status().isCreated());
+
+    mockMvc
+        .perform(
+            get("/api/v1/plans-entretien")
+                .with(jwt())
+                .param("page", "0")
+                .param("size", "10"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalElements", greaterThanOrEqualTo(1)))
+        .andExpect(jsonPath("$.content[0].libelle").value("Vidange moteur"));
+  }
+
+  @Test
+  void consulterLeDernierScoreDeSante() throws Exception {
+    UUID vehiculeId = creerVehicule();
+    var requete = new ScoreSanteRequest(vehiculeId, 92, 4000, LocalDate.now().plusMonths(3), null);
+
+    mockMvc
+        .perform(
+            post("/api/v1/scores-sante")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requete)))
+        .andExpect(status().isCreated());
+
+    mockMvc
+        .perform(
+            get("/api/v1/scores-sante/dernier")
+                .with(jwt())
+                .param("vehiculeId", vehiculeId.toString()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.statut").value("BON"));
   }
 
   @Test
