@@ -20,7 +20,30 @@ public record LogiflowProperties(@NotNull @Valid Cors cors, @NotNull @Valid Secu
   /**
    * {@code permissiveLocalProfile} : démarre sans JwtDecoder (pas d'IdP). {@code
    * anonymousLocalAccess} : authentifie un utilisateur fictif pour que le frontend local puisse
-   * appeler l'API. Les deux restent à {@code false} hors profil {@code local}.
+   * appeler l'API. Les deux restent à {@code false} hors profil {@code local}. {@code mfa} :
+   * exigence MFA sur les jetons JWT des IdP (Keycloak).
    */
-  public record Security(boolean permissiveLocalProfile, boolean anonymousLocalAccess) {}
+  public record Security(boolean permissiveLocalProfile, boolean anonymousLocalAccess, Mfa mfa) {
+
+    public Security {
+      if (mfa == null) {
+        mfa = new Mfa(false, null, null);
+      }
+    }
+
+    /**
+     * Exigence d'une authentification multi-facteurs (MFA) sur les jetons JWT des IdP (Keycloak).
+     */
+    public record Mfa(boolean required, List<String> amrMethods, List<String> acrValues) {
+
+      public Mfa {
+        if (amrMethods == null || amrMethods.isEmpty()) {
+          amrMethods = List.of("mfa", "otp", "totp", "webauthn");
+        } else {
+          amrMethods = List.copyOf(amrMethods);
+        }
+        acrValues = acrValues == null ? List.of() : List.copyOf(acrValues);
+      }
+    }
+  }
 }

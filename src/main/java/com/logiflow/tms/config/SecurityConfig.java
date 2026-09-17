@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.web.configurers.oauth2.ser
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
@@ -123,6 +124,17 @@ public class SecurityConfig {
     JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
     converter.setJwtGrantedAuthoritiesConverter(rolesConverter);
     return converter;
+  }
+
+  /**
+   * Valideur MFA branché automatiquement sur le {@code JwtDecoder} auto-configuré (Spring Boot 4
+   * collecte les beans {@code OAuth2TokenValidator<Jwt>}) : dès que {@code
+   * logiflow.security.mfa.required=true}, tout jeton ne prouvant pas une étape MFA (claims OIDC
+   * {@code amr}/{@code acr}) est rejeté en 401. Voir {@link MfaJwtValidator}.
+   */
+  @Bean
+  public OAuth2TokenValidator<Jwt> mfaJwtValidator(LogiflowProperties properties) {
+    return new MfaJwtValidator(properties);
   }
 
   private List<GrantedAuthority> extractKeycloakRealmRoles(Jwt jwt) {

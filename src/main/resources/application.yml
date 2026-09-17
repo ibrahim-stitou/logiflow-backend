@@ -78,6 +78,15 @@ logiflow:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   security:
     permissive-local-profile: false
+    mfa:
+      # Avec un IdP (Keycloak), exige que chaque jeton JWT prouve qu'une étape MFA a été réalisée :
+      # les jetons dépourvus de preuve (claims OIDC `amr`/`acr`) sont rejetés en 401.
+      # Voir docs/adr/0002-connexion-mfa-keycloak.md.
+      required: ${MFA_REQUIRED:false}
+      # Méthodes OIDC `amr` acceptées comme preuve MFA (Keycloak expose p. ex. "otp", "totp", "webauthn").
+      amr-methods: ${MFA_AMR_METHODS:mfa,otp,totp,webauthn}
+      # Valeurs `acr` acceptées comme preuve MFA supplémentaire (ex. "phr", "loa3"). Vide = contrôle `amr` seul.
+      acr-values: ${MFA_ACR_VALUES:}
   storage:
     # Stockage disque local des documents (voir com.logiflow.tms.document.infrastructure.storage) ;
     # amené à être remplacé par un stockage objet (S3) via un nouvel adaptateur FileStorageService.
