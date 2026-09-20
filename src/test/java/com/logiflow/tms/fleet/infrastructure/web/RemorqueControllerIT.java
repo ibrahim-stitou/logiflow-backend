@@ -6,7 +6,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.logiflow.tms.fleet.domain.model.TypeCarrosserie;
 import com.logiflow.tms.fleet.infrastructure.web.dto.RemorqueRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,7 @@ class RemorqueControllerIT extends AbstractIntegrationTest {
     return new RemorqueRequest(
         immatriculation,
         null,
-        TypeCarrosserie.TAUTLINER,
+        "TAUTLINER",
         null,
         null,
         null,

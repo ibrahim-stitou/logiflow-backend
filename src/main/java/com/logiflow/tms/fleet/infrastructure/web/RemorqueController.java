@@ -2,6 +2,8 @@ package com.logiflow.tms.fleet.infrastructure.web;
 
 import com.logiflow.tms.fleet.application.RemorqueService;
 import com.logiflow.tms.fleet.application.command.CreerRemorqueCommand;
+import com.logiflow.tms.fleet.domain.model.TypeCarrosserie;
+import com.logiflow.tms.fleet.domain.model.TypeRemorque;
 import com.logiflow.tms.fleet.infrastructure.web.dto.RemorqueRequest;
 import com.logiflow.tms.fleet.infrastructure.web.dto.RemorqueResponse;
 import com.logiflow.tms.shared.application.PageRequest;
@@ -34,8 +36,8 @@ public class RemorqueController {
         remorqueService.creerRemorque(
             new CreerRemorqueCommand(
                 request.immatriculation(),
-                request.type(),
-                request.carrosserie(),
+                request.type() != null ? TypeRemorque.valueOf(request.type()) : null,
+                TypeCarrosserie.valueOf(request.carrosserie()),
                 request.numeroParc(),
                 request.vin(),
                 request.marque(),

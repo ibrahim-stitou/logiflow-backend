@@ -3,12 +3,16 @@ package com.logiflow.tms.ai.application;
 import com.logiflow.tms.ai.application.command.CalculerItineraireCommand;
 import com.logiflow.tms.ai.domain.model.InteractionIa;
 import com.logiflow.tms.ai.domain.model.ItineraireCalcule;
+import com.logiflow.tms.ai.domain.model.PointItineraire;
 import com.logiflow.tms.ai.domain.model.TypeInteractionIa;
 import com.logiflow.tms.ai.domain.port.out.AiServiceClientPort;
 import com.logiflow.tms.ai.domain.port.out.InteractionIaRepository;
+import com.logiflow.tms.ai.domain.port.out.RouteGeometryPort;
 import com.logiflow.tms.shared.domain.exception.ServiceIndisponibleException;
+import com.logiflow.tms.shared.domain.vo.GeoPoint;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +30,7 @@ public class ItineraireService {
 
   private final AiServiceClientPort aiServiceClientPort;
   private final InteractionIaRepository interactionRepository;
+  private final RouteGeometryPort routeGeometryPort;
 
   @Transactional
   public ItineraireCalcule calculer(CalculerItineraireCommand command) {
@@ -33,11 +38,24 @@ public class ItineraireService {
     Instant debut = Instant.now();
     try {
       ItineraireCalcule itineraire = aiServiceClientPort.calculerItineraire(command.points());
+      List<GeoPoint> geometrie = resoudreGeometrieSansEchec(command.points());
       journaliser(true, debut, resume, null);
-      return itineraire;
+      return new ItineraireCalcule(
+          itineraire.distanceKm(),
+          itineraire.dureeMin(),
+          itineraire.segments(),
+          geometrie);
     } catch (ServiceIndisponibleException e) {
       journaliser(false, debut, resume, e.getMessage());
       throw e;
+    }
+  }
+
+  private List<GeoPoint> resoudreGeometrieSansEchec(List<PointItineraire> points) {
+    try {
+      return routeGeometryPort.resoudreGeometrie(points);
+    } catch (ServiceIndisponibleException e) {
+      return List.of();
     }
   }
 

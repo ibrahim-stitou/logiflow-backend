@@ -1,6 +1,8 @@
 package com.logiflow.tms.referential.domain.port.out;
 
 import com.logiflow.tms.referential.domain.model.Client;
+import com.logiflow.tms.shared.application.Page;
+import com.logiflow.tms.shared.application.PageRequest;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,4 +16,6 @@ public interface ClientRepository {
   Optional<Client> parCode(String code);
 
   boolean existeParCode(String code);
+
+  Page<Client> rechercher(String texteRecherche, PageRequest pageRequest);
 }

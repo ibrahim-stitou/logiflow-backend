@@ -12,6 +12,7 @@ import com.logiflow.tms.ai.domain.model.ItineraireCalcule;
 import com.logiflow.tms.ai.domain.model.PointItineraire;
 import com.logiflow.tms.ai.domain.port.out.AiServiceClientPort;
 import com.logiflow.tms.ai.domain.port.out.InteractionIaRepository;
+import com.logiflow.tms.ai.domain.port.out.RouteGeometryPort;
 import com.logiflow.tms.shared.domain.exception.ServiceIndisponibleException;
 import com.logiflow.tms.shared.domain.vo.GeoPoint;
 import java.util.List;
@@ -26,6 +27,7 @@ class ItineraireServiceTest {
 
   @Mock private AiServiceClientPort aiServiceClientPort;
   @Mock private InteractionIaRepository interactionRepository;
+  @Mock private RouteGeometryPort routeGeometryPort;
 
   private ItineraireService itineraireService;
 
@@ -36,19 +38,26 @@ class ItineraireServiceTest {
 
   @BeforeEach
   void setUp() {
-    itineraireService = new ItineraireService(aiServiceClientPort, interactionRepository);
+    itineraireService =
+        new ItineraireService(aiServiceClientPort, interactionRepository, routeGeometryPort);
   }
 
   @Test
   void calculerRenvoieLItineraireEtJournaliseLeSucces() {
     ItineraireCalcule itineraireCalcule = new ItineraireCalcule(465.3, 258.4, List.of());
     when(aiServiceClientPort.calculerItineraire(points)).thenReturn(itineraireCalcule);
+    when(routeGeometryPort.resoudreGeometrie(points))
+        .thenReturn(
+            List.of(
+                new GeoPoint(48.8566, 2.3522),
+                new GeoPoint(45.7640, 4.8357)));
     when(interactionRepository.sauvegarder(any(InteractionIa.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     ItineraireCalcule resultat = itineraireService.calculer(new CalculerItineraireCommand(points));
 
     assertThat(resultat.distanceKm()).isEqualTo(465.3);
+    assertThat(resultat.geometrie()).hasSize(2);
     verify(interactionRepository).sauvegarder(any(InteractionIa.class));
   }
 

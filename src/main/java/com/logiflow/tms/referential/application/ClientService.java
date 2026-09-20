@@ -4,6 +4,8 @@ import com.logiflow.tms.referential.api.ClientApi;
 import com.logiflow.tms.referential.api.dto.ClientSummary;
 import com.logiflow.tms.referential.domain.model.Client;
 import com.logiflow.tms.referential.domain.port.out.ClientRepository;
+import com.logiflow.tms.shared.application.Page;
+import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.ConflictException;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import java.util.Optional;
@@ -45,6 +47,11 @@ public class ClientService implements ClientApi {
   @Transactional(readOnly = true)
   public Client consulterClient(UUID id) {
     return trouverOuEchouer(id);
+  }
+
+  @Transactional(readOnly = true)
+  public Page<Client> listerClients(String texteRecherche, PageRequest pageRequest) {
+    return clientRepository.rechercher(texteRecherche, pageRequest);
   }
 
   @Override

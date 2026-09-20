@@ -10,6 +10,9 @@ spring:
       ddl-auto: validate
 
 logiflow:
+  osrm:
+    # URL volontairement injoignable : les IT exercent le chemin 503 sans appel réseau externe.
+    base-url: http://127.0.0.1:19999
   cors:
     allowed-origins: http://localhost:4200
   security:

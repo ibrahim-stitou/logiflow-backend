@@ -58,6 +58,19 @@ class ItineraireControllerIT extends AbstractIntegrationTest {
   }
 
   @Test
+  void calculerGeometrieSansOsrmDisponibleRenvoie503() throws Exception {
+    var requete = new ItineraireRequest(DEUX_POINTS);
+
+    mockMvc
+        .perform(
+            post("/api/v1/ia/itineraires/geometrie")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requete)))
+        .andExpect(status().isServiceUnavailable());
+  }
+
+  @Test
   void accederSansAuthentificationRenvoie401() throws Exception {
     var requete = new ItineraireRequest(DEUX_POINTS);
 
