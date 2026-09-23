@@ -22,13 +22,26 @@ public class VoyageRepositoryAdapter implements VoyageRepository {
 
   @Override
   public Voyage sauvegarder(Voyage voyage) {
-    var entite = jpaRepository.save(mapper.versEntite(voyage));
-    return mapper.versDomaine(entite);
+    var entite =
+        jpaRepository
+            .findById(voyage.id())
+            .map(
+                existante -> {
+                  mapper.mettreAJour(existante, voyage);
+                  return existante;
+                })
+            .orElseGet(() -> mapper.versEntite(voyage));
+    return mapper.versDomaine(jpaRepository.save(entite));
   }
 
   @Override
   public Optional<Voyage> parId(UUID id) {
     return jpaRepository.findById(id).map(mapper::versDomaine);
+  }
+
+  @Override
+  public Optional<Voyage> parIdAvecVerrouillage(UUID id) {
+    return jpaRepository.findByIdForUpdate(id).map(mapper::versDomaine);
   }
 
   @Override

@@ -24,14 +24,24 @@ public class DossierRepositoryAdapter implements DossierTransportRepository {
 
   @Override
   public DossierTransport sauvegarder(DossierTransport dossier) {
-    var entite = jpaRepository.save(mapper.versEntite(dossier));
-    ligneJpaRepository.deleteByDossierId(entite.getId());
+    DossierEntity entite =
+        jpaRepository
+            .findById(dossier.id())
+            .map(
+                existante -> {
+                  mapper.mettreAJour(existante, dossier);
+                  return existante;
+                })
+            .orElseGet(() -> mapper.versEntite(dossier));
+    DossierEntity entiteSauvegardee = jpaRepository.save(entite);
+    ligneJpaRepository.deleteByDossierId(entiteSauvegardee.getId());
     var lignesEntites =
         dossier.lignesMarchandise().stream()
-            .map(ligne -> mapper.versLigneEntite(entite.getId(), ligne))
+            .map(ligne -> mapper.versLigneEntite(entiteSauvegardee.getId(), ligne))
             .toList();
     ligneJpaRepository.saveAll(lignesEntites);
-    return mapper.versDomaine(entite, ligneJpaRepository.findByDossierId(entite.getId()));
+    return mapper.versDomaine(
+        entiteSauvegardee, ligneJpaRepository.findByDossierId(entiteSauvegardee.getId()));
   }
 
   @Override

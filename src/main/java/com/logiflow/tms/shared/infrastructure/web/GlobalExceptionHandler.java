@@ -3,6 +3,8 @@ package com.logiflow.tms.shared.infrastructure.web;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.exception.ConflictException;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
+import com.logiflow.tms.shared.domain.exception.RemorqueCapaciteDepasseeException;
+import com.logiflow.tms.shared.domain.exception.RouteDeviationDepasseeException;
 import com.logiflow.tms.shared.domain.exception.ServiceIndisponibleException;
 import com.logiflow.tms.shared.domain.exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,6 +47,40 @@ public class GlobalExceptionHandler {
         "Règle métier non respectée",
         ex.getMessage(),
         request);
+  }
+
+  @ExceptionHandler(RouteDeviationDepasseeException.class)
+  public ProblemDetail gererDeviationItineraire(
+      RouteDeviationDepasseeException ex, HttpServletRequest request) {
+    ProblemDetail problemDetail =
+        ApiError.of(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "deviation-itineraire",
+            "Déviation d'itinéraire excessive",
+            ex.getMessage(),
+            request);
+    problemDetail.setProperty("code", "ROUTE_DEVIATION_EXCEEDED");
+    problemDetail.setProperty(
+        "point", ex.point() == RouteDeviationDepasseeException.PointDeviation.PICKUP ? "pickup" : "dropoff");
+    problemDetail.setProperty("detourKm", ex.detourKm());
+    problemDetail.setProperty("detourPercent", ex.detourPercent());
+    problemDetail.setProperty("maxAllowedPercent", ex.maxAllowedPercent());
+    return problemDetail;
+  }
+
+  @ExceptionHandler(RemorqueCapaciteDepasseeException.class)
+  public ProblemDetail gererCapaciteRemorque(
+      RemorqueCapaciteDepasseeException ex, HttpServletRequest request) {
+    ProblemDetail problemDetail =
+        ApiError.of(
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            "capacite-remorque",
+            "Capacité remorque insuffisante",
+            ex.getMessage(),
+            request);
+    problemDetail.setProperty("code", "REMORQUE_CAPACITY_EXCEEDED");
+    problemDetail.setProperty("failedLegs", ex.tronconsEnEchec());
+    return problemDetail;
   }
 
   @ExceptionHandler(NotFoundException.class)

@@ -5,6 +5,7 @@ import com.logiflow.tms.planning.domain.vo.Trajet;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.vo.Reference;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -36,7 +37,7 @@ public final class Voyage {
   private final Instant arriveePrevue;
   private final UUID vehiculeId;
   private final UUID remorqueId;
-  private final List<UUID> dossierIds;
+  private List<UUID> dossierIds;
   private Trajet trajet;
   private List<Affectation> affectations;
   private double tauxRemplissage;
@@ -164,6 +165,18 @@ public final class Voyage {
       throw new IllegalArgumentException("Le taux de remplissage doit être compris entre 0 et 1");
     }
     this.tauxRemplissage = tauxRemplissage;
+  }
+
+  /** Ajoute un dossier au voyage (groupage ou ajout post-création). */
+  public void ajouterDossier(UUID dossierId) {
+    Objects.requireNonNull(dossierId, "L'identifiant du dossier est obligatoire");
+    if (dossierIds.contains(dossierId)) {
+      throw new BusinessException(
+          "Le dossier " + dossierId + " est déjà rattaché au voyage " + reference.valeur());
+    }
+    var misAJour = new ArrayList<>(dossierIds);
+    misAJour.add(dossierId);
+    dossierIds = List.copyOf(misAJour);
   }
 
   public boolean estGroupage() {

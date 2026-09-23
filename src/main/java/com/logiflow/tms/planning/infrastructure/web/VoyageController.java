@@ -1,8 +1,13 @@
 package com.logiflow.tms.planning.infrastructure.web;
 
+import com.logiflow.tms.planning.application.VoyageCapaciteService;
+import com.logiflow.tms.planning.application.VoyageDossierService;
 import com.logiflow.tms.planning.application.VoyageService;
 import com.logiflow.tms.planning.application.command.CreerVoyageCommand;
+import com.logiflow.tms.planning.infrastructure.web.dto.AjouterDossierVoyageRequest;
 import com.logiflow.tms.planning.domain.model.StatutVoyage;
+import com.logiflow.tms.planning.infrastructure.web.dto.VerifierAjoutDossierResponse;
+import com.logiflow.tms.planning.infrastructure.web.dto.VoyageCapaciteResponse;
 import com.logiflow.tms.planning.infrastructure.web.dto.VoyageRequest;
 import com.logiflow.tms.planning.infrastructure.web.dto.VoyageResponse;
 import com.logiflow.tms.shared.application.PageRequest;
@@ -27,6 +32,8 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 public class VoyageController {
 
   private final VoyageService voyageService;
+  private final VoyageDossierService voyageDossierService;
+  private final VoyageCapaciteService voyageCapaciteService;
 
   @PostMapping("/api/v1/voyages")
   public ResponseEntity<VoyageResponse> creer(@Valid @RequestBody VoyageRequest request) {
@@ -53,6 +60,11 @@ public class VoyageController {
     return VoyageResponse.depuis(voyageService.consulterVoyage(id));
   }
 
+  @GetMapping("/api/v1/voyages/{id}/capacite")
+  public VoyageCapaciteResponse consulterCapacite(@PathVariable UUID id) {
+    return VoyageCapaciteResponse.depuis(voyageCapaciteService.obtenirVueCapacite(id));
+  }
+
   @GetMapping("/api/v1/voyages")
   public PageResponse<VoyageResponse> lister(
       @RequestParam(required = false) String q,
@@ -71,5 +83,24 @@ public class VoyageController {
   public VoyageResponse changerStatut(@PathVariable UUID id, @RequestParam StatutVoyage valeur) {
     voyageService.changerStatut(id, valeur);
     return VoyageResponse.depuis(voyageService.consulterVoyage(id));
+  }
+
+  @PostMapping("/api/v1/voyages/{voyageId}/dossiers/check")
+  public VerifierAjoutDossierResponse verifierAjoutDossier(
+      @PathVariable UUID voyageId, @Valid @RequestBody AjouterDossierVoyageRequest request) {
+    return VerifierAjoutDossierResponse.depuis(
+        voyageDossierService.verifierAjoutDossier(voyageId, request.versCommande()));
+  }
+
+  @PostMapping("/api/v1/voyages/{voyageId}/dossiers")
+  public ResponseEntity<Void> ajouterDossier(
+      @PathVariable UUID voyageId, @Valid @RequestBody AjouterDossierVoyageRequest request) {
+    UUID dossierId = voyageDossierService.ajouterDossier(voyageId, request.versCommande());
+    URI location =
+        ServletUriComponentsBuilder.fromCurrentContextPath()
+            .path("/api/v1/dossiers/{id}")
+            .buildAndExpand(dossierId)
+            .toUri();
+    return ResponseEntity.created(location).build();
   }
 }

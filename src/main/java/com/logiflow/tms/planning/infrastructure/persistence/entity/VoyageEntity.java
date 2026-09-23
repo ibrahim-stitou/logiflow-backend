@@ -92,4 +92,25 @@ public class VoyageEntity extends BaseEntity {
     this.affectationsJson = affectationsJson;
     this.tauxRemplissage = tauxRemplissage;
   }
+
+  public void ecraserEtatMetier(
+      String statut,
+      Instant departPrevu,
+      Instant arriveePrevue,
+      UUID vehiculeId,
+      UUID remorqueId,
+      String dossierIdsJson,
+      String trajetJson,
+      String affectationsJson,
+      double tauxRemplissage) {
+    this.statut = statut;
+    this.departPrevu = departPrevu;
+    this.arriveePrevue = arriveePrevue;
+    this.vehiculeId = vehiculeId;
+    this.remorqueId = remorqueId;
+    this.dossierIdsJson = dossierIdsJson;
+    this.trajetJson = trajetJson;
+    this.affectationsJson = affectationsJson;
+    this.tauxRemplissage = tauxRemplissage;
+  }
 }

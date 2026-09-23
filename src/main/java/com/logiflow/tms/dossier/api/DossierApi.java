@@ -1,8 +1,10 @@
 package com.logiflow.tms.dossier.api;
 
+import com.logiflow.tms.dossier.api.dto.DossierCapaciteSummary;
 import com.logiflow.tms.dossier.api.dto.DossierSummary;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -15,6 +17,15 @@ public interface DossierApi {
   Optional<DossierSummary> consulter(UUID dossierId);
 
   /**
+   * Retourne les données de capacité des dossiers demandés (poids, volume, arrêts voyage). Les
+   * identifiants inconnus sont ignorés.
+   */
+  List<DossierCapaciteSummary> listerPourCalculCapacite(List<UUID> dossierIds);
+
+  /** Arrêts voyage encore référencés par les dossiers fournis (chargement ou déchargement). */
+  Set<UUID> listerArretsVoyageReferences(List<UUID> dossierIds);
+
+  /**
    * Marque les dossiers comme planifiés après création d'un voyage. Chaque dossier doit être au
    * statut {@code CREE}.
    */
@@ -25,4 +36,17 @@ public interface DossierApi {
    * dossiers déjà en exécution ne sont pas modifiés.
    */
   void replanifierApresAnnulationVoyage(List<UUID> dossierIds);
+
+  /**
+   * Affecte les arrêts voyage de chargement/déchargement à un dossier déjà planifié (sans changer le
+   * statut).
+   */
+  void affecterArretsVoyage(UUID dossierId, UUID arretChargementId, UUID arretDechargementId);
+
+  /**
+   * Planifie un dossier {@code CREE} sur un voyage en lui affectant ses arrêts de
+   * chargement/déchargement.
+   */
+  void planifierSurVoyageAvecArrets(
+      UUID dossierId, UUID arretChargementId, UUID arretDechargementId);
 }

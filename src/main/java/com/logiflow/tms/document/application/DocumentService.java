@@ -1,6 +1,7 @@
 package com.logiflow.tms.document.application;
 
 import com.logiflow.tms.document.api.DocumentApi;
+import com.logiflow.tms.document.api.DocumentEntiteModificationEvent;
 import com.logiflow.tms.document.application.command.TeleverserDocumentCommand;
 import com.logiflow.tms.document.domain.model.Document;
 import com.logiflow.tms.document.domain.model.TypeEntiteDocumentable;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,9 +23,12 @@ public class DocumentService implements DocumentApi {
 
   private final DocumentRepository documentRepository;
   private final FileStorageService fileStorageService;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional
   public UUID televerser(TeleverserDocumentCommand command) {
+    eventPublisher.publishEvent(
+        new DocumentEntiteModificationEvent(command.typeEntite().name(), command.entiteId()));
     String url =
         fileStorageService.stocker(command.nomFichier(), command.contenu(), command.typeContenu());
     Document document =
@@ -50,6 +55,8 @@ public class DocumentService implements DocumentApi {
             .parId(id)
             .orElseThrow(
                 () -> new NotFoundException("Aucun document trouvé pour l'identifiant " + id));
+    eventPublisher.publishEvent(
+        new DocumentEntiteModificationEvent(document.typeEntite().name(), document.entiteId()));
     fileStorageService.supprimer(document.url());
     documentRepository.supprimer(id);
   }

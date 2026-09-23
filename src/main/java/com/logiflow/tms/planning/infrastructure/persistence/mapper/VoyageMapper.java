@@ -67,6 +67,22 @@ public class VoyageMapper {
         .build();
   }
 
+  public void mettreAJour(VoyageEntity entity, Voyage voyage) {
+    if (entity == null || voyage == null) {
+      return;
+    }
+    entity.ecraserEtatMetier(
+        voyage.statut().name(),
+        voyage.departPrevu(),
+        voyage.arriveePrevue(),
+        voyage.vehiculeId(),
+        voyage.remorqueId(),
+        versJson(voyage.dossierIds()),
+        versJson(voyage.trajet()),
+        versJson(voyage.affectations()),
+        voyage.tauxRemplissage());
+  }
+
   private String versJson(Object valeur) {
     try {
       return objectMapper.writeValueAsString(valeur);

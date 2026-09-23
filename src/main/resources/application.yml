@@ -96,6 +96,9 @@ logiflow:
     base-url: ${OSRM_BASE_URL:https://router.project-osrm.org}
     connect-timeout: ${OSRM_CONNECT_TIMEOUT:2s}
     read-timeout: ${OSRM_READ_TIMEOUT:8s}
+  planning:
+    # Seuil maximal de détour (en %) accepté lors de l'insertion d'un point hors itinéraire planifié.
+    deviation-max-pourcent: ${PLANNING_DEVIATION_MAX_PERCENT:25}
   ai-service:
     # Service interne (application Flask, dépôt séparé) : jamais exposé au frontend.
     # Voir docs/integration-ia.md.

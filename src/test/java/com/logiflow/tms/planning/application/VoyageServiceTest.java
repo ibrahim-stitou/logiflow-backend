@@ -49,6 +49,7 @@ class VoyageServiceTest {
   @Mock private VehiculeApi vehiculeApi;
   @Mock private RemorqueApi remorqueApi;
   @Mock private ChauffeurApi chauffeurApi;
+  @Mock private VoyageArretMaintenanceService voyageArretMaintenanceService;
 
   private VoyageService voyageService;
 
@@ -60,6 +61,7 @@ class VoyageServiceTest {
             referenceGenerator,
             new ConformiteDomainService(),
             dossierApi,
+            voyageArretMaintenanceService,
             vehiculeApi,
             remorqueApi,
             chauffeurApi);

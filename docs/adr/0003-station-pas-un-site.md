@@ -1,0 +1,3 @@
+# ADR 0003 — Station de carburant distincte du Site référentiel
+
+LogiFlow modélise les **Stations** (points de distribution carburant : code, libellé, adresse optionnelle) dans le module `carburant`, séparément des **Sites** géolocalisés du référentiel (quais de chargement/déchargement). Les **Prises de carburant** référencent une **Station** via select ; elles ne réutilisent pas la liste `/sites` ni la carte des **Localisation**s. Alternative écartée : étendre **Site** avec un type `STATION` — rejetée pour ne pas mélanger planification transport et achat carburant, et pour éviter d'imposer une **Localisation** obligatoire sur chaque pompe.

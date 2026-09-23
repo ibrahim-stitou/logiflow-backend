@@ -1,6 +1,7 @@
 package com.logiflow.tms.dossier.application;
 
 import com.logiflow.tms.dossier.api.DossierApi;
+import com.logiflow.tms.dossier.api.dto.DossierCapaciteSummary;
 import com.logiflow.tms.dossier.api.dto.DossierSummary;
 import com.logiflow.tms.dossier.application.command.CreerDossierCommand;
 import com.logiflow.tms.dossier.domain.model.DossierTransport;
@@ -15,8 +16,10 @@ import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import java.time.Year;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -107,11 +110,37 @@ public class DossierTransportService implements DossierApi {
 
   @Override
   @Transactional
+  public void affecterArretsVoyage(
+      UUID dossierId, UUID arretChargementId, UUID arretDechargementId) {
+    DossierTransport dossier = trouverOuEchouer(dossierId);
+    dossier.affecterArretsVoyage(arretChargementId, arretDechargementId);
+    dossierRepository.sauvegarder(dossier);
+  }
+
+  @Override
+  @Transactional
+  public void planifierSurVoyageAvecArrets(
+      UUID dossierId, UUID arretChargementId, UUID arretDechargementId) {
+    DossierTransport dossier = trouverOuEchouer(dossierId);
+    if (dossier.statut() != StatutDossier.CREE) {
+      throw new BusinessException(
+          "Seul un dossier au statut CREE peut être ajouté à un voyage ("
+              + dossier.reference().valeur()
+              + ")");
+    }
+    dossier.affecterArretsVoyage(arretChargementId, arretDechargementId);
+    dossier.changerStatut(StatutDossier.PLANIFIE);
+    dossierRepository.sauvegarder(dossier);
+  }
+
+  @Override
+  @Transactional
   public void replanifierApresAnnulationVoyage(List<UUID> dossierIds) {
     for (UUID dossierId : dossierIds) {
       DossierTransport dossier = trouverOuEchouer(dossierId);
       if (dossier.statut() == StatutDossier.PLANIFIE) {
         dossier.changerStatut(StatutDossier.CREE);
+        dossier.retirerArretsVoyage();
         dossierRepository.sauvegarder(dossier);
       }
     }
@@ -138,6 +167,36 @@ public class DossierTransportService implements DossierApi {
     return dossierRepository.parId(dossierId).map(this::versResume);
   }
 
+  @Override
+  @Transactional(readOnly = true)
+  public List<DossierCapaciteSummary> listerPourCalculCapacite(List<UUID> dossierIds) {
+    return dossierIds.stream()
+        .map(dossierRepository::parId)
+        .flatMap(Optional::stream)
+        .map(this::versCapacite)
+        .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Set<UUID> listerArretsVoyageReferences(List<UUID> dossierIds) {
+    Set<UUID> references = new HashSet<>();
+    for (UUID dossierId : dossierIds) {
+      dossierRepository
+          .parId(dossierId)
+          .ifPresent(
+              dossier -> {
+                if (dossier.arretChargementId() != null) {
+                  references.add(dossier.arretChargementId());
+                }
+                if (dossier.arretDechargementId() != null) {
+                  references.add(dossier.arretDechargementId());
+                }
+              });
+    }
+    return references;
+  }
+
   /** Résout la conformité ADR du dossier via le catalogue référentiel des marchandises. */
   @Transactional(readOnly = true)
   public boolean dossierContientAdr(DossierTransport dossier) {
@@ -154,6 +213,15 @@ public class DossierTransportService implements DossierApi {
         dossier.volumeM3(),
         dossier.nbPalettes(),
         dossierContientAdr(dossier));
+  }
+
+  private DossierCapaciteSummary versCapacite(DossierTransport dossier) {
+    return new DossierCapaciteSummary(
+        dossier.id(),
+        dossier.poidsBrutKg(),
+        dossier.volumeM3(),
+        dossier.arretChargementId(),
+        dossier.arretDechargementId());
   }
 
   private DossierTransport trouverOuEchouer(UUID id) {

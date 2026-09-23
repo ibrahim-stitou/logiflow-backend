@@ -63,6 +63,12 @@ public class DossierEntity extends BaseEntity {
   @Column(name = "documents_json", columnDefinition = "text")
   private String documentsJson;
 
+  @Column(name = "arret_chargement_id")
+  private UUID arretChargementId;
+
+  @Column(name = "arret_dechargement_id")
+  private UUID arretDechargementId;
+
   protected DossierEntity() {}
 
   @Builder
@@ -80,7 +86,9 @@ public class DossierEntity extends BaseEntity {
       String carrosserieRequise,
       Double temperatureRequise,
       String segmentsJson,
-      String documentsJson) {
+      String documentsJson,
+      UUID arretChargementId,
+      UUID arretDechargementId) {
     definirId(id);
     this.reference = reference;
     this.commandeId = commandeId;
@@ -95,6 +103,8 @@ public class DossierEntity extends BaseEntity {
     this.temperatureRequise = temperatureRequise;
     this.segmentsJson = segmentsJson;
     this.documentsJson = documentsJson;
+    this.arretChargementId = arretChargementId;
+    this.arretDechargementId = arretDechargementId;
   }
 
   /** Met à jour l'état métier sans toucher à l'identifiant ni au verrou optimiste. */
@@ -109,7 +119,9 @@ public class DossierEntity extends BaseEntity {
       String carrosserieRequise,
       Double temperatureRequise,
       String segmentsJson,
-      String documentsJson) {
+      String documentsJson,
+      UUID arretChargementId,
+      UUID arretDechargementId) {
     this.statut = statut;
     this.typeTransport = typeTransport;
     this.groupable = groupable;
@@ -121,5 +133,7 @@ public class DossierEntity extends BaseEntity {
     this.temperatureRequise = temperatureRequise;
     this.segmentsJson = segmentsJson;
     this.documentsJson = documentsJson;
+    this.arretChargementId = arretChargementId;
+    this.arretDechargementId = arretDechargementId;
   }
 }

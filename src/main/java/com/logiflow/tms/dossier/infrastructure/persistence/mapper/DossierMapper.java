@@ -54,7 +54,9 @@ public class DossierMapper {
         lignes.stream().map(this::versLigneDomaine).toList(),
         versListe(entity.getSegmentsJson(), new TypeReference<List<Segment>>() {}),
         versListeOuVide(
-            entity.getDocumentsJson(), new TypeReference<List<DocumentTransport>>() {}));
+            entity.getDocumentsJson(), new TypeReference<List<DocumentTransport>>() {}),
+        entity.getArretChargementId(),
+        entity.getArretDechargementId());
   }
 
   public LigneMarchandise versLigneDomaine(LigneMarchandiseEntity entity) {
@@ -101,6 +103,8 @@ public class DossierMapper {
         .temperatureRequise(dossier.temperatureRequise())
         .segmentsJson(versJson(dossier.segments()))
         .documentsJson(versJson(dossier.documents()))
+        .arretChargementId(dossier.arretChargementId())
+        .arretDechargementId(dossier.arretDechargementId())
         .build();
   }
 
@@ -116,7 +120,9 @@ public class DossierMapper {
         dossier.carrosserieRequise() != null ? dossier.carrosserieRequise().name() : null,
         dossier.temperatureRequise(),
         versJson(dossier.segments()),
-        versJson(dossier.documents()));
+        versJson(dossier.documents()),
+        dossier.arretChargementId(),
+        dossier.arretDechargementId());
   }
 
   private String versJson(Object valeur) {

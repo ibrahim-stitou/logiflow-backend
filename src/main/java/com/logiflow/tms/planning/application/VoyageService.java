@@ -2,7 +2,6 @@ package com.logiflow.tms.planning.application;
 
 import com.logiflow.tms.dossier.api.DossierApi;
 import com.logiflow.tms.dossier.api.dto.DossierSummary;
-import com.logiflow.tms.dossier.domain.model.StatutDossier;
 import com.logiflow.tms.driver.api.ChauffeurApi;
 import com.logiflow.tms.fleet.api.RemorqueApi;
 import com.logiflow.tms.fleet.api.VehiculeApi;
@@ -40,6 +39,7 @@ public class VoyageService implements VoyageApi {
   private final SequenceReferenceGenerator referenceGenerator;
   private final ConformiteDomainService conformiteDomainService;
   private final DossierApi dossierApi;
+  private final VoyageArretMaintenanceService voyageArretMaintenanceService;
   private final VehiculeApi vehiculeApi;
   private final RemorqueApi remorqueApi;
   private final ChauffeurApi chauffeurApi;
@@ -60,7 +60,7 @@ public class VoyageService implements VoyageApi {
                                     "Aucun dossier de transport trouvé pour l'identifiant " + id)))
             .toList();
     for (DossierSummary dossier : dossiers) {
-      if (!StatutDossier.CREE.name().equals(dossier.statut())) {
+      if (!"CREE".equals(dossier.statut())) {
         throw new BusinessException(
             "Seul un dossier au statut CREE peut être planifié sur un voyage ("
                 + dossier.reference()
@@ -150,7 +150,9 @@ public class VoyageService implements VoyageApi {
     voyage.changerStatut(statut);
     voyageRepository.sauvegarder(voyage);
     if (statut == StatutVoyage.ANNULE) {
-      dossierApi.replanifierApresAnnulationVoyage(voyage.dossierIds());
+      List<UUID> dossierIds = voyage.dossierIds();
+      dossierApi.replanifierApresAnnulationVoyage(dossierIds);
+      voyageArretMaintenanceService.purgerArretsOrphelins(id, dossierIds);
     }
   }
 
@@ -181,6 +183,7 @@ public class VoyageService implements VoyageApi {
                     v.reference().valeur(),
                     v.statut().name(),
                     v.vehiculeId(),
+                    v.remorqueId(),
                     v.dossierIds()));
   }
 

@@ -47,6 +47,8 @@ public final class DossierTransport {
   private List<LigneMarchandise> lignesMarchandise;
   private List<Segment> segments;
   private List<DocumentTransport> documents;
+  private UUID arretChargementId;
+  private UUID arretDechargementId;
 
   private DossierTransport(
       UUID id,
@@ -63,7 +65,9 @@ public final class DossierTransport {
       Double temperatureRequise,
       List<LigneMarchandise> lignesMarchandise,
       List<Segment> segments,
-      List<DocumentTransport> documents) {
+      List<DocumentTransport> documents,
+      UUID arretChargementId,
+      UUID arretDechargementId) {
     this.id = Objects.requireNonNull(id, "L'identifiant du dossier est obligatoire");
     this.reference = Objects.requireNonNull(reference, "La référence du dossier est obligatoire");
     this.commandeId = Objects.requireNonNull(commandeId, "La commande d'origine est obligatoire");
@@ -98,6 +102,8 @@ public final class DossierTransport {
           "Un dossier de transport doit définir au moins deux segments (chargement et déchargement)");
     }
     this.documents = List.copyOf(documents);
+    this.arretChargementId = arretChargementId;
+    this.arretDechargementId = arretDechargementId;
   }
 
   public static DossierTransport creer(
@@ -130,7 +136,9 @@ public final class DossierTransport {
         temperatureRequise,
         lignesMarchandise,
         segments,
-        documents);
+        documents,
+        null,
+        null);
   }
 
   public static DossierTransport reconstituer(
@@ -148,7 +156,9 @@ public final class DossierTransport {
       Double temperatureRequise,
       List<LigneMarchandise> lignesMarchandise,
       List<Segment> segments,
-      List<DocumentTransport> documents) {
+      List<DocumentTransport> documents,
+      UUID arretChargementId,
+      UUID arretDechargementId) {
     return new DossierTransport(
         id,
         reference,
@@ -164,7 +174,26 @@ public final class DossierTransport {
         temperatureRequise,
         lignesMarchandise,
         segments,
-        documents);
+        documents,
+        arretChargementId,
+        arretDechargementId);
+  }
+
+  /**
+   * Associe les arrêts voyage de chargement et de déchargement pour le calcul de capacité par
+   * tronçon. Appelé lors de la planification ou de l'ajout au voyage.
+   */
+  public void affecterArretsVoyage(UUID chargementId, UUID dechargementId) {
+    Objects.requireNonNull(chargementId, "L'arrêt de chargement est obligatoire");
+    Objects.requireNonNull(dechargementId, "L'arrêt de déchargement est obligatoire");
+    this.arretChargementId = chargementId;
+    this.arretDechargementId = dechargementId;
+  }
+
+  /** Réinitialise les arrêts voyage (ex. annulation de planification). */
+  public void retirerArretsVoyage() {
+    this.arretChargementId = null;
+    this.arretDechargementId = null;
   }
 
   /** Applique une transition d'état, en la validant contre le cycle de vie autorisé. */
@@ -279,6 +308,14 @@ public final class DossierTransport {
 
   public List<DocumentTransport> documents() {
     return documents;
+  }
+
+  public UUID arretChargementId() {
+    return arretChargementId;
+  }
+
+  public UUID arretDechargementId() {
+    return arretDechargementId;
   }
 
   @Override

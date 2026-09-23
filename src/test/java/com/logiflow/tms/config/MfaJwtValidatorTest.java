@@ -86,7 +86,10 @@ class MfaJwtValidatorTest {
       boolean requis, List<String> methodes, List<String> acr) {
     Security security = new Security(false, false, new Mfa(requis, methodes, acr));
     return new MfaJwtValidator(
-        new LogiflowProperties(new Cors(List.of("http://localhost:4200")), security));
+        new LogiflowProperties(
+            new Cors(List.of("http://localhost:4200")),
+            security,
+            new LogiflowProperties.Planning(25)));
   }
 
   private static Jwt jetonSinspreuveMfa() {

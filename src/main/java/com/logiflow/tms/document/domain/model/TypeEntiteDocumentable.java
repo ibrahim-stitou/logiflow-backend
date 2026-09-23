@@ -4,5 +4,6 @@ package com.logiflow.tms.document.domain.model;
 public enum TypeEntiteDocumentable {
   VEHICULE,
   REMORQUE,
-  CHAUFFEUR
+  CHAUFFEUR,
+  PRISE_CARBURANT
 }

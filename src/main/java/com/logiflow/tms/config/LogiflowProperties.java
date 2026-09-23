@@ -1,8 +1,10 @@
 package com.logiflow.tms.config;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -12,7 +14,13 @@ import org.springframework.validation.annotation.Validated;
  */
 @ConfigurationProperties(prefix = "logiflow")
 @Validated
-public record LogiflowProperties(@NotNull @Valid Cors cors, @NotNull @Valid Security security) {
+public record LogiflowProperties(
+    @NotNull @Valid Cors cors,
+    @NotNull @Valid Security security,
+    @NotNull @Valid Planning planning) {
+
+  /** Seuils et paramètres du module planning (capacité par tronçon, déviation d'itinéraire). */
+  public record Planning(@Positive @Max(100) double deviationMaxPourcent) {}
 
   /** Configuration CORS de l'API exposée au frontend Angular. */
   public record Cors(@NotEmpty List<String> allowedOrigins) {}

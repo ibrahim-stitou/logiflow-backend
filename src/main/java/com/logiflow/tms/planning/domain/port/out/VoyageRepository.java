@@ -14,6 +14,9 @@ public interface VoyageRepository {
 
   Optional<Voyage> parId(UUID id);
 
+  /** Charge le voyage avec verrou pessimiste pour sérialiser les ajouts concurrents de dossiers. */
+  Optional<Voyage> parIdAvecVerrouillage(UUID id);
+
   Optional<Voyage> parReference(String reference);
 
   Page<Voyage> rechercher(String texteRecherche, PageRequest pageRequest);

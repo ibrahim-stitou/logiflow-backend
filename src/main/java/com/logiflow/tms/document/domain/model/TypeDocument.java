@@ -7,5 +7,6 @@ public enum TypeDocument {
   CONTROLE_TECHNIQUE,
   ADR,
   PHOTO,
+  JUSTIFICATIF_CARBURANT,
   AUTRE
 }
