@@ -21,6 +21,7 @@ import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import com.logiflow.tms.shared.domain.vo.Capacite;
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -174,22 +175,33 @@ public class VoyageService implements VoyageApi {
   @Override
   @Transactional(readOnly = true)
   public Optional<VoyageSummary> consulter(UUID voyageId) {
-    return voyageRepository
-        .parId(voyageId)
-        .map(
-            v ->
-                new VoyageSummary(
-                    v.id(),
-                    v.reference().valeur(),
-                    v.statut().name(),
-                    v.vehiculeId(),
-                    v.remorqueId(),
-                    v.dossierIds()));
+    return voyageRepository.parId(voyageId).map(this::versResume);
+  }
+
+  private VoyageSummary versResume(Voyage v) {
+    return new VoyageSummary(
+        v.id(),
+        v.reference().valeur(),
+        v.statut().name(),
+        v.vehiculeId(),
+        v.remorqueId(),
+        v.dossierIds());
   }
 
   private Voyage trouverOuEchouer(UUID id) {
     return voyageRepository
         .parId(id)
         .orElseThrow(() -> new NotFoundException("Aucun voyage trouvé pour l'identifiant " + id));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<VoyageSummary> rechercher(String texte, String statut, PageRequest pageRequest) {
+    return voyageRepository.rechercherParStatut(texte, statut, pageRequest).map(this::versResume);
+  }
+
+  @Override
+  public List<String> statutsConnus() {
+    return Arrays.stream(StatutVoyage.values()).map(Enum::name).toList();
   }
 }

@@ -14,6 +14,8 @@ import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import com.logiflow.tms.shared.domain.vo.Immatriculation;
 import com.logiflow.tms.shared.domain.vo.Poids;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -84,7 +86,11 @@ public class VehiculeService implements VehiculeApi {
 
   @Transactional
   public void sortir(
-      UUID id, LocalDate dateSortie, String motifSortie, Integer kilometrageSortie, Integer heuresMoteurSortie) {
+      UUID id,
+      LocalDate dateSortie,
+      String motifSortie,
+      Integer kilometrageSortie,
+      Integer heuresMoteurSortie) {
     Vehicule vehicule = trouverOuEchouer(id);
     vehicule.sortir(dateSortie, motifSortie, kilometrageSortie, heuresMoteurSortie);
     vehiculeRepository.sauvegarder(vehicule);
@@ -133,5 +139,16 @@ public class VehiculeService implements VehiculeApi {
     return vehiculeRepository
         .parId(id)
         .orElseThrow(() -> new NotFoundException("Aucun véhicule trouvé pour l'identifiant " + id));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<VehiculeSummary> rechercher(String texte, String statut, PageRequest pageRequest) {
+    return vehiculeRepository.rechercherParStatut(texte, statut, pageRequest).map(this::versResume);
+  }
+
+  @Override
+  public List<String> statutsConnus() {
+    return Arrays.stream(StatutVehicule.values()).map(Enum::name).toList();
   }
 }

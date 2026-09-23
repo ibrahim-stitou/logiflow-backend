@@ -3,6 +3,7 @@ package com.logiflow.tms.shared.infrastructure.security;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -31,6 +32,16 @@ public class SecurityContextService {
       return Optional.of(
           new CurrentUser(
               jwt.getSubject(), nomAffichage != null ? nomAffichage : jwt.getSubject(), roles));
+    }
+    // Authentification non-JWT : utilisateur fictif du profil local (LocalDevAuthenticationFilter)
+    // ou jeton de contexte du copilote. Les anonymes restent exclus.
+    if (authentication instanceof UsernamePasswordAuthenticationToken) {
+      Set<String> roles =
+          authentication.getAuthorities().stream()
+              .map(authority -> authority.getAuthority())
+              .collect(Collectors.toUnmodifiableSet());
+      return Optional.of(
+          new CurrentUser(authentication.getName(), authentication.getName(), roles));
     }
     return Optional.empty();
   }

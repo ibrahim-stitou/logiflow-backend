@@ -2,6 +2,8 @@ package com.logiflow.tms.maintenance.application;
 
 import com.logiflow.tms.fleet.api.VehiculeApi;
 import com.logiflow.tms.maintenance.api.MaintenanceApi;
+import com.logiflow.tms.maintenance.api.dto.OrdreTravailSummary;
+import com.logiflow.tms.maintenance.api.dto.PlanEntretienSummary;
 import com.logiflow.tms.maintenance.api.dto.ScoreSanteSummary;
 import com.logiflow.tms.maintenance.application.command.CalculerScoreSanteCommand;
 import com.logiflow.tms.maintenance.application.command.CreerOrdreTravailCommand;
@@ -148,5 +150,38 @@ public class MaintenanceService implements MaintenanceApi {
         .parId(id)
         .orElseThrow(
             () -> new NotFoundException("Aucun ordre de travail trouvé pour l'identifiant " + id));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<OrdreTravailSummary> ordresTravail(UUID vehiculeId, PageRequest pageRequest) {
+    return ordreTravailRepository
+        .rechercher(vehiculeId, pageRequest)
+        .map(
+            ot ->
+                new OrdreTravailSummary(
+                    ot.id(),
+                    ot.vehiculeId(),
+                    ot.type().name(),
+                    ot.statut().name(),
+                    ot.datePlanifiee(),
+                    ot.cout() != null ? ot.cout().montant() : null,
+                    ot.cout() != null ? ot.cout().devise().getCurrencyCode() : null));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<PlanEntretienSummary> plansEntretien(UUID vehiculeId, PageRequest pageRequest) {
+    return planEntretienRepository
+        .rechercher(vehiculeId, pageRequest)
+        .map(
+            plan ->
+                new PlanEntretienSummary(
+                    plan.id(),
+                    plan.vehiculeId(),
+                    plan.libelle(),
+                    plan.periodiciteKm(),
+                    plan.periodiciteMois(),
+                    plan.seuilAlerteKm()));
   }
 }

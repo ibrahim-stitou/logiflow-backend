@@ -1,7 +1,10 @@
 package com.logiflow.tms.driver.api;
 
 import com.logiflow.tms.driver.api.dto.ChauffeurSummary;
+import com.logiflow.tms.shared.application.Page;
+import com.logiflow.tms.shared.application.PageRequest;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,4 +28,14 @@ public interface ChauffeurApi {
    * à la date donnée.
    */
   boolean documentsValides(UUID chauffeurId, LocalDate date);
+
+  /**
+   * Recherche paginée pour la consultation transverse (copilote IA). {@code disponibilite}
+   * optionnel ({@code null} = tous), doit appartenir à {@link #disponibilitesConnues()} ; {@code
+   * texte} optionnel.
+   */
+  Page<ChauffeurSummary> rechercher(String texte, String disponibilite, PageRequest pageRequest);
+
+  /** Valeurs possibles du filtre de {@link #rechercher}. */
+  List<String> disponibilitesConnues();
 }

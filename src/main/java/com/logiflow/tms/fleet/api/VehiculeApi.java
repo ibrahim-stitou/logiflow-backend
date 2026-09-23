@@ -1,7 +1,10 @@
 package com.logiflow.tms.fleet.api;
 
 import com.logiflow.tms.fleet.api.dto.VehiculeSummary;
+import com.logiflow.tms.shared.application.Page;
+import com.logiflow.tms.shared.application.PageRequest;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,4 +22,13 @@ public interface VehiculeApi {
 
   /** Indique si tous les documents obligatoires du véhicule sont valides à la date donnée. */
   boolean documentsValides(UUID vehiculeId, LocalDate date);
+
+  /**
+   * Recherche paginée pour la consultation transverse (copilote IA). {@code statut} optionnel
+   * ({@code null} = tous), doit appartenir à {@link #statutsConnus()} ; {@code texte} optionnel.
+   */
+  Page<VehiculeSummary> rechercher(String texte, String statut, PageRequest pageRequest);
+
+  /** Valeurs possibles du filtre de {@link #rechercher}. */
+  List<String> statutsConnus();
 }

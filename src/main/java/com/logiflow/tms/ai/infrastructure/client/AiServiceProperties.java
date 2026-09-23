@@ -9,6 +9,9 @@ import org.springframework.validation.annotation.Validated;
 /**
  * Configuration de connexion au service IA externe (application Flask), préfixe {@code
  * logiflow.ai-service.*}. Voir docs/integration-ia.md pour le détail du contrat.
+ *
+ * <p>{@code apiKey} authentifie Spring auprès du service IA ; {@code callbackApiKey} authentifie le
+ * service IA quand il rappelle les outils du copilote ({@code /internal/copilote/**}).
  */
 @ConfigurationProperties(prefix = "logiflow.ai-service")
 @Validated
@@ -16,4 +19,7 @@ public record AiServiceProperties(
     @NotBlank String baseUrl,
     @NotBlank String apiKey,
     @NotNull Duration connectTimeout,
-    @NotNull Duration readTimeout) {}
+    @NotNull Duration readTimeout,
+    @NotNull Duration streamReadTimeout,
+    @NotBlank String callbackApiKey,
+    @NotNull Duration contexteTtl) {}

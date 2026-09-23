@@ -9,6 +9,7 @@ import com.logiflow.tms.carburant.infrastructure.persistence.repository.PriseCar
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -48,10 +49,7 @@ public class PriseCarburantRepositoryAdapter implements PriseCarburantRepository
         org.springframework.data.domain.PageRequest.of(pageRequest.numero(), pageRequest.taille());
     var pageJpa =
         jpaRepository.rechercher(
-            texteRecherche,
-            voyageId,
-            statut != null ? statut.name() : null,
-            pageable);
+            texteRecherche, voyageId, statut != null ? statut.name() : null, pageable);
     var contenu = pageJpa.getContent().stream().map(mapper::versDomaine).toList();
     return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
   }
@@ -59,14 +57,29 @@ public class PriseCarburantRepositoryAdapter implements PriseCarburantRepository
   @Override
   public PriseCarburantStats stats(String texteRecherche, UUID voyageId, StatutPrise statut) {
     String statutNom = statut != null ? statut.name() : null;
-    Object[] totaux = jpaRepository.agregerTotaux(texteRecherche, voyageId, statutNom);
+    return versStats(
+        jpaRepository.agregerTotaux(texteRecherche, voyageId, statutNom),
+        jpaRepository.agregerParType(texteRecherche, voyageId, statutNom));
+  }
+
+  @Override
+  public PriseCarburantStats statsPeriode(UUID vehiculeId, Instant debut, Instant fin) {
+    return versStats(
+        jpaRepository.agregerTotauxPeriode(vehiculeId, debut, fin),
+        jpaRepository.agregerParTypePeriode(vehiculeId, debut, fin));
+  }
+
+  private static PriseCarburantStats versStats(Object[] totaux, List<Object[]> lignesParType) {
+    // Une requête agrégée JPQL à plusieurs colonnes peut revenir enveloppée dans un Object[].
+    if (totaux.length == 1 && totaux[0] instanceof Object[] imbrique) {
+      totaux = imbrique;
+    }
     long nombre = totaux[0] != null ? ((Number) totaux[0]).longValue() : 0L;
     double litres = totaux[1] != null ? ((Number) totaux[1]).doubleValue() : 0.0;
-    BigDecimal montant =
-        totaux[2] != null ? (BigDecimal) totaux[2] : BigDecimal.ZERO;
+    BigDecimal montant = totaux[2] != null ? (BigDecimal) totaux[2] : BigDecimal.ZERO;
 
     List<ParType> parType =
-        jpaRepository.agregerParType(texteRecherche, voyageId, statutNom).stream()
+        lignesParType.stream()
             .map(
                 row ->
                     new ParType(

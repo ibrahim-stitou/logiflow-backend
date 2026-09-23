@@ -16,6 +16,7 @@ import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import java.time.Year;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -80,8 +81,7 @@ public class DossierTransportService implements DossierApi {
   @Transactional
   public void changerStatut(UUID id, StatutDossier statut) {
     if (statut == StatutDossier.PLANIFIE) {
-      throw new BusinessException(
-          "Le statut PLANIFIE est réservé à la planification d'un voyage");
+      throw new BusinessException("Le statut PLANIFIE est réservé à la planification d'un voyage");
     }
     DossierTransport dossier = trouverOuEchouer(id);
     if (dossier.statut() == StatutDossier.PLANIFIE && statut == StatutDossier.CREE) {
@@ -231,5 +231,16 @@ public class DossierTransportService implements DossierApi {
             () ->
                 new NotFoundException(
                     "Aucun dossier de transport trouvé pour l'identifiant " + id));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<DossierSummary> rechercher(String texte, String statut, PageRequest pageRequest) {
+    return dossierRepository.rechercherParStatut(texte, statut, pageRequest).map(this::versResume);
+  }
+
+  @Override
+  public List<String> statutsConnus() {
+    return Arrays.stream(StatutDossier.values()).map(Enum::name).toList();
   }
 }

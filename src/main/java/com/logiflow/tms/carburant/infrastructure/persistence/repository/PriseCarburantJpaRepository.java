@@ -65,4 +65,29 @@ public interface PriseCarburantJpaRepository extends JpaRepository<PriseCarburan
       @Param("q") String texteRecherche,
       @Param("voyageId") UUID voyageId,
       @Param("statut") String statut);
+
+  @Query(
+      """
+      SELECT COUNT(p), COALESCE(SUM(p.litrage), 0), COALESCE(SUM(p.montantTtc), 0)
+      FROM PriseCarburantEntity p
+      WHERE (:vehiculeId IS NULL OR p.vehiculeId = :vehiculeId)
+        AND p.datePrise >= :debut AND p.datePrise < :fin
+      """)
+  Object[] agregerTotauxPeriode(
+      @Param("vehiculeId") UUID vehiculeId,
+      @Param("debut") java.time.Instant debut,
+      @Param("fin") java.time.Instant fin);
+
+  @Query(
+      """
+      SELECT p.typeCarburant, COUNT(p), COALESCE(SUM(p.litrage), 0), COALESCE(SUM(p.montantTtc), 0)
+      FROM PriseCarburantEntity p
+      WHERE (:vehiculeId IS NULL OR p.vehiculeId = :vehiculeId)
+        AND p.datePrise >= :debut AND p.datePrise < :fin
+      GROUP BY p.typeCarburant
+      """)
+  java.util.List<Object[]> agregerParTypePeriode(
+      @Param("vehiculeId") UUID vehiculeId,
+      @Param("debut") java.time.Instant debut,
+      @Param("fin") java.time.Instant fin);
 }

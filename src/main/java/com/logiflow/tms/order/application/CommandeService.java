@@ -4,6 +4,7 @@ import com.logiflow.tms.order.api.CommandeApi;
 import com.logiflow.tms.order.api.dto.CommandeSummary;
 import com.logiflow.tms.order.application.command.CreerCommandeCommand;
 import com.logiflow.tms.order.domain.model.Commande;
+import com.logiflow.tms.order.domain.model.StatutCommande;
 import com.logiflow.tms.order.domain.port.out.CommandeRepository;
 import com.logiflow.tms.order.domain.port.out.SequenceReferenceGenerator;
 import com.logiflow.tms.order.domain.service.OrderDomainService;
@@ -15,6 +16,8 @@ import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import java.time.LocalDate;
 import java.time.Year;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -110,5 +113,16 @@ public class CommandeService implements CommandeApi {
         .parId(id)
         .orElseThrow(
             () -> new NotFoundException("Aucune commande trouvée pour l'identifiant " + id));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<CommandeSummary> rechercher(String texte, String statut, PageRequest pageRequest) {
+    return commandeRepository.rechercherParStatut(texte, statut, pageRequest).map(this::versResume);
+  }
+
+  @Override
+  public List<String> statutsConnus() {
+    return Arrays.stream(StatutCommande.values()).map(Enum::name).toList();
   }
 }

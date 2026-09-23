@@ -1,6 +1,9 @@
 package com.logiflow.tms.fleet.api;
 
 import com.logiflow.tms.fleet.api.dto.RemorqueSummary;
+import com.logiflow.tms.shared.application.Page;
+import com.logiflow.tms.shared.application.PageRequest;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,4 +17,13 @@ public interface RemorqueApi {
 
   /** Indique si la remorque existe et est au statut DISPONIBLE. */
   boolean estDisponible(UUID remorqueId);
+
+  /**
+   * Recherche paginée pour la consultation transverse (copilote IA). {@code statut} optionnel
+   * ({@code null} = tous), doit appartenir à {@link #statutsConnus()} ; {@code texte} optionnel.
+   */
+  Page<RemorqueSummary> rechercher(String texte, String statut, PageRequest pageRequest);
+
+  /** Valeurs possibles du filtre de {@link #rechercher}. */
+  List<String> statutsConnus();
 }

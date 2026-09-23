@@ -19,4 +19,11 @@ public interface DossierTransportRepository {
   List<DossierTransport> parCommandeId(UUID commandeId);
 
   Page<DossierTransport> rechercher(String texteRecherche, PageRequest pageRequest);
+
+  /**
+   * Recherche filtrée par statut (optionnel, {@code null} = tous) et texte (optionnel), triée de la
+   * plus récemment modifiée à la plus ancienne.
+   */
+  Page<DossierTransport> rechercherParStatut(
+      String texteRecherche, String statut, PageRequest pageRequest);
 }

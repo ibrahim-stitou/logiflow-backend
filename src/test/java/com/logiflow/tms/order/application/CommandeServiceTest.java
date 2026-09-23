@@ -43,7 +43,11 @@ class CommandeServiceTest {
   void setUp() {
     commandeService =
         new CommandeService(
-            commandeRepository, new OrderDomainService(), referenceGenerator, clientApi, marchandiseApi);
+            commandeRepository,
+            new OrderDomainService(),
+            referenceGenerator,
+            clientApi,
+            marchandiseApi);
   }
 
   @Test

@@ -1,6 +1,9 @@
 package com.logiflow.tms.order.api;
 
 import com.logiflow.tms.order.api.dto.CommandeSummary;
+import com.logiflow.tms.shared.application.Page;
+import com.logiflow.tms.shared.application.PageRequest;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,4 +18,13 @@ public interface CommandeApi {
 
   /** Indique si la commande existe et est au statut CONFIRMEE. */
   boolean estConfirmee(UUID commandeId);
+
+  /**
+   * Recherche paginée pour la consultation transverse (copilote IA). {@code statut} optionnel
+   * ({@code null} = tous), doit appartenir à {@link #statutsConnus()} ; {@code texte} optionnel.
+   */
+  Page<CommandeSummary> rechercher(String texte, String statut, PageRequest pageRequest);
+
+  /** Valeurs possibles du filtre de {@link #rechercher}. */
+  List<String> statutsConnus();
 }

@@ -62,6 +62,18 @@ public class VoyageRepositoryAdapter implements VoyageRepository {
   }
 
   @Override
+  public Page<Voyage> rechercherParStatut(
+      String texteRecherche, String statut, PageRequest pageRequest) {
+    var pageable =
+        org.springframework.data.domain.PageRequest.of(pageRequest.numero(), pageRequest.taille());
+    org.springframework.data.domain.Page<VoyageEntity> pageJpa =
+        jpaRepository.rechercherParStatut(
+            texteRecherche == null ? "" : texteRecherche.strip(), statut, pageable);
+    var contenu = pageJpa.getContent().stream().map(mapper::versDomaine).toList();
+    return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
+  }
+
+  @Override
   public List<Voyage> parDossierId(UUID dossierId) {
     String fragment = "[\"" + dossierId + "\"]";
     return jpaRepository.findByDossierId(fragment).stream().map(mapper::versDomaine).toList();

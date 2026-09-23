@@ -1,6 +1,8 @@
 package com.logiflow.tms.referential.api;
 
 import com.logiflow.tms.referential.api.dto.ClientSummary;
+import com.logiflow.tms.shared.application.Page;
+import com.logiflow.tms.shared.application.PageRequest;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,4 +17,7 @@ public interface ClientApi {
 
   /** Indique si le client existe et est actif. */
   boolean estActif(UUID clientId);
+
+  /** Recherche paginée par raison sociale ou code (texte optionnel), pour le copilote IA. */
+  Page<ClientSummary> rechercher(String texte, PageRequest pageRequest);
 }

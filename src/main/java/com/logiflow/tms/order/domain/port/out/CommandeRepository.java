@@ -16,4 +16,10 @@ public interface CommandeRepository {
   Optional<Commande> parReference(String reference);
 
   Page<Commande> rechercher(String texteRecherche, PageRequest pageRequest);
+
+  /**
+   * Recherche filtrée par statut (optionnel, {@code null} = tous) et texte (optionnel), triée de la
+   * plus récemment modifiée à la plus ancienne.
+   */
+  Page<Commande> rechercherParStatut(String texteRecherche, String statut, PageRequest pageRequest);
 }

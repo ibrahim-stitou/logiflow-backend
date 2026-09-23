@@ -14,6 +14,8 @@ import com.logiflow.tms.shared.domain.vo.Capacite;
 import com.logiflow.tms.shared.domain.vo.Immatriculation;
 import com.logiflow.tms.shared.domain.vo.Poids;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -126,5 +128,16 @@ public class RemorqueService implements RemorqueApi {
         .parId(id)
         .orElseThrow(
             () -> new NotFoundException("Aucune remorque trouvée pour l'identifiant " + id));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<RemorqueSummary> rechercher(String texte, String statut, PageRequest pageRequest) {
+    return remorqueRepository.rechercherParStatut(texte, statut, pageRequest).map(this::versResume);
+  }
+
+  @Override
+  public List<String> statutsConnus() {
+    return Arrays.stream(StatutVehicule.values()).map(Enum::name).toList();
   }
 }

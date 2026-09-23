@@ -16,6 +16,8 @@ import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -150,5 +152,19 @@ public class ChauffeurService implements ChauffeurApi {
         .parId(id)
         .orElseThrow(
             () -> new NotFoundException("Aucun chauffeur trouvé pour l'identifiant " + id));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<ChauffeurSummary> rechercher(
+      String texte, String disponibilite, PageRequest pageRequest) {
+    return chauffeurRepository
+        .rechercherParDisponibilite(texte, disponibilite, pageRequest)
+        .map(this::versResume);
+  }
+
+  @Override
+  public List<String> disponibilitesConnues() {
+    return Arrays.stream(DisponibiliteChauffeur.values()).map(Enum::name).toList();
   }
 }

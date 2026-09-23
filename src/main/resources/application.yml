@@ -107,7 +107,15 @@ logiflow:
     # (profils local/test) : @NotBlank sur AiServiceProperties exigerait sinon une vraie clé.
     api-key: ${AI_SERVICE_API_KEY:local-dev-key}
     connect-timeout: ${AI_SERVICE_CONNECT_TIMEOUT:2s}
-    read-timeout: ${AI_SERVICE_READ_TIMEOUT:8s}
+    # 30s : un LLM local (Ollama) dépasse largement les 8s initiales sur une réponse complète.
+    read-timeout: ${AI_SERVICE_READ_TIMEOUT:30s}
+    # Délai maximal SANS octet reçu sur le flux SSE du copilote (appels d'outils + génération).
+    stream-read-timeout: ${AI_SERVICE_STREAM_READ_TIMEOUT:120s}
+    # Secret distinct présenté par le service IA quand il rappelle les outils du copilote
+    # (/internal/copilote/**) : jamais le même que api-key (sens Spring → IA).
+    callback-api-key: ${AI_SERVICE_CALLBACK_API_KEY:local-dev-callback-key}
+    # Durée de validité du jeton de contexte transmis au service IA pour un message du copilote.
+    contexte-ttl: ${AI_SERVICE_CONTEXTE_TTL:5m}
 
 logging:
   pattern:

@@ -50,4 +50,16 @@ public class RemorqueRepositoryAdapter implements RemorqueRepository {
     var contenu = pageJpa.getContent().stream().map(mapper::versDomaine).toList();
     return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
   }
+
+  @Override
+  public Page<Remorque> rechercherParStatut(
+      String texteRecherche, String statut, PageRequest pageRequest) {
+    var pageable =
+        org.springframework.data.domain.PageRequest.of(pageRequest.numero(), pageRequest.taille());
+    var pageJpa =
+        jpaRepository.rechercherParStatut(
+            texteRecherche == null ? "" : texteRecherche.strip(), statut, pageable);
+    var contenu = pageJpa.getContent().stream().map(mapper::versDomaine).toList();
+    return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
+  }
 }

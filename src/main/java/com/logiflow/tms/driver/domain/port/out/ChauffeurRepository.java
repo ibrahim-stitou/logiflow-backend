@@ -18,4 +18,11 @@ public interface ChauffeurRepository {
   boolean existeParMatricule(String matricule);
 
   Page<Chauffeur> rechercher(String texteRecherche, PageRequest pageRequest);
+
+  /**
+   * Recherche filtrée par disponibilité opérationnelle (optionnelle, {@code null} = tous) et texte
+   * (optionnel), triée de la plus récemment modifiée à la plus ancienne.
+   */
+  Page<Chauffeur> rechercherParDisponibilite(
+      String texteRecherche, String disponibilite, PageRequest pageRequest);
 }
