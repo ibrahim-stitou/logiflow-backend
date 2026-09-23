@@ -73,6 +73,17 @@ class MaintenanceControllerIT extends AbstractIntegrationTest {
   }
 
   @Test
+  void statsOrdresDeTravail() throws Exception {
+    mockMvc
+        .perform(get("/api/v1/ordres-travail/stats").with(jwt()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.nombre").isNumber())
+        .andExpect(jsonPath("$.coutTotal.montant").isNumber())
+        .andExpect(jsonPath("$.coutTotal.devise").value("MAD"))
+        .andExpect(jsonPath("$.enCours").isNumber());
+  }
+
+  @Test
   void listerLesOrdresDeTravail() throws Exception {
     UUID vehiculeId = creerVehicule();
     var requete =

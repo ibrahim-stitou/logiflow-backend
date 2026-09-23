@@ -97,6 +97,12 @@ public class MaintenanceService implements MaintenanceApi {
   }
 
   @Transactional(readOnly = true)
+  public OrdreTravailRepository.OrdreTravailStats statsOrdresTravail(
+      UUID vehiculeId, StatutOT statut) {
+    return ordreTravailRepository.stats(vehiculeId, statut);
+  }
+
+  @Transactional(readOnly = true)
   public Page<PlanEntretien> listerPlansEntretien(UUID vehiculeId, PageRequest pageRequest) {
     return planEntretienRepository.rechercher(vehiculeId, pageRequest);
   }

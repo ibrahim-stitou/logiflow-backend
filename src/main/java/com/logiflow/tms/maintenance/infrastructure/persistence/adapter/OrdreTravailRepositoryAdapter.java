@@ -1,7 +1,11 @@
 package com.logiflow.tms.maintenance.infrastructure.persistence.adapter;
 
 import com.logiflow.tms.maintenance.domain.model.OrdreTravail;
+import com.logiflow.tms.maintenance.domain.model.StatutOT;
 import com.logiflow.tms.maintenance.domain.port.out.OrdreTravailRepository;
+import com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat;
+import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versBigDecimal;
+import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versEntier;
 import com.logiflow.tms.maintenance.infrastructure.persistence.entity.OrdreTravailEntity;
 import com.logiflow.tms.maintenance.infrastructure.persistence.mapper.OrdreTravailMapper;
 import com.logiflow.tms.maintenance.infrastructure.persistence.repository.OrdreTravailJpaRepository;
@@ -54,5 +58,26 @@ public class OrdreTravailRepositoryAdapter implements OrdreTravailRepository {
             : jpaRepository.findByVehiculeId(vehiculeId, pageable);
     var contenu = pageJpa.getContent().stream().map(mapper::versDomaine).toList();
     return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
+  }
+
+  @Override
+  public OrdreTravailStats stats(UUID vehiculeId, StatutOT statut) {
+    String statutNom = statut != null ? statut.name() : null;
+    Object[] totaux =
+        jpaRepository
+            .agregerTotaux(vehiculeId, statutNom)
+            .stream()
+            .findFirst()
+            .map(JpaTupleAgregat::normaliserLigne)
+            .orElse(null);
+    long nombre = 0L;
+    var coutTotal = java.math.BigDecimal.ZERO;
+    long enCours = 0L;
+    if (totaux != null) {
+      nombre = versEntier(totaux[0]);
+      coutTotal = versBigDecimal(totaux[1]);
+      enCours = versEntier(totaux[2]);
+    }
+    return new OrdreTravailStats(nombre, coutTotal, enCours);
   }
 }

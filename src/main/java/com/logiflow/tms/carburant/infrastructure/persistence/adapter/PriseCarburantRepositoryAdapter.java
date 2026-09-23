@@ -8,6 +8,10 @@ import com.logiflow.tms.carburant.infrastructure.persistence.mapper.PriseCarbura
 import com.logiflow.tms.carburant.infrastructure.persistence.repository.PriseCarburantJpaRepository;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
+import com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat;
+import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versBigDecimal;
+import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versEntier;
+import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versReel;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -59,23 +63,44 @@ public class PriseCarburantRepositoryAdapter implements PriseCarburantRepository
   @Override
   public PriseCarburantStats stats(String texteRecherche, UUID voyageId, StatutPrise statut) {
     String statutNom = statut != null ? statut.name() : null;
-    Object[] totaux = jpaRepository.agregerTotaux(texteRecherche, voyageId, statutNom);
-    long nombre = totaux[0] != null ? ((Number) totaux[0]).longValue() : 0L;
-    double litres = totaux[1] != null ? ((Number) totaux[1]).doubleValue() : 0.0;
-    BigDecimal montant =
-        totaux[2] != null ? (BigDecimal) totaux[2] : BigDecimal.ZERO;
+    Object[] totaux =
+        jpaRepository
+            .agregerTotaux(texteRecherche, voyageId, statutNom)
+            .stream()
+            .findFirst()
+            .map(JpaTupleAgregat::normaliserLigne)
+            .orElse(null);
+    long nombre = 0L;
+    double litres = 0.0;
+    BigDecimal montant = BigDecimal.ZERO;
+    if (totaux != null) {
+      nombre = versEntier(totaux[0]);
+      litres = versReel(totaux[1]);
+      montant = versBigDecimal(totaux[2]);
+    }
 
     List<ParType> parType =
         jpaRepository.agregerParType(texteRecherche, voyageId, statutNom).stream()
+            .map(JpaTupleAgregat::normaliserLigne)
             .map(
                 row ->
                     new ParType(
-                        TypeCarburant.valueOf((String) row[0]),
-                        ((Number) row[1]).longValue(),
-                        ((Number) row[2]).doubleValue(),
-                        (BigDecimal) row[3]))
+                        versTypeCarburant(row[0]),
+                        versEntier(row[1]),
+                        versReel(row[2]),
+                        versBigDecimal(row[3])))
             .toList();
 
     return new PriseCarburantStats(nombre, litres, montant, parType);
+  }
+
+  private static TypeCarburant versTypeCarburant(Object value) {
+    if (value instanceof TypeCarburant type) {
+      return type;
+    }
+    if (value instanceof String name) {
+      return TypeCarburant.valueOf(name);
+    }
+    throw new IllegalStateException("Type carburant inattendu: " + value.getClass().getName());
   }
 }
