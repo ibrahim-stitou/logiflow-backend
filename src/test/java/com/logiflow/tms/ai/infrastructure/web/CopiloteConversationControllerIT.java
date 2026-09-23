@@ -241,7 +241,10 @@ class CopiloteConversationControllerIT extends AbstractIntegrationTest {
   }
 
   @Test
-  void sansAuthentificationRenvoie401() throws Exception {
-    mockMvc.perform(get("/api/v1/ia/copilote/conversations")).andExpect(status().isUnauthorized());
+  void sansAuthentificationLAccesEstRefuse() throws Exception {
+    // Profil test permissif (pas de resource server JWT) : refus anonyme en 403 ; 401 en dev/prod.
+    mockMvc
+        .perform(get("/api/v1/ia/copilote/conversations"))
+        .andExpect(status().is4xxClientError());
   }
 }
