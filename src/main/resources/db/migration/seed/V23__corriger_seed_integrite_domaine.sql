@@ -1,12 +1,5 @@
 -- Corrige des enregistrements V21 qui cassent le mapping domaine (listes API en 400).
 
--- Plaque SIV invalide (chr(91) = '[' pour GP-022-V[).
-UPDATE fleet.vehicule
-SET immatriculation = 'GP-022-VZ',
-    updated_at = now(),
-    updated_by = 'system'
-WHERE immatriculation = 'GP-022-V[';
-
 -- Commandes sans ligne de marchandise (le domaine refuse une commande vide).
 INSERT INTO commande.ligne_commande (id, commande_id, marchandise_id, poids_kg, volume_m3, nb_colis,
     created_at, created_by, updated_at, updated_by, version)

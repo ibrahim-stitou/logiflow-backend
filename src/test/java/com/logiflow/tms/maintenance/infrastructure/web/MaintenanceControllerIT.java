@@ -14,11 +14,11 @@ import com.logiflow.tms.maintenance.infrastructure.web.dto.OrdreTravailRequest;
 import com.logiflow.tms.maintenance.infrastructure.web.dto.PlanEntretienRequest;
 import com.logiflow.tms.maintenance.infrastructure.web.dto.ScoreSanteRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
+import com.logiflow.tms.shared.domain.DeviseApplication;
 import com.logiflow.tms.shared.domain.vo.Money;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Currency;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +60,7 @@ class MaintenanceControllerIT extends AbstractIntegrationTest {
             vehiculeId,
             TypeIntervention.ENTRETIEN_PREVENTIF,
             LocalDateTime.now(),
-            new Money(BigDecimal.valueOf(250), Currency.getInstance("EUR")));
+            new Money(BigDecimal.valueOf(250), DeviseApplication.PAR_DEFAUT));
 
     mockMvc
         .perform(
@@ -91,7 +91,7 @@ class MaintenanceControllerIT extends AbstractIntegrationTest {
             vehiculeId,
             TypeIntervention.REPARATION,
             LocalDateTime.now(),
-            new Money(BigDecimal.valueOf(180), Currency.getInstance("EUR")));
+            new Money(BigDecimal.valueOf(180), DeviseApplication.PAR_DEFAUT));
 
     mockMvc
         .perform(
@@ -121,13 +121,13 @@ class MaintenanceControllerIT extends AbstractIntegrationTest {
             vehiculeA,
             TypeIntervention.ENTRETIEN_PREVENTIF,
             LocalDateTime.now(),
-            new Money(BigDecimal.valueOf(120), Currency.getInstance("EUR")));
+            new Money(BigDecimal.valueOf(120), DeviseApplication.PAR_DEFAUT));
     var ordreB =
         new OrdreTravailRequest(
             vehiculeB,
             TypeIntervention.REPARATION,
             LocalDateTime.now(),
-            new Money(BigDecimal.valueOf(300), Currency.getInstance("EUR")));
+            new Money(BigDecimal.valueOf(300), DeviseApplication.PAR_DEFAUT));
 
     mockMvc
         .perform(
@@ -224,7 +224,7 @@ class MaintenanceControllerIT extends AbstractIntegrationTest {
             UUID.randomUUID(),
             TypeIntervention.REPARATION,
             LocalDateTime.now(),
-            new Money(BigDecimal.TEN, Currency.getInstance("EUR")));
+            new Money(BigDecimal.TEN, DeviseApplication.PAR_DEFAUT));
 
     mockMvc
         .perform(
