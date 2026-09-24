@@ -73,7 +73,9 @@ public class CopiloteConversationController {
     this.executor = executor;
   }
 
-  /** Disponibilité du copilote (service IA, Ollama, modèle) pour l'indicateur du panneau. */
+  /**
+   * Disponibilité du copilote (service IA, fournisseur LLM, modèle) pour l'indicateur du panneau.
+   */
   @GetMapping("/etat")
   public EtatResponse etat() {
     utilisateur();

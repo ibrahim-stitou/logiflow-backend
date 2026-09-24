@@ -20,11 +20,21 @@ public final class CopiloteConversationWebDto {
   private CopiloteConversationWebDto() {}
 
   public record EtatResponse(
-      boolean operationnel, boolean serviceIa, String ollama, String base, String modele) {
+      boolean operationnel,
+      boolean serviceIa,
+      String llm,
+      String base,
+      String modele,
+      String fournisseur) {
 
     public static EtatResponse depuis(EtatCopilote etat) {
       return new EtatResponse(
-          etat.operationnel(), etat.serviceIa(), etat.ollama(), etat.base(), etat.modele());
+          etat.operationnel(),
+          etat.serviceIa(),
+          etat.llm(),
+          etat.base(),
+          etat.modele(),
+          etat.fournisseur());
     }
   }
 

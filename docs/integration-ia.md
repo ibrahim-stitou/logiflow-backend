@@ -4,7 +4,9 @@
 
 Les agents IA (groupage, maintenance prédictive, copilote conversationnel, itinéraire) sont
 développés dans une **application Flask séparée** (dépôt `logiflow-ai-service`), déployée et
-versionnée indépendamment de ce backend. Les modèles de langage sont servis par **Ollama**,
+versionnée indépendamment de ce backend. Les modèles de langage sont servis par un
+**fournisseur cloud compatible OpenAI** (Groq par défaut, palier gratuit — voir l'ADR 0004).
+L'ancienne cible était **Ollama**,
 auto-hébergé sur un serveur dédié (provisionné via Terraform) — aucun appel à une API LLM tierce
 payante. L'agent itinéraire s'appuie sur **OSRM** pour le routing (démo publique par défaut,
 auto-hébergeable plus tard). Voir `docs/architecture.md` du dépôt `logiflow-ai-service` pour le
@@ -24,7 +26,7 @@ graph LR
     FL -->|outils du copilote<br/>clé de rappel + jeton de contexte| SB
     SB --> PG[(PostgreSQL<br/>base TMS logiflow)]
     FL --> PGA[(PostgreSQL<br/>base logiflow_ai)]
-    FL --> OL[Ollama]
+    FL --> OL[LLM cloud<br/>Groq…]
     FL -.->|jamais d'accès à la base TMS<br/>ni d'appel entrant depuis Angular| NG
 ```
 
@@ -70,7 +72,8 @@ Toutes les routes sont préfixées `/internal/ai/v1` côté Flask, pour bien les
 
 Voir l'ADR `docs/adr/0004-copilote-base-ia-dediee-et-outils.md`. Le copilote est un chatbot à
 conversations persistées, qui répond à partir des **données du TMS** (via des outils) et des
-connaissances du LLM local (Ollama, `llama3.1:8b` par défaut). Les réponses sont **streamées**.
+connaissances du LLM (`llama-3.3-70b-versatile` chez Groq par défaut). Les réponses sont
+**streamées**.
 
 #### API exposée au frontend (Spring)
 
@@ -260,12 +263,12 @@ par le service IA dans sa base `logiflow_ai`.
 
 ## Environnements
 
-- **Local** : le service Flask (dépôt `logiflow-ai-service`) tourne à côté, avec Ollama et OSRM
+- **Local** : le service Flask (dépôt `logiflow-ai-service`) tourne à côté, avec une clé API LLM et OSRM
   accessibles en local ou sur le réseau. Un bloc `ai-service` commenté est prévu dans
   `docker/docker-compose.yml`, à décommenter une fois le dépôt Flask disponible. Tant qu'il n'est
   pas démarré, Spring Boot fonctionne normalement : seuls les endpoints `/api/v1/ia/**` sont
   affectés (503 pour le copilote et l'itinéraire, repli déterministe pour le groupage).
-- **Cible** : Ollama tourne sur un serveur dédié (provisionné via Terraform) ; backend, service IA
+- **Cible** : projet d'apprentissage, le LLM reste un service cloud ; backend, service IA
   et frontend démarrent dans WSL sur le même réseau interne. Voir le dépôt d'infrastructure une
   fois disponible.
 - **CI** : aucun appel réseau réel vers Flask dans les tests — `AiServiceClientPort` est mocké

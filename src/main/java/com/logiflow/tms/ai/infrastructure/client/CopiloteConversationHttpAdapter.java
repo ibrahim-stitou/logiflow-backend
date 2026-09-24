@@ -63,9 +63,10 @@ public class CopiloteConversationHttpAdapter implements CopiloteConversationPort
       }
       return new EtatCopilote(
           "UP".equals(sante.status()),
-          valeurOuInconnu(sante.dependances().get("ollama")),
+          valeurOuInconnu(sante.dependances().get("llm")),
           valeurOuInconnu(sante.dependances().get("base")),
-          sante.modele());
+          sante.modele(),
+          sante.fournisseur());
     } catch (RestClientException e) {
       return EtatCopilote.serviceIaInjoignable();
     }

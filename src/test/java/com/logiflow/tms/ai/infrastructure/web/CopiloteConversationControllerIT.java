@@ -56,7 +56,7 @@ class CopiloteConversationControllerIT extends AbstractIntegrationTest {
                 echange,
                 200,
                 "application/json",
-                "{\"status\":\"UP\",\"dependances\":{\"ollama\":\"MODELE_ABSENT\",\"base\":\"UP\"},\"modele\":\"llama3.1:8b\"}"));
+                "{\"status\":\"UP\",\"dependances\":{\"llm\":\"MODELE_ABSENT\",\"base\":\"UP\"},\"modele\":\"llama-3.3-70b-versatile\",\"fournisseur\":\"api.groq.com\"}"));
     SERVICE_IA.start();
   }
 
@@ -165,8 +165,9 @@ class CopiloteConversationControllerIT extends AbstractIntegrationTest {
         .perform(get("/api/v1/ia/copilote/etat").with(jwt()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.serviceIa").value(true))
-        .andExpect(jsonPath("$.ollama").value("MODELE_ABSENT"))
-        .andExpect(jsonPath("$.modele").value("llama3.1:8b"))
+        .andExpect(jsonPath("$.llm").value("MODELE_ABSENT"))
+        .andExpect(jsonPath("$.fournisseur").value("api.groq.com"))
+        .andExpect(jsonPath("$.modele").value("llama-3.3-70b-versatile"))
         .andExpect(jsonPath("$.operationnel").value(false));
   }
 

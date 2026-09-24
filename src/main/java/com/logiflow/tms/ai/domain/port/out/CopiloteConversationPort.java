@@ -19,7 +19,10 @@ import java.util.function.Consumer;
  */
 public interface CopiloteConversationPort {
 
-  /** État du service IA et d'Ollama ; ne lève jamais d'exception (injoignable = état dégradé). */
+  /**
+   * État du service IA et de son fournisseur LLM ; ne lève jamais d'exception (injoignable = état
+   * dégradé).
+   */
   EtatCopilote etat();
 
   List<ConversationCopilote> lister(String utilisateurId, int limite, int decalage);

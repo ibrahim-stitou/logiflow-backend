@@ -76,7 +76,7 @@ services:
   # port vers l'hôte) — seul le backend Spring Boot, sur le même réseau interne, peut l'appeler.
   # À décommenter avec le service `app` (en local, on lance plutôt Flask avec `make run`).
   # Sa base propre `logiflow_ai` vit dans le conteneur postgres (init/02-ai-database.sql) ;
-  # Ollama tourne sur l'hôte. Voir docs/integration-ia.md et l'ADR 0004.
+  # Le LLM est un fournisseur cloud (clé API). Voir docs/integration-ia.md et l'ADR 0004.
   # ai-service:
   #   build:
   #     context: ../../logiflow-ai-service
@@ -88,11 +88,10 @@ services:
   #   environment:
   #     INTERNAL_API_KEY: ${AI_SERVICE_API_KEY:-change-me-local-only}
   #     DATABASE_URL: postgresql+psycopg://logiflow_ai:${AI_DB_PASSWORD:-change-me-local-only}@postgres:5432/logiflow_ai
-  #     OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-  #     OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.1:8b}
+  #     LLM_BASE_URL: ${LLM_BASE_URL:-https://api.groq.com/openai/v1}
+  #     LLM_API_KEY: ${LLM_API_KEY}
+  #     LLM_MODEL: ${LLM_MODEL:-llama-3.3-70b-versatile}
   #     BACKEND_BASE_URL: http://app:8080
   #     BACKEND_CALLBACK_API_KEY: ${AI_SERVICE_CALLBACK_API_KEY:-change-me-local-only}
-  #   extra_hosts:
-  #     - "host.docker.internal:host-gateway"
   #   networks:
   #     - logiflow-net
