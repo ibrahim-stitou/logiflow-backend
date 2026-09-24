@@ -75,9 +75,13 @@ public class SecurityConfig {
                 authorize
                     // STATELESS : le SecurityContext ne survit pas au dispatch ERROR/FORWARD vers
                     // /error. Sans ceci, toute exception MVC (validation, 404, etc.) rebondit en
-                    // 403 vide au lieu du ProblemDetail.
+                    // 403 vide au lieu du ProblemDetail. Idem pour le dispatch ASYNC qui clôt un flux
+                    // SSE (copilote) : la requête d'origine a déjà été autorisée.
                     .dispatcherTypeMatchers(
-                        DispatcherType.FORWARD, DispatcherType.ERROR, DispatcherType.INCLUDE)
+                        DispatcherType.FORWARD,
+                        DispatcherType.ERROR,
+                        DispatcherType.INCLUDE,
+                        DispatcherType.ASYNC)
                     .permitAll()
                     .requestMatchers(PUBLIC_ENDPOINTS)
                     .permitAll()

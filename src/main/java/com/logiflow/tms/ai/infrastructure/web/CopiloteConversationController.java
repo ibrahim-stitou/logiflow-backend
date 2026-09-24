@@ -53,8 +53,11 @@ public class CopiloteConversationController {
 
   private static final Logger log = LoggerFactory.getLogger(CopiloteConversationController.class);
 
-  /** Au-delà, le flux est clos côté Spring même si le service IA n'a pas terminé. */
-  private static final long DUREE_MAX_FLUX_MS = 180_000;
+  /**
+   * Au-delà, le flux est clos côté Spring même si le service IA n'a pas terminé. Large : sur CPU,
+   * un LLM local peut mettre plusieurs minutes pour une question nécessitant des outils.
+   */
+  private static final long DUREE_MAX_FLUX_MS = 900_000;
 
   private final CopiloteConversationService conversationService;
   private final SecurityContextService securityContextService;
