@@ -2,7 +2,8 @@
 
 ## Principe
 
-Les agents IA (groupage, maintenance prédictive, copilote conversationnel, itinéraire) sont
+Les agents IA (planification de voyage, maintenance prédictive, copilote conversationnel,
+itinéraire) sont
 développés dans une **application Flask séparée** (dépôt `logiflow-ai-service`), déployée et
 versionnée indépendamment de ce backend. Les modèles de langage sont servis par un
 **fournisseur cloud compatible OpenAI** (Groq par défaut, palier gratuit — voir l'ADR 0004).
@@ -41,8 +42,8 @@ Conséquences de ce principe :
   utilisateur s'arrête à Spring Boot. Entre Spring Boot et Flask, l'authentification est un
   **secret partagé de service à service** (voir ci-dessous), pas une identité utilisateur.
 - Si Flask est indisponible, lent ou renvoie une erreur, l'expérience se dégrade **sans jamais
-  casser** les fonctionnalités déterministes déjà implémentées (ex. le filtrage dur du groupage
-  dans `dossier.domain.service.DossierDomainService` continue de fonctionner sans IA).
+  casser** les fonctionnalités déterministes déjà implémentées (ex. la planification manuelle
+  des voyages et son contrôle de conformité fonctionnent sans IA).
 
 ## Authentification service à service
 
@@ -151,57 +152,74 @@ que Flask pourrait prétendre. Un JWT utilisateur n'ouvre pas ces routes.
 | `lister_remorques` | exploitation, ATELIER | `RemorqueApi.rechercher` |
 | `consulter_maintenance` | exploitation, ATELIER | `MaintenanceApi.ordresTravail` / `plansEntretien` |
 | `consommation_carburant` | exploitation, ATELIER | `CarburantApi.consommation` |
+| `proposer_voyages` | exploitation | `PlanificationVoyageService` (agent de planification) |
 
 « Exploitation » = ADMINISTRATEUR, RESPONSABLE_EXPLOITATION, EXPLOITANT. CHAUFFEUR n'a aucun
 outil : le copilote ne lui répond qu'avec les connaissances générales du LLM. Un outil
 supplémentaire, `rechercher_base_connaissance` (documentation fonctionnelle, pgvector), est
 exécuté localement par Flask sur sa propre base.
 
-### 2. Agent de groupage — *implémenté (version simplifiée)*
+### 2. Agent de planification de voyage — *implémenté* (remplace l'agent de groupage)
 
-`POST /internal/ai/v1/groupage/analyser`
+Voir l'ADR 0005. À partir d'une **période** et d'un **type de voyage**, l'agent propose plusieurs
+voyages complets et comparés : dossiers groupés, arrêts ordonnés avec heures d'arrivée,
+tracteur + remorque, chauffeur(s), indicateurs et justification. L'exploitant choisit une
+proposition, relit le formulaire pré-rempli puis crée le voyage ; la planification manuelle
+reste disponible.
 
-Requête :
+#### API exposée au frontend (Spring)
 
-```json
-{
-  "dossiers": [
-    { "id": "...", "reference": "DT-2026-000123", "poidsBrutKg": 500, "volumeM3": 2.5, "nbPalettes": 10, "contientAdr": false }
-  ],
-  "correlationId": "..."
-}
-```
-
-Réponse attendue (200) :
+`POST /api/v1/ia/planification/propositions`
 
 ```json
-{
-  "propositions": [
-    {
-      "dossierIds": ["...", "..."],
-      "score": 0.87,
-      "confiance": 0.9,
-      "gainKm": 120.5,
-      "gainMarge": 340.0,
-      "justification": "Points de chargement à 4 km, fenêtres compatibles, remplissage 92 %."
-    }
-  ]
-}
+{ "debut": "2026-09-27T00:00:00Z", "fin": "2026-10-04T00:00:00Z",
+  "typeVoyage": "GROUPAGE", "portee": "NATIONAL", "nbOptions": 3 }
 ```
 
-Exposé au frontend par Spring Boot via `POST /api/v1/ia/groupage/propositions`.
+`PlanificationVoyageService` :
 
-**Dégradation gracieuse** : la version actuelle transmet à Flask les dossiers déjà filtrés par
-les règles dures (`DossierTransport.estGroupableAvec`, voir module `dossier`). Si Flask est
-indisponible, `GroupageAdvisorService` intercepte l'échec et renvoie directement les paires
-compatibles selon les règles dures, avec un score neutre et une justification indiquant que
-l'enrichissement IA était indisponible — **le flux métier n'est jamais bloqué**.
+1. collecte les dossiers `CREE` dont une fenêtre de chargement chevauche la période
+   (`DossierApi.candidatsPlanification`), filtrés par portée ;
+2. collecte les ressources **libres sur la période** (`VoyageApi.ressourcesOccupees`) et
+   exploitables : véhicules et remorques hors maintenance/immobilisation, documents valides à la
+   date de début ; chauffeurs sans motif de non-affectation (`ChauffeurApi.listerPourPlanification`) ;
+3. envoie ce contexte à Flask ;
+4. **revalide chaque option** avec les règles de création de voyage
+   (`VoyageApi.evaluerConformite`) : une option n'est jamais présentée comme conforme sur la
+   seule parole de l'agent ;
+5. journalise l'interaction (`PLANIFICATION`).
 
-**Limite assumée de cette version** : le contrat n'inclut pas encore les coordonnées
-géographiques des sites de chargement/déchargement (nécessaires au calcul de proximité réel).
-Cela suppose d'enrichir `dossier.api.DossierSummary` avec les identifiants de sites, puis de les
-résoudre via `referential.api.SiteApi`. Prévu dans un lot ultérieur, une fois l'algorithme de
-scoring géographique prêt côté Flask.
+Chaque option de la réponse porte un objet `voyage` au format de `POST /api/v1/voyages`
+(trajet avec ETA/ETD par étape, affectations TITULAIRE/RENFORT, `arrets` = ordre des sites),
+ainsi que `conformite {conforme, bloquants, avertissements}` et les libellés des ressources.
+Service IA indisponible → **503** : l'écran propose alors la planification manuelle.
+
+#### Contrat interne (Flask)
+
+`POST /internal/ai/v1/planification/proposer` — requête : `debut`, `fin`, `typeVoyage`,
+`nbOptions`, `dossiers[]` (charge, ADR, carrosserie, température, fenêtres de chargement et de
+déchargement), `sites[]` (coordonnées), `vehicules[]`, `remorques[]`, `chauffeurs[]` (permis,
+habilitations valides, passeport, solde, site de rattachement). Réponse : `options[]`
+(`rang`, `objectif`, `dossierIds`, `arrets[]` avec `eta`/`etd`/distances/charge, `vehiculeId`,
+`remorqueId`, `chauffeurIds`, `indicateurs`, `alertes`, `justification`, `recommandee`),
+`comparaison`, `dossiersNonPlanifiables`, `sourceDistances` (`OSRM` | `HAVERSINE`),
+`sourceRedaction` (`LLM` | `GABARIT`).
+
+L'agent est un **solveur déterministe** (matrice OSRM `/table` avec repli Haversine, groupes par
+insertion gloutonne, ordre des arrêts avec précédence, horaires avec pauses réglementaires,
+choix des ressources) ; le **LLM ne fait que rédiger** justifications et comparaison, avec un
+gabarit de repli s'il est indisponible.
+
+#### Création de voyage (module planning)
+
+La création persiste désormais les **arrêts** (construits depuis les sites des dossiers, ou dans
+l'ordre imposé par `VoyageRequest.arrets`) et rattache chaque dossier à ses arrêts. Le contrôle
+de conformité (`ConformiteVoyageService`) couvre : disponibilité **sur la période**
+(chevauchement), documents à la date de départ, tracteur ⇒ remorque, carrosserie et
+température, capacité par tronçon, permis/ADR/passeport des chauffeurs, solde de conduite
+réparti sur l'équipage ; les fenêtres horaires hors période sont des avertissements. Il est
+exposé à blanc par `POST /api/v1/voyages/conformite` ; les ressources libres par
+`GET /api/v1/voyages/ressources-disponibles?debut&fin`.
 
 ### 3. Agent de maintenance prédictive — *contrat documenté, non implémenté*
 
@@ -267,7 +285,8 @@ par le service IA dans sa base `logiflow_ai`.
   accessibles en local ou sur le réseau. Un bloc `ai-service` commenté est prévu dans
   `docker/docker-compose.yml`, à décommenter une fois le dépôt Flask disponible. Tant qu'il n'est
   pas démarré, Spring Boot fonctionne normalement : seuls les endpoints `/api/v1/ia/**` sont
-  affectés (503 pour le copilote et l'itinéraire, repli déterministe pour le groupage).
+  affectés (503 pour le copilote, l'itinéraire et la planification assistée, qui renvoie vers la
+  planification manuelle).
 - **Cible** : projet d'apprentissage, le LLM reste un service cloud ; backend, service IA
   et frontend démarrent dans WSL sur le même réseau interne. Voir le dépôt d'infrastructure une
   fois disponible.
