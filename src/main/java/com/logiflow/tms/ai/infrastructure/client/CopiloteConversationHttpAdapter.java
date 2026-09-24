@@ -2,6 +2,7 @@ package com.logiflow.tms.ai.infrastructure.client;
 
 import com.logiflow.tms.ai.domain.model.copilote.ConversationCopilote;
 import com.logiflow.tms.ai.domain.model.copilote.ConversationCopiloteDetail;
+import com.logiflow.tms.ai.domain.model.copilote.EtatCopilote;
 import com.logiflow.tms.ai.domain.model.copilote.EvenementCopilote;
 import com.logiflow.tms.ai.domain.port.out.CopiloteConversationPort;
 import com.logiflow.tms.ai.infrastructure.client.dto.CopiloteConversationDto;
@@ -46,6 +47,32 @@ public class CopiloteConversationHttpAdapter implements CopiloteConversationPort
       @Qualifier("aiServiceStreamRestClient") RestClient aiServiceStreamRestClient) {
     this.aiServiceRestClient = aiServiceRestClient;
     this.aiServiceStreamRestClient = aiServiceStreamRestClient;
+  }
+
+  @Override
+  public EtatCopilote etat() {
+    try {
+      CopiloteConversationDto.Sante sante =
+          aiServiceRestClient
+              .get()
+              .uri("/health")
+              .retrieve()
+              .body(CopiloteConversationDto.Sante.class);
+      if (sante == null || sante.dependances() == null) {
+        return EtatCopilote.serviceIaInjoignable();
+      }
+      return new EtatCopilote(
+          "UP".equals(sante.status()),
+          valeurOuInconnu(sante.dependances().get("ollama")),
+          valeurOuInconnu(sante.dependances().get("base")),
+          sante.modele());
+    } catch (RestClientException e) {
+      return EtatCopilote.serviceIaInjoignable();
+    }
+  }
+
+  private static String valeurOuInconnu(String valeur) {
+    return valeur != null ? valeur : EtatCopilote.INCONNU;
   }
 
   @Override

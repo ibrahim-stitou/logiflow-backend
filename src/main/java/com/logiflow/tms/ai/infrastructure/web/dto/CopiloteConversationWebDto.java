@@ -2,6 +2,7 @@ package com.logiflow.tms.ai.infrastructure.web.dto;
 
 import com.logiflow.tms.ai.domain.model.copilote.ConversationCopilote;
 import com.logiflow.tms.ai.domain.model.copilote.ConversationCopiloteDetail;
+import com.logiflow.tms.ai.domain.model.copilote.EtatCopilote;
 import com.logiflow.tms.ai.domain.model.copilote.MessageCopilote;
 import com.logiflow.tms.ai.domain.model.copilote.SourceCopilote;
 import jakarta.validation.constraints.Max;
@@ -17,6 +18,15 @@ import java.util.UUID;
 public final class CopiloteConversationWebDto {
 
   private CopiloteConversationWebDto() {}
+
+  public record EtatResponse(
+      boolean operationnel, boolean serviceIa, String ollama, String base, String modele) {
+
+    public static EtatResponse depuis(EtatCopilote etat) {
+      return new EtatResponse(
+          etat.operationnel(), etat.serviceIa(), etat.ollama(), etat.base(), etat.modele());
+    }
+  }
 
   public record CreerConversationRequest(@Size(max = 200) String titre) {}
 

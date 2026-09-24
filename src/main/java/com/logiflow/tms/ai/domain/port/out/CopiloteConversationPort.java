@@ -2,6 +2,7 @@ package com.logiflow.tms.ai.domain.port.out;
 
 import com.logiflow.tms.ai.domain.model.copilote.ConversationCopilote;
 import com.logiflow.tms.ai.domain.model.copilote.ConversationCopiloteDetail;
+import com.logiflow.tms.ai.domain.model.copilote.EtatCopilote;
 import com.logiflow.tms.ai.domain.model.copilote.EvenementCopilote;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import com.logiflow.tms.shared.domain.exception.ServiceIndisponibleException;
@@ -17,6 +18,9 @@ import java.util.function.Consumer;
  * ServiceIndisponibleException}.
  */
 public interface CopiloteConversationPort {
+
+  /** État du service IA et d'Ollama ; ne lève jamais d'exception (injoignable = état dégradé). */
+  EtatCopilote etat();
 
   List<ConversationCopilote> lister(String utilisateurId, int limite, int decalage);
 

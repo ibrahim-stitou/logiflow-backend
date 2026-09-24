@@ -49,6 +49,14 @@ class CopiloteConversationControllerIT extends AbstractIntegrationTest {
       throw new IllegalStateException(e);
     }
     SERVICE_IA.createContext("/internal/ai/v1/copilot", CopiloteConversationControllerIT::repondre);
+    SERVICE_IA.createContext(
+        "/health",
+        echange ->
+            envoyer(
+                echange,
+                200,
+                "application/json",
+                "{\"status\":\"UP\",\"dependances\":{\"ollama\":\"MODELE_ABSENT\",\"base\":\"UP\"},\"modele\":\"llama3.1:8b\"}"));
     SERVICE_IA.start();
   }
 
@@ -149,6 +157,17 @@ class CopiloteConversationControllerIT extends AbstractIntegrationTest {
     assertThat(REQUETES.getFirst())
         .containsEntry("utilisateur", "user-42")
         .containsEntry("cle", "local-dev-key");
+  }
+
+  @Test
+  void lEtatDuCopiloteRefleteCeluiDuServiceIa() throws Exception {
+    mockMvc
+        .perform(get("/api/v1/ia/copilote/etat").with(jwt()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.serviceIa").value(true))
+        .andExpect(jsonPath("$.ollama").value("MODELE_ABSENT"))
+        .andExpect(jsonPath("$.modele").value("llama3.1:8b"))
+        .andExpect(jsonPath("$.operationnel").value(false));
   }
 
   @Test

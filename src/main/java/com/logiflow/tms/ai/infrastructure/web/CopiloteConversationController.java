@@ -7,6 +7,7 @@ import com.logiflow.tms.ai.infrastructure.web.dto.CopiloteConversationWebDto.Con
 import com.logiflow.tms.ai.infrastructure.web.dto.CopiloteConversationWebDto.ConversationResponse;
 import com.logiflow.tms.ai.infrastructure.web.dto.CopiloteConversationWebDto.CreerConversationRequest;
 import com.logiflow.tms.ai.infrastructure.web.dto.CopiloteConversationWebDto.EnvoyerMessageRequest;
+import com.logiflow.tms.ai.infrastructure.web.dto.CopiloteConversationWebDto.EtatResponse;
 import com.logiflow.tms.ai.infrastructure.web.dto.CopiloteConversationWebDto.FeedbackRequest;
 import com.logiflow.tms.ai.infrastructure.web.dto.CopiloteConversationWebDto.RenommerConversationRequest;
 import com.logiflow.tms.shared.domain.exception.ValidationException;
@@ -70,6 +71,13 @@ public class CopiloteConversationController {
     this.conversationService = conversationService;
     this.securityContextService = securityContextService;
     this.executor = executor;
+  }
+
+  /** Disponibilité du copilote (service IA, Ollama, modèle) pour l'indicateur du panneau. */
+  @GetMapping("/etat")
+  public EtatResponse etat() {
+    utilisateur();
+    return EtatResponse.depuis(conversationService.etat());
   }
 
   @GetMapping("/conversations")

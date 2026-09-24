@@ -6,6 +6,7 @@ import com.logiflow.tms.ai.domain.model.TypeInteractionIa;
 import com.logiflow.tms.ai.domain.model.copilote.ContexteCopilote;
 import com.logiflow.tms.ai.domain.model.copilote.ConversationCopilote;
 import com.logiflow.tms.ai.domain.model.copilote.ConversationCopiloteDetail;
+import com.logiflow.tms.ai.domain.model.copilote.EtatCopilote;
 import com.logiflow.tms.ai.domain.model.copilote.EvenementCopilote;
 import com.logiflow.tms.ai.domain.port.out.ContexteCopiloteStore;
 import com.logiflow.tms.ai.domain.port.out.CopiloteConversationPort;
@@ -50,6 +51,10 @@ public class CopiloteConversationService {
     this.contexteStore = contexteStore;
     this.interactionRepository = interactionRepository;
     this.dureeContexte = dureeContexte;
+  }
+
+  public EtatCopilote etat() {
+    return conversationPort.etat();
   }
 
   public List<ConversationCopilote> lister(String utilisateurId, int limite, int decalage) {

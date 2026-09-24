@@ -57,6 +57,9 @@ public final class CopiloteConversationDto {
 
   public record Titre(String titre) {}
 
+  /** Réponse de GET /health du service IA. */
+  public record Sante(String status, java.util.Map<String, String> dependances, String modele) {}
+
   public record Feedback(int note, String commentaire) {}
 
   public record EnvoyerMessage(
