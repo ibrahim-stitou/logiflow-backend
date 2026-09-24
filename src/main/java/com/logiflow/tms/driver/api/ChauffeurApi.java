@@ -1,5 +1,6 @@
 package com.logiflow.tms.driver.api;
 
+import com.logiflow.tms.driver.api.dto.ChauffeurPlanificationSummary;
 import com.logiflow.tms.driver.api.dto.ChauffeurSummary;
 import com.logiflow.tms.driver.api.dto.ExigencesAffectationDto;
 import com.logiflow.tms.shared.application.Page;
@@ -46,4 +47,7 @@ public interface ChauffeurApi {
    * affectable ; chauffeur inconnu = un motif.
    */
   List<String> motifsNonAffectation(UUID chauffeurId, ExigencesAffectationDto exigences);
+
+  /** Vues de planification des chauffeurs ACTIF, évaluées à la date donnée. */
+  List<ChauffeurPlanificationSummary> listerPourPlanification(LocalDate date);
 }

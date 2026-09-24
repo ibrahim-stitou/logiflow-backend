@@ -3,6 +3,7 @@ package com.logiflow.tms.planning.application;
 import com.logiflow.tms.dossier.api.DossierApi;
 import com.logiflow.tms.dossier.api.dto.DossierCapaciteSummary;
 import com.logiflow.tms.fleet.api.RemorqueApi;
+import com.logiflow.tms.fleet.api.VehiculeApi;
 import com.logiflow.tms.planning.domain.model.ArretVoyage;
 import com.logiflow.tms.planning.domain.model.Voyage;
 import com.logiflow.tms.planning.domain.port.out.VoyageArretRepository;
@@ -14,6 +15,7 @@ import com.logiflow.tms.planning.domain.service.CapaciteTronconDomainService.Uti
 import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import com.logiflow.tms.shared.domain.vo.Capacite;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +34,7 @@ public class VoyageCapaciteService {
   private final VoyageArretRepository voyageArretRepository;
   private final DossierApi dossierApi;
   private final RemorqueApi remorqueApi;
+  private final VehiculeApi vehiculeApi;
   private final CapaciteTronconDomainService capaciteTronconDomainService;
 
   public List<UtilisationTroncon> obtenirUtilisationParTroncon(UUID voyageId) {
@@ -88,12 +91,7 @@ public class VoyageCapaciteService {
         capaciteTronconDomainService.calculerUtilisation(
             contexte.arrets(), contexte.dossiersSurTroncons());
     return capaciteTronconDomainService.verifierAjoutDossier(
-        utilisationActuelle,
-        capaciteMax,
-        indiceChargement,
-        indiceDechargement,
-        poidsKg,
-        volumeM3);
+        utilisationActuelle, capaciteMax, indiceChargement, indiceDechargement, poidsKg, volumeM3);
   }
 
   private ContexteCapacite chargerContexte(UUID voyageId) {
@@ -105,13 +103,10 @@ public class VoyageCapaciteService {
         voyageRepository
             .parId(voyageId)
             .orElseThrow(
-                () ->
-                    new NotFoundException("Aucun voyage trouvé pour l'identifiant " + voyageId));
+                () -> new NotFoundException("Aucun voyage trouvé pour l'identifiant " + voyageId));
 
     List<ArretVoyage> arrets =
-        arretsFournis != null
-            ? arretsFournis
-            : voyageArretRepository.parVoyageIdOrdonnes(voyageId);
+        arretsFournis != null ? arretsFournis : voyageArretRepository.parVoyageIdOrdonnes(voyageId);
     if (arrets.size() < 2) {
       throw new BusinessException(
           "Le voyage doit comporter au moins deux arrêts pour calculer la capacité par tronçon");
@@ -142,10 +137,26 @@ public class VoyageCapaciteService {
         indiceArret(indices, dossier.arretDechargementId()));
   }
 
+  /**
+   * Capacité du support de charge : la remorque, sinon le porteur lui-même (volume et palettes à 0
+   * quand ils ne sont pas renseignés, c'est-à-dire non contrôlés).
+   */
   private Capacite capaciteRemorque(Voyage voyage) {
     if (voyage.remorqueId() == null) {
-      throw new BusinessException(
-          "Le voyage n'a pas de remorque affectée — impossible de vérifier la capacité");
+      return vehiculeApi
+          .consulterPourPlanification(voyage.vehiculeId(), LocalDate.now())
+          .filter(vehicule -> !"TRACTEUR".equals(vehicule.type()))
+          .map(
+              vehicule ->
+                  new Capacite(
+                      (int) Math.round(vehicule.chargeUtileKg()),
+                      vehicule.volumeUtileM3() == null ? 0d : vehicule.volumeUtileM3(),
+                      vehicule.nbPositionsPalettes() == null ? 0 : vehicule.nbPositionsPalettes()))
+          .orElseThrow(
+              () ->
+                  new BusinessException(
+                      "Le voyage n'a pas de remorque affectée — impossible de vérifier la"
+                          + " capacité"));
     }
     return remorqueApi
         .consulter(voyage.remorqueId())

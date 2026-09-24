@@ -32,6 +32,7 @@ import com.logiflow.tms.planning.infrastructure.web.dto.AjouterDossierVoyageRequ
 import com.logiflow.tms.planning.infrastructure.web.dto.VoyageRequest;
 import com.logiflow.tms.referential.infrastructure.web.dto.ClientRequest;
 import com.logiflow.tms.referential.infrastructure.web.dto.MarchandiseRequest;
+import com.logiflow.tms.referential.infrastructure.web.dto.SiteRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
 import com.logiflow.tms.shared.domain.vo.GeoPoint;
 import com.logiflow.tms.shared.domain.vo.Money;
@@ -405,6 +406,10 @@ class VoyageDossierControllerIT extends AbstractIntegrationTest {
                     trajet,
                     List.of(new Affectation(chauffeurId, RoleChauffeur.TITULAIRE, depart)))),
             "/api/v1/voyages");
+    // La création persiste les arrêts déduits des dossiers : ces tests posent leur propre
+    // itinéraire (coordonnées maîtrisées pour les calculs de déviation).
+    voyageArretRepository.supprimerParVoyageId(voyageId);
+    rafraichirContextePersistence();
 
     UUID arretA = UUID.randomUUID();
     UUID arretB = UUID.randomUUID();
@@ -448,6 +453,8 @@ class VoyageDossierControllerIT extends AbstractIntegrationTest {
   private UUID creerDossierAvecPoids(
       UUID commandeId, UUID marchandiseId, double poidsKg, double volumeM3) throws Exception {
     Instant maintenant = Instant.now();
+    UUID siteChargement = creerSite(45.76, 4.84);
+    UUID siteDechargement = creerSite(45.80, 4.90);
     return creerId(
         objectMapper.writeValueAsString(
             new DossierRequest(
@@ -464,19 +471,33 @@ class VoyageDossierControllerIT extends AbstractIntegrationTest {
                     new Segment(
                         TypeSegment.CHARGEMENT,
                         0,
-                        UUID.randomUUID(),
+                        siteChargement,
                         new TimeWindow(maintenant, maintenant.plus(2, ChronoUnit.HOURS)),
                         null),
                     new Segment(
                         TypeSegment.DECHARGEMENT,
                         1,
-                        UUID.randomUUID(),
+                        siteDechargement,
                         new TimeWindow(
                             maintenant.plus(1, ChronoUnit.DAYS),
                             maintenant.plus(1, ChronoUnit.DAYS).plus(2, ChronoUnit.HOURS)),
                         null)),
                 List.of())),
         "/api/v1/dossiers");
+  }
+
+  private UUID creerSite(double latitude, double longitude) throws Exception {
+    return creerId(
+        objectMapper.writeValueAsString(
+            new SiteRequest(
+                "SITE-VD-" + UUID.randomUUID().toString().substring(0, 8),
+                "Site voyage dossier",
+                null,
+                new GeoPoint(latitude, longitude),
+                null,
+                null,
+                null)),
+        "/api/v1/sites");
   }
 
   private UUID creerCommandeConfirmee(UUID clientId, UUID marchandiseId) throws Exception {

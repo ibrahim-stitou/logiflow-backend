@@ -16,6 +16,8 @@ public interface DossierJpaRepository extends JpaRepository<DossierEntity, UUID>
 
   List<DossierEntity> findByCommandeId(UUID commandeId);
 
+  List<DossierEntity> findByStatut(String statut);
+
   Page<DossierEntity> findByReferenceContainingIgnoreCase(String reference, Pageable pageable);
 
   @Query(

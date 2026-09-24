@@ -2,6 +2,7 @@ package com.logiflow.tms.fleet.application;
 
 import com.logiflow.tms.document.api.DocumentApi;
 import com.logiflow.tms.fleet.api.VehiculeApi;
+import com.logiflow.tms.fleet.api.dto.VehiculePlanificationSummary;
 import com.logiflow.tms.fleet.api.dto.VehiculeSummary;
 import com.logiflow.tms.fleet.application.command.CreerVehiculeCommand;
 import com.logiflow.tms.fleet.domain.model.StatutVehicule;
@@ -14,6 +15,7 @@ import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import com.logiflow.tms.shared.domain.vo.Immatriculation;
 import com.logiflow.tms.shared.domain.vo.Poids;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +32,7 @@ public class VehiculeService implements VehiculeApi {
   // Doit correspondre à TypeEntiteDocumentable.VEHICULE du module document (contrat en String pour
   // ne pas exposer ce type de domaine hors de son module).
   private static final String TYPE_ENTITE_DOCUMENTABLE = "VEHICULE";
+  private static final int PAGE_PLANIFICATION = 100;
 
   private final VehiculeRepository vehiculeRepository;
   private final FleetDomainService fleetDomainService;
@@ -123,6 +126,46 @@ public class VehiculeService implements VehiculeApi {
   public boolean documentsValides(UUID vehiculeId, LocalDate date) {
     return vehiculeRepository.parId(vehiculeId).isPresent()
         && documentApi.tousValides(TYPE_ENTITE_DOCUMENTABLE, vehiculeId, date);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<VehiculePlanificationSummary> consulterPourPlanification(
+      UUID vehiculeId, LocalDate date) {
+    return vehiculeRepository.parId(vehiculeId).map(v -> versPlanification(v, date));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<VehiculePlanificationSummary> listerPourPlanification(LocalDate date) {
+    List<VehiculePlanificationSummary> resultat = new ArrayList<>();
+    PageRequest page = PageRequest.premiere(PAGE_PLANIFICATION);
+    Page<Vehicule> courante;
+    do {
+      courante = vehiculeRepository.rechercherParStatut("", null, page);
+      courante.contenu().stream()
+          .filter(v -> v.statut() != StatutVehicule.HORS_SERVICE)
+          .map(v -> versPlanification(v, date))
+          .forEach(resultat::add);
+      page = new PageRequest(page.numero() + 1, PAGE_PLANIFICATION);
+    } while (page.numero() < courante.totalPages());
+    return resultat;
+  }
+
+  private VehiculePlanificationSummary versPlanification(Vehicule vehicule, LocalDate date) {
+    return new VehiculePlanificationSummary(
+        vehicule.id(),
+        vehicule.immatriculation().valeur(),
+        vehicule.type().name(),
+        vehicule.chargeUtile().kg(),
+        vehicule.volumeUtileM3(),
+        vehicule.nbPositionsPalettes(),
+        vehicule.typeCarrosserie() == null ? null : vehicule.typeCarrosserie().name(),
+        vehicule.groupeFroid(),
+        vehicule.temperatureMin(),
+        vehicule.temperatureMax(),
+        vehicule.statut().name(),
+        documentApi.tousValides(TYPE_ENTITE_DOCUMENTABLE, vehicule.id(), date));
   }
 
   private VehiculeSummary versResume(Vehicule vehicule) {

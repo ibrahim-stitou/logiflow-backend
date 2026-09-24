@@ -2,6 +2,7 @@ package com.logiflow.tms.driver.application;
 
 import com.logiflow.tms.document.api.DocumentApi;
 import com.logiflow.tms.driver.api.ChauffeurApi;
+import com.logiflow.tms.driver.api.dto.ChauffeurPlanificationSummary;
 import com.logiflow.tms.driver.api.dto.ChauffeurSummary;
 import com.logiflow.tms.driver.api.dto.ExigencesAffectationDto;
 import com.logiflow.tms.driver.application.command.CreerChauffeurCommand;
@@ -19,6 +20,7 @@ import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +37,8 @@ public class ChauffeurService implements ChauffeurApi {
   // Doit correspondre à TypeEntiteDocumentable.CHAUFFEUR du module document (contrat en String pour
   // ne pas exposer ce type de domaine hors de son module).
   private static final String TYPE_ENTITE_DOCUMENTABLE = "CHAUFFEUR";
+
+  private static final int PAGE_PLANIFICATION = 100;
 
   private final ChauffeurRepository chauffeurRepository;
   private final DriverDomainService driverDomainService;
@@ -138,6 +142,46 @@ public class ChauffeurService implements ChauffeurApi {
         .parId(chauffeurId)
         .map(chauffeur -> chauffeur.motifsNonAffectation(versExigences(exigences)))
         .orElseGet(() -> List.of("Chauffeur introuvable : " + chauffeurId));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<ChauffeurPlanificationSummary> listerPourPlanification(LocalDate date) {
+    List<ChauffeurPlanificationSummary> resultat = new ArrayList<>();
+    PageRequest page = PageRequest.premiere(PAGE_PLANIFICATION);
+    Page<Chauffeur> courante;
+    do {
+      courante =
+          chauffeurRepository.rechercherFiltre(null, StatutChauffeur.ACTIF.name(), null, page);
+      courante.contenu().stream().map(c -> versPlanification(c, date)).forEach(resultat::add);
+      page = new PageRequest(page.numero() + 1, PAGE_PLANIFICATION);
+    } while (page.numero() < courante.totalPages());
+    return resultat;
+  }
+
+  private ChauffeurPlanificationSummary versPlanification(Chauffeur chauffeur, LocalDate date) {
+    var profil = chauffeur.profil();
+    boolean passeportValide =
+        profil.numeroPasseport() != null
+            && profil.dateExpirationPasseport() != null
+            && !profil.dateExpirationPasseport().isBefore(date);
+    return new ChauffeurPlanificationSummary(
+        chauffeur.id(),
+        chauffeur.matricule(),
+        chauffeur.nom(),
+        chauffeur.prenom(),
+        chauffeur.statut().name(),
+        chauffeur.disponibilite().name(),
+        chauffeur.soldeTempsConduite().toMinutes(),
+        profil.categoriesPermis().stream().map(Enum::name).sorted().toList(),
+        chauffeur.habilitations().stream()
+            .filter(h -> h.estValide(date))
+            .map(h -> h.type().name())
+            .distinct()
+            .toList(),
+        passeportValide,
+        profil.siteRattachementId(),
+        chauffeur.motifsNonAffectation(new ExigencesAffectation(date, false, false, null)));
   }
 
   private static ExigencesAffectation versExigences(ExigencesAffectationDto dto) {

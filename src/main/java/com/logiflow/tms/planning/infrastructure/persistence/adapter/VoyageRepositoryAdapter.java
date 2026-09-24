@@ -7,6 +7,7 @@ import com.logiflow.tms.planning.infrastructure.persistence.mapper.VoyageMapper;
 import com.logiflow.tms.planning.infrastructure.persistence.repository.VoyageJpaRepository;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -83,5 +84,10 @@ public class VoyageRepositoryAdapter implements VoyageRepository {
   public List<Voyage> parChauffeurId(UUID chauffeurId) {
     String fragment = "[{\"chauffeurId\":\"" + chauffeurId + "\"}]";
     return jpaRepository.findByChauffeurId(fragment).stream().map(mapper::versDomaine).toList();
+  }
+
+  @Override
+  public List<Voyage> actifsSurPeriode(Instant debut, Instant fin) {
+    return jpaRepository.actifsSurPeriode(debut, fin).stream().map(mapper::versDomaine).toList();
   }
 }

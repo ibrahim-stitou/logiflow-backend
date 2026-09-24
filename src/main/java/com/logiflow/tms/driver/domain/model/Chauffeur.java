@@ -189,7 +189,9 @@ public final class Chauffeur {
     if (statut != StatutChauffeur.ACTIF) {
       motifs.add(qui + " : statut " + statut.name());
     }
-    if (!estDisponible()) {
+    // EN_VOYAGE décrit l'instant présent : le chevauchement de période avec d'autres voyages est
+    // contrôlé par le module planning. Les autres indisponibilités (congé, repos…) bloquent.
+    if (!estDisponible() && disponibilite != DisponibiliteChauffeur.EN_VOYAGE) {
       motifs.add(qui + " : non disponible (" + disponibilite.name() + ")");
     }
     if (profil.dateExpirationPermis() != null && profil.dateExpirationPermis().isBefore(date)) {

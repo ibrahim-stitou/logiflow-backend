@@ -1,5 +1,6 @@
 package com.logiflow.tms.fleet.api;
 
+import com.logiflow.tms.fleet.api.dto.VehiculePlanificationSummary;
 import com.logiflow.tms.fleet.api.dto.VehiculeSummary;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
@@ -31,4 +32,11 @@ public interface VehiculeApi {
 
   /** Valeurs possibles du filtre de {@link #rechercher}. */
   List<String> statutsConnus();
+
+  /** Vue de planification d'un véhicule, documents évalués à la date donnée. */
+  Optional<VehiculePlanificationSummary> consulterPourPlanification(
+      UUID vehiculeId, LocalDate date);
+
+  /** Véhicules en service (hors HORS_SERVICE), documents évalués à la date donnée. */
+  List<VehiculePlanificationSummary> listerPourPlanification(LocalDate date);
 }

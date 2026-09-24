@@ -84,6 +84,15 @@ class ChauffeurAffectationTest {
   }
 
   @Test
+  void enVoyageNeBloquePasCarLeChevauchementEstControleParPlanning() {
+    Chauffeur chauffeur = chauffeur(ProfilChauffeur.vide(), List.of());
+    chauffeur.changerDisponibilite(DisponibiliteChauffeur.EN_VOYAGE);
+
+    assertThat(chauffeur.motifsNonAffectation(new ExigencesAffectation(DEPART, false, false, null)))
+        .isEmpty();
+  }
+
+  @Test
   void adrExigeUneHabilitationAdrValideALaDateDuDepart() {
     Chauffeur sansAdr = chauffeur(ProfilChauffeur.vide(), List.of());
     Chauffeur adrExpiree =

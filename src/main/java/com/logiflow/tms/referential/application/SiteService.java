@@ -11,6 +11,7 @@ import com.logiflow.tms.referential.domain.service.SiteDomainService;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -80,17 +81,28 @@ public class SiteService implements SiteApi {
   @Override
   @Transactional(readOnly = true)
   public Optional<SiteSummary> consulter(UUID siteId) {
-    return siteRepository
-        .parId(siteId)
-        .map(
-            site ->
-                new SiteSummary(
-                    site.id(),
-                    site.code(),
-                    site.libelle(),
-                    site.localisation().latitude(),
-                    site.localisation().longitude(),
-                    site.estActif()));
+    return siteRepository.parId(siteId).map(SiteService::versResume);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<SiteSummary> consulterTous(Collection<UUID> siteIds) {
+    return siteIds.stream()
+        .distinct()
+        .map(siteRepository::parId)
+        .flatMap(Optional::stream)
+        .map(SiteService::versResume)
+        .toList();
+  }
+
+  private static SiteSummary versResume(Site site) {
+    return new SiteSummary(
+        site.id(),
+        site.code(),
+        site.libelle(),
+        site.localisation().latitude(),
+        site.localisation().longitude(),
+        site.estActif());
   }
 
   @Override

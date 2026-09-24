@@ -3,6 +3,7 @@ package com.logiflow.tms.planning.infrastructure.config;
 import com.logiflow.tms.planning.domain.service.CapaciteTronconDomainService;
 import com.logiflow.tms.planning.domain.service.ConformiteDomainService;
 import com.logiflow.tms.planning.domain.service.InsertionItineraireDomainService;
+import com.logiflow.tms.planning.domain.service.ItineraireDossiersDomainService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,6 +22,11 @@ public class PlanningDomainConfig {
   @Bean
   public CapaciteTronconDomainService capaciteTronconDomainService() {
     return new CapaciteTronconDomainService();
+  }
+
+  @Bean
+  public ItineraireDossiersDomainService itineraireDossiersDomainService() {
+    return new ItineraireDossiersDomainService();
   }
 
   @Bean

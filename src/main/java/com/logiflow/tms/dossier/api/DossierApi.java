@@ -1,9 +1,11 @@
 package com.logiflow.tms.dossier.api;
 
 import com.logiflow.tms.dossier.api.dto.DossierCapaciteSummary;
+import com.logiflow.tms.dossier.api.dto.DossierPlanificationSummary;
 import com.logiflow.tms.dossier.api.dto.DossierSummary;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -60,4 +62,16 @@ public interface DossierApi {
 
   /** Valeurs possibles du filtre de {@link #rechercher}. */
   List<String> statutsConnus();
+
+  /**
+   * Vues de planification des dossiers demandés, dans l'ordre fourni. Les identifiants inconnus
+   * sont ignorés.
+   */
+  List<DossierPlanificationSummary> consulterPourPlanification(List<UUID> dossierIds);
+
+  /**
+   * Dossiers {@code CREE} planifiables sur la période [debut, fin[ : au moins une fenêtre de
+   * chargement chevauche la période.
+   */
+  List<DossierPlanificationSummary> candidatsPlanification(Instant debut, Instant fin);
 }

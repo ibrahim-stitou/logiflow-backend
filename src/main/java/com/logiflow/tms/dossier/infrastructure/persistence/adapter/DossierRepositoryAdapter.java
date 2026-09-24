@@ -1,6 +1,7 @@
 package com.logiflow.tms.dossier.infrastructure.persistence.adapter;
 
 import com.logiflow.tms.dossier.domain.model.DossierTransport;
+import com.logiflow.tms.dossier.domain.model.StatutDossier;
 import com.logiflow.tms.dossier.domain.port.out.DossierTransportRepository;
 import com.logiflow.tms.dossier.infrastructure.persistence.entity.DossierEntity;
 import com.logiflow.tms.dossier.infrastructure.persistence.mapper.DossierMapper;
@@ -58,6 +59,15 @@ public class DossierRepositoryAdapter implements DossierTransportRepository {
         .map(
             entite ->
                 mapper.versDomaine(entite, ligneJpaRepository.findByDossierId(entite.getId())));
+  }
+
+  @Override
+  public List<DossierTransport> parStatut(StatutDossier statut) {
+    return jpaRepository.findByStatut(statut.name()).stream()
+        .map(
+            (DossierEntity entite) ->
+                mapper.versDomaine(entite, ligneJpaRepository.findByDossierId(entite.getId())))
+        .toList();
   }
 
   @Override

@@ -1,25 +1,20 @@
 package com.logiflow.tms.planning.application;
 
 import com.logiflow.tms.dossier.api.DossierApi;
-import com.logiflow.tms.dossier.api.dto.DossierSummary;
-import com.logiflow.tms.driver.api.ChauffeurApi;
-import com.logiflow.tms.fleet.api.RemorqueApi;
-import com.logiflow.tms.fleet.api.VehiculeApi;
 import com.logiflow.tms.planning.api.VoyageApi;
 import com.logiflow.tms.planning.api.dto.VoyageSummary;
+import com.logiflow.tms.planning.application.ConformiteVoyageService.RapportConformite;
 import com.logiflow.tms.planning.application.command.CreerVoyageCommand;
+import com.logiflow.tms.planning.domain.model.ArretVoyage;
 import com.logiflow.tms.planning.domain.model.StatutVoyage;
 import com.logiflow.tms.planning.domain.model.Voyage;
 import com.logiflow.tms.planning.domain.port.out.SequenceReferenceGenerator;
+import com.logiflow.tms.planning.domain.port.out.VoyageArretRepository;
 import com.logiflow.tms.planning.domain.port.out.VoyageRepository;
-import com.logiflow.tms.planning.domain.service.ConformiteDomainService;
-import com.logiflow.tms.planning.domain.service.ConformiteDomainService.CriteresConformite;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
-import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
-import com.logiflow.tms.shared.domain.vo.Capacite;
-import java.time.LocalDate;
+import com.logiflow.tms.shared.domain.exception.ValidationException;
 import java.time.Year;
 import java.util.Arrays;
 import java.util.List;
@@ -38,77 +33,23 @@ public class VoyageService implements VoyageApi {
 
   private final VoyageRepository voyageRepository;
   private final SequenceReferenceGenerator referenceGenerator;
-  private final ConformiteDomainService conformiteDomainService;
+  private final ConformiteVoyageService conformiteVoyageService;
+  private final VoyageArretRepository voyageArretRepository;
   private final DossierApi dossierApi;
   private final VoyageArretMaintenanceService voyageArretMaintenanceService;
-  private final VehiculeApi vehiculeApi;
-  private final RemorqueApi remorqueApi;
-  private final ChauffeurApi chauffeurApi;
 
   @Transactional
   public UUID creerVoyage(CreerVoyageCommand command) {
-    LocalDate aujourdHui = LocalDate.now();
-
-    List<DossierSummary> dossiers =
-        command.dossierIds().stream()
-            .map(
-                id ->
-                    dossierApi
-                        .consulter(id)
-                        .orElseThrow(
-                            () ->
-                                new NotFoundException(
-                                    "Aucun dossier de transport trouvé pour l'identifiant " + id)))
-            .toList();
-    for (DossierSummary dossier : dossiers) {
-      if (!"CREE".equals(dossier.statut())) {
-        throw new BusinessException(
-            "Seul un dossier au statut CREE peut être planifié sur un voyage ("
-                + dossier.reference()
-                + ")");
-      }
+    UUID voyageId = UUID.randomUUID();
+    RapportConformite rapport = conformiteVoyageService.evaluer(command, voyageId, null);
+    if (!rapport.conforme()) {
+      throw new ValidationException("Affectation non conforme", rapport.messagesBloquants());
     }
-    boolean contientAdr = dossiers.stream().anyMatch(DossierSummary::contientAdr);
-
-    boolean vehiculeDisponible = vehiculeApi.estDisponible(command.vehiculeId());
-    boolean documentsVehiculeValides =
-        vehiculeApi.documentsValides(command.vehiculeId(), aujourdHui);
-
-    boolean chauffeursDisponibles =
-        command.affectations().stream()
-            .allMatch(affectation -> chauffeurApi.estDisponible(affectation.chauffeurId()));
-    boolean habilitationAdrConforme =
-        !contientAdr
-            || command.affectations().stream()
-                .allMatch(
-                    affectation ->
-                        chauffeurApi.possedeHabilitationAdr(affectation.chauffeurId(), aujourdHui));
-    boolean tempsConduiteSuffisant =
-        command.affectations().stream()
-            .allMatch(
-                affectation ->
-                    chauffeurApi
-                        .consulter(affectation.chauffeurId())
-                        .map(
-                            chauffeur ->
-                                chauffeur.soldeTempsConduiteMinutes()
-                                    >= command.trajet().dureeConduiteMin())
-                        .orElse(false));
-
-    conformiteDomainService.verifierConformite(
-        new CriteresConformite(
-            vehiculeDisponible,
-            documentsVehiculeValides,
-            chauffeursDisponibles,
-            habilitationAdrConforme,
-            tempsConduiteSuffisant));
-
-    double tauxRemplissage = calculerTauxRemplissage(command.remorqueId(), dossiers);
 
     var reference = referenceGenerator.generer(PREFIXE_REFERENCE, Year.now().getValue());
     Voyage voyage =
         Voyage.creer(
-            UUID.randomUUID(),
+            voyageId,
             reference,
             command.typeVoyage(),
             command.portee(),
@@ -119,30 +60,22 @@ public class VoyageService implements VoyageApi {
             command.dossierIds(),
             command.trajet(),
             command.affectations(),
-            tauxRemplissage);
-    UUID voyageId = voyageRepository.sauvegarder(voyage).id();
-    dossierApi.planifierPourVoyage(command.dossierIds());
+            Math.min(1d, rapport.tauxRemplissage()));
+    voyageRepository.sauvegarder(voyage);
+    voyageArretRepository.sauvegarderTous(rapport.arrets());
+    rapport
+        .arretsParDossier()
+        .forEach(
+            (dossierId, arrets) ->
+                dossierApi.planifierSurVoyageAvecArrets(
+                    dossierId, arrets.arretChargementId(), arrets.arretDechargementId()));
     return voyageId;
   }
 
-  private double calculerTauxRemplissage(UUID remorqueId, List<DossierSummary> dossiers) {
-    if (remorqueId == null) {
-      return 0d;
-    }
-    Capacite requise =
-        dossiers.stream()
-            .map(d -> new Capacite((int) Math.round(d.poidsBrutKg()), d.volumeM3(), d.nbPalettes()))
-            .reduce(Capacite.zero(), Capacite::plus);
-    return remorqueApi
-        .consulter(remorqueId)
-        .map(
-            r ->
-                requise.tauxRemplissage(
-                    new Capacite(
-                        (int) Math.round(r.chargeUtileKg()),
-                        r.volumeUtileM3(),
-                        r.nbPositionsPalettes())))
-        .orElse(0d);
+  /** Contrôle de conformité à blanc (aucune écriture), pour l'écran de planification. */
+  @Transactional(readOnly = true)
+  public RapportConformite evaluerConformite(CreerVoyageCommand command) {
+    return conformiteVoyageService.evaluer(command, UUID.randomUUID(), null);
   }
 
   @Transactional
@@ -155,6 +88,12 @@ public class VoyageService implements VoyageApi {
       dossierApi.replanifierApresAnnulationVoyage(dossierIds);
       voyageArretMaintenanceService.purgerArretsOrphelins(id, dossierIds);
     }
+  }
+
+  @Transactional(readOnly = true)
+  public List<ArretVoyage> listerArrets(UUID voyageId) {
+    trouverOuEchouer(voyageId);
+    return voyageArretRepository.parVoyageIdOrdonnes(voyageId);
   }
 
   @Transactional(readOnly = true)

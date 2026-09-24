@@ -2,6 +2,7 @@ package com.logiflow.tms.planning.infrastructure.persistence.repository;
 
 import com.logiflow.tms.planning.infrastructure.persistence.entity.VoyageEntity;
 import jakarta.persistence.LockModeType;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,4 +45,13 @@ public interface VoyageJpaRepository extends JpaRepository<VoyageEntity, UUID> {
               + " ORDER BY v.depart_prevu DESC",
       nativeQuery = true)
   List<VoyageEntity> findByChauffeurId(@Param("fragment") String fragment);
+
+  @Query(
+      """
+      SELECT e FROM VoyageEntity e
+      WHERE e.statut NOT IN ('ANNULE', 'TERMINE', 'CLOTURE')
+        AND e.departPrevu < :fin
+        AND e.arriveePrevue > :debut
+      """)
+  List<VoyageEntity> actifsSurPeriode(@Param("debut") Instant debut, @Param("fin") Instant fin);
 }

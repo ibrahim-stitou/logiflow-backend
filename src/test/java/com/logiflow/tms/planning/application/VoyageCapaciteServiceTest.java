@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import com.logiflow.tms.dossier.api.DossierApi;
 import com.logiflow.tms.dossier.api.dto.DossierCapaciteSummary;
 import com.logiflow.tms.fleet.api.RemorqueApi;
+import com.logiflow.tms.fleet.api.VehiculeApi;
 import com.logiflow.tms.fleet.api.dto.RemorqueSummary;
 import com.logiflow.tms.planning.domain.model.ArretVoyage;
 import com.logiflow.tms.planning.domain.model.Portee;
@@ -41,6 +42,7 @@ class VoyageCapaciteServiceTest {
   @Mock private VoyageArretRepository voyageArretRepository;
   @Mock private DossierApi dossierApi;
   @Mock private RemorqueApi remorqueApi;
+  @Mock private VehiculeApi vehiculeApi;
 
   private VoyageCapaciteService voyageCapaciteService;
 
@@ -59,6 +61,7 @@ class VoyageCapaciteServiceTest {
             voyageArretRepository,
             dossierApi,
             remorqueApi,
+            vehiculeApi,
             new CapaciteTronconDomainService());
 
     voyageId = UUID.randomUUID();
@@ -166,17 +169,12 @@ class VoyageCapaciteServiceTest {
         .thenReturn(
             List.of(
                 new DossierCapaciteSummary(
-                    dossierId,
-                    poidsDossier,
-                    volumeDossier,
-                    arretChargement,
-                    arretDechargement)));
+                    dossierId, poidsDossier, volumeDossier, arretChargement, arretDechargement)));
     if (avecRemorque) {
       when(remorqueApi.consulter(remorqueId))
           .thenReturn(
               Optional.of(
-                  new RemorqueSummary(
-                      remorqueId, "REM-001", 20.0, 33, 1000, "DISPONIBLE")));
+                  new RemorqueSummary(remorqueId, "REM-001", 20.0, 33, 1000, "DISPONIBLE")));
     }
   }
 

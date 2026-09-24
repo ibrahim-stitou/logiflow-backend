@@ -1,6 +1,7 @@
 package com.logiflow.tms.dossier.domain.port.out;
 
 import com.logiflow.tms.dossier.domain.model.DossierTransport;
+import com.logiflow.tms.dossier.domain.model.StatutDossier;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
 import java.util.List;
@@ -17,6 +18,8 @@ public interface DossierTransportRepository {
   Optional<DossierTransport> parReference(String reference);
 
   List<DossierTransport> parCommandeId(UUID commandeId);
+
+  List<DossierTransport> parStatut(StatutDossier statut);
 
   Page<DossierTransport> rechercher(String texteRecherche, PageRequest pageRequest);
 
