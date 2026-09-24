@@ -35,7 +35,7 @@ connaissances du LLM, `sources` toujours vide). L'objectif est un vrai chatbot q
    (`SseEmitter`, relais événement par événement) → Angular (`fetch` + lecture du flux). Fermer la
    connexion interrompt la génération.
 5. **LLM cloud compatible OpenAI**, configurable (`LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`) :
-   Groq `llama-3.3-70b-versatile` par défaut. Embeddings optionnels (`EMBED_*`). Voir l'amendement.
+   Groq `openai/gpt-oss-120b` par défaut. Embeddings optionnels (`EMBED_*`). Voir l'amendement.
 
 ## Alternatives écartées
 

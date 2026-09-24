@@ -72,7 +72,7 @@ Toutes les routes sont préfixées `/internal/ai/v1` côté Flask, pour bien les
 
 Voir l'ADR `docs/adr/0004-copilote-base-ia-dediee-et-outils.md`. Le copilote est un chatbot à
 conversations persistées, qui répond à partir des **données du TMS** (via des outils) et des
-connaissances du LLM (`llama-3.3-70b-versatile` chez Groq par défaut). Les réponses sont
+connaissances du LLM (`openai/gpt-oss-120b` chez Groq par défaut). Les réponses sont
 **streamées**.
 
 #### API exposée au frontend (Spring)
