@@ -1,17 +1,12 @@
 package com.logiflow.tms.ai.infrastructure.client;
 
-import com.logiflow.tms.ai.domain.model.CandidatDossier;
 import com.logiflow.tms.ai.domain.model.ItineraireCalcule;
 import com.logiflow.tms.ai.domain.model.PointItineraire;
-import com.logiflow.tms.ai.domain.model.PropositionGroupage;
 import com.logiflow.tms.ai.domain.model.ReponseCopilote;
 import com.logiflow.tms.ai.domain.model.SegmentItineraire;
 import com.logiflow.tms.ai.domain.port.out.AiServiceClientPort;
 import com.logiflow.tms.ai.infrastructure.client.dto.CopilotAskRequest;
 import com.logiflow.tms.ai.infrastructure.client.dto.CopilotAskResponse;
-import com.logiflow.tms.ai.infrastructure.client.dto.GroupageAnalyserRequest;
-import com.logiflow.tms.ai.infrastructure.client.dto.GroupageAnalyserRequest.DossierCandidatDto;
-import com.logiflow.tms.ai.infrastructure.client.dto.GroupageAnalyserResponse;
 import com.logiflow.tms.ai.infrastructure.client.dto.ItineraryCalculerRequest;
 import com.logiflow.tms.ai.infrastructure.client.dto.ItineraryCalculerRequest.PointDto;
 import com.logiflow.tms.ai.infrastructure.client.dto.ItineraryCalculerResponse;
@@ -58,50 +53,6 @@ public class AiServiceHttpAdapter implements AiServiceClientPort {
     } catch (RestClientException e) {
       throw new ServiceIndisponibleException(
           "Le service IA (copilote) est momentanément indisponible", e);
-    }
-  }
-
-  @Override
-  public List<PropositionGroupage> analyserGroupage(List<CandidatDossier> candidats) {
-    try {
-      List<DossierCandidatDto> dossiers =
-          candidats.stream()
-              .map(
-                  c ->
-                      new DossierCandidatDto(
-                          c.id(),
-                          c.reference(),
-                          c.poidsBrutKg(),
-                          c.volumeM3(),
-                          c.nbPalettes(),
-                          c.contientAdr()))
-              .toList();
-      GroupageAnalyserResponse reponse =
-          aiServiceRestClient
-              .post()
-              .uri("/internal/ai/v1/groupage/analyser")
-              .body(
-                  new GroupageAnalyserRequest(dossiers, CorrelationIdFilter.correlationIdCourant()))
-              .retrieve()
-              .body(GroupageAnalyserResponse.class);
-      if (reponse == null) {
-        throw new ServiceIndisponibleException("Réponse vide du service IA (groupage)");
-      }
-      return reponse.propositions().stream()
-          .map(
-              p ->
-                  new PropositionGroupage(
-                      p.dossierIds(),
-                      p.score(),
-                      p.confiance(),
-                      p.gainKm(),
-                      p.gainMarge(),
-                      p.justification(),
-                      true))
-          .toList();
-    } catch (RestClientException e) {
-      throw new ServiceIndisponibleException(
-          "Le service IA (groupage) est momentanément indisponible", e);
     }
   }
 

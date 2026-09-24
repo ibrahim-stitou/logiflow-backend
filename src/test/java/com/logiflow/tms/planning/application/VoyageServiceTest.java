@@ -51,6 +51,7 @@ class VoyageServiceTest {
   @Mock private VoyageArretRepository voyageArretRepository;
   @Mock private DossierApi dossierApi;
   @Mock private VoyageArretMaintenanceService voyageArretMaintenanceService;
+  @Mock private DisponibiliteRessourcesService disponibiliteRessourcesService;
 
   private VoyageService voyageService;
 
@@ -63,7 +64,8 @@ class VoyageServiceTest {
             conformiteVoyageService,
             voyageArretRepository,
             dossierApi,
-            voyageArretMaintenanceService);
+            voyageArretMaintenanceService,
+            disponibiliteRessourcesService);
   }
 
   private CreerVoyageCommand commandeType(UUID dossierId) {

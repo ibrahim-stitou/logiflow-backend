@@ -168,6 +168,12 @@ public class DossierTransportService implements DossierApi {
     return dossierRepository.rechercher(texteRecherche, pageRequest);
   }
 
+  @Transactional(readOnly = true)
+  public Page<DossierTransport> listerDossiers(
+      String texteRecherche, StatutDossier statut, PageRequest pageRequest) {
+    return dossierRepository.rechercherParStatut(texteRecherche, statut.name(), pageRequest);
+  }
+
   @Override
   @Transactional(readOnly = true)
   public Optional<DossierSummary> consulter(UUID dossierId) {

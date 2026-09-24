@@ -1,9 +1,7 @@
 package com.logiflow.tms.ai.domain.port.out;
 
-import com.logiflow.tms.ai.domain.model.CandidatDossier;
 import com.logiflow.tms.ai.domain.model.ItineraireCalcule;
 import com.logiflow.tms.ai.domain.model.PointItineraire;
-import com.logiflow.tms.ai.domain.model.PropositionGroupage;
 import com.logiflow.tms.ai.domain.model.ReponseCopilote;
 import com.logiflow.tms.shared.domain.exception.ServiceIndisponibleException;
 import java.util.List;
@@ -20,12 +18,6 @@ public interface AiServiceClientPort {
    *     erreur
    */
   ReponseCopilote poserQuestion(String question, String utilisateurId, Set<String> roles);
-
-  /**
-   * @throws ServiceIndisponibleException si le service IA ne peut pas être joint ou répond en
-   *     erreur
-   */
-  List<PropositionGroupage> analyserGroupage(List<CandidatDossier> candidats);
 
   /**
    * @throws ServiceIndisponibleException si le service IA ne peut pas être joint ou répond en

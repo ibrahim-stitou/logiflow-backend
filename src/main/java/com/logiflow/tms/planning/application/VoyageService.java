@@ -2,23 +2,37 @@ package com.logiflow.tms.planning.application;
 
 import com.logiflow.tms.dossier.api.DossierApi;
 import com.logiflow.tms.planning.api.VoyageApi;
+import com.logiflow.tms.planning.api.dto.ConformiteVoyageSummary;
+import com.logiflow.tms.planning.api.dto.ProjetVoyageDto;
+import com.logiflow.tms.planning.api.dto.RessourcesOccupeesSummary;
 import com.logiflow.tms.planning.api.dto.VoyageSummary;
+import com.logiflow.tms.planning.application.ConformiteVoyageService.AnomalieConformite;
 import com.logiflow.tms.planning.application.ConformiteVoyageService.RapportConformite;
 import com.logiflow.tms.planning.application.command.CreerVoyageCommand;
 import com.logiflow.tms.planning.domain.model.ArretVoyage;
+import com.logiflow.tms.planning.domain.model.Portee;
+import com.logiflow.tms.planning.domain.model.RoleChauffeur;
 import com.logiflow.tms.planning.domain.model.StatutVoyage;
+import com.logiflow.tms.planning.domain.model.TypeEtape;
+import com.logiflow.tms.planning.domain.model.TypeVoyage;
 import com.logiflow.tms.planning.domain.model.Voyage;
 import com.logiflow.tms.planning.domain.port.out.SequenceReferenceGenerator;
 import com.logiflow.tms.planning.domain.port.out.VoyageArretRepository;
 import com.logiflow.tms.planning.domain.port.out.VoyageRepository;
+import com.logiflow.tms.planning.domain.vo.Affectation;
+import com.logiflow.tms.planning.domain.vo.Etape;
+import com.logiflow.tms.planning.domain.vo.Trajet;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import com.logiflow.tms.shared.domain.exception.ValidationException;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.Year;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -37,6 +51,7 @@ public class VoyageService implements VoyageApi {
   private final VoyageArretRepository voyageArretRepository;
   private final DossierApi dossierApi;
   private final VoyageArretMaintenanceService voyageArretMaintenanceService;
+  private final DisponibiliteRessourcesService disponibiliteRessourcesService;
 
   @Transactional
   public UUID creerVoyage(CreerVoyageCommand command) {
@@ -142,6 +157,67 @@ public class VoyageService implements VoyageApi {
   @Transactional(readOnly = true)
   public Page<VoyageSummary> rechercher(String texte, String statut, PageRequest pageRequest) {
     return voyageRepository.rechercherParStatut(texte, statut, pageRequest).map(this::versResume);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public RessourcesOccupeesSummary ressourcesOccupees(Instant debut, Instant fin) {
+    var occupees = disponibiliteRessourcesService.ressourcesOccupees(debut, fin, null);
+    return new RessourcesOccupeesSummary(
+        Set.copyOf(occupees.vehicules().keySet()),
+        Set.copyOf(occupees.remorques().keySet()),
+        Set.copyOf(occupees.chauffeurs().keySet()));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public ConformiteVoyageSummary evaluerConformite(ProjetVoyageDto projet) {
+    RapportConformite rapport = evaluerConformite(versCommande(projet));
+    return new ConformiteVoyageSummary(
+        rapport.conforme(),
+        rapport.messagesBloquants(),
+        rapport.anomalies().stream()
+            .filter(a -> !a.bloquante())
+            .map(AnomalieConformite::message)
+            .toList());
+  }
+
+  /** Trajet synthétique : seule la durée de conduite intervient dans le contrôle. */
+  private static CreerVoyageCommand versCommande(ProjetVoyageDto projet) {
+    Instant depart = projet.departPrevu();
+    Instant arrivee = projet.arriveePrevue();
+    Trajet trajet =
+        depart == null || arrivee == null || !arrivee.isAfter(depart)
+            ? null
+            : new Trajet(
+                0,
+                projet.dureeConduiteMin(),
+                (int)
+                    Math.max(
+                        projet.dureeConduiteMin(), Duration.between(depart, arrivee).toMinutes()),
+                List.of(
+                    new Etape(0, TypeEtape.CHARGEMENT, depart, depart, 0, 0),
+                    new Etape(1, TypeEtape.DECHARGEMENT, arrivee, null, 0, 0)));
+    List<UUID> chauffeurs = projet.chauffeurIds() == null ? List.of() : projet.chauffeurIds();
+    List<Affectation> affectations = new java.util.ArrayList<>();
+    for (int i = 0; i < chauffeurs.size(); i++) {
+      affectations.add(
+          new Affectation(
+              chauffeurs.get(i),
+              i == 0 ? RoleChauffeur.TITULAIRE : RoleChauffeur.RENFORT,
+              depart == null ? Instant.now() : depart));
+    }
+    return new CreerVoyageCommand(
+        TypeVoyage.valueOf(projet.typeVoyage()),
+        Portee.valueOf(projet.portee()),
+        depart,
+        arrivee,
+        projet.vehiculeId(),
+        projet.remorqueId(),
+        projet.dossierIds(),
+        trajet,
+        affectations,
+        projet.ordreSites());
   }
 
   @Override
