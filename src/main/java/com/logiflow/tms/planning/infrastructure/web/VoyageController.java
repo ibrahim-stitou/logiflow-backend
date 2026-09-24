@@ -70,7 +70,12 @@ public class VoyageController {
       @RequestParam(required = false) String q,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size,
-      @RequestParam(required = false) UUID dossierId) {
+      @RequestParam(required = false) UUID dossierId,
+      @RequestParam(required = false) UUID chauffeurId) {
+    if (chauffeurId != null) {
+      var voyages = voyageService.listerParChauffeur(chauffeurId);
+      return PageResponse.ofList(voyages.stream().map(VoyageResponse::depuis).toList());
+    }
     if (dossierId != null) {
       var voyages = voyageService.listerParDossier(dossierId);
       return PageResponse.ofList(voyages.stream().map(VoyageResponse::depuis).toList());

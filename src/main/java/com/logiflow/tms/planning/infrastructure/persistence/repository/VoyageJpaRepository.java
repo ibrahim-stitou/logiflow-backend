@@ -37,4 +37,11 @@ public interface VoyageJpaRepository extends JpaRepository<VoyageEntity, UUID> {
       """)
   Page<VoyageEntity> rechercherParStatut(
       @Param("q") String texteRecherche, @Param("statut") String statut, Pageable pageable);
+
+  @Query(
+      value =
+          "SELECT * FROM planning.voyage v WHERE v.affectations_json::jsonb @> CAST(:fragment AS jsonb)"
+              + " ORDER BY v.depart_prevu DESC",
+      nativeQuery = true)
+  List<VoyageEntity> findByChauffeurId(@Param("fragment") String fragment);
 }

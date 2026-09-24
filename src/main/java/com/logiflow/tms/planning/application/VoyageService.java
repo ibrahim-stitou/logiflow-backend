@@ -172,6 +172,11 @@ public class VoyageService implements VoyageApi {
     return voyageRepository.parDossierId(dossierId);
   }
 
+  @Transactional(readOnly = true)
+  public List<Voyage> listerParChauffeur(UUID chauffeurId) {
+    return voyageRepository.parChauffeurId(chauffeurId);
+  }
+
   @Override
   @Transactional(readOnly = true)
   public Optional<VoyageSummary> consulter(UUID voyageId) {

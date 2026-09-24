@@ -36,6 +36,7 @@ import com.logiflow.tms.shared.AbstractIntegrationTest;
 import com.logiflow.tms.shared.domain.vo.GeoPoint;
 import com.logiflow.tms.shared.domain.vo.Money;
 import com.logiflow.tms.shared.domain.vo.TimeWindow;
+import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -43,7 +44,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
-import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -150,8 +150,7 @@ class VoyageDossierControllerIT extends AbstractIntegrationTest {
         new AjouterDossierVoyageRequest(
             dossier2,
             new AjouterDossierVoyageRequest.SelectionArretRequest(
-                null,
-                new AjouterDossierVoyageRequest.NouvelArretRequest("Hors route", 0.5, 0.5)),
+                null, new AjouterDossierVoyageRequest.NouvelArretRequest("Hors route", 0.5, 0.5)),
             new AjouterDossierVoyageRequest.SelectionArretRequest(contexte.arretC(), null),
             1d);
 
@@ -324,24 +323,60 @@ class VoyageDossierControllerIT extends AbstractIntegrationTest {
         creerId(
             objectMapper.writeValueAsString(
                 new VehiculeRequest(
-                    immatVehicule, TypeVehicule.PORTEUR, null, null, null, null, null, null, 19000,
-                    null, 9000, null, null, null, null, null, null, false, null, null, null, null,
+                    immatVehicule,
+                    TypeVehicule.PORTEUR,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    19000,
+                    null,
+                    9000,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
                     null)),
             "/api/v1/vehicules");
     UUID remorqueId =
         creerId(
             objectMapper.writeValueAsString(
                 new RemorqueRequest(
-                    immatRemorque, null, "TAUTLINER", null, null, null, null, null, null, 80, 33,
-                    24000, null, null, null, false, null, null, null, null, null)),
+                    immatRemorque,
+                    null,
+                    "TAUTLINER",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    80,
+                    33,
+                    24000,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null)),
             "/api/v1/remorques");
     UUID chauffeurId =
         creerId(
             objectMapper.writeValueAsString(
-                new ChauffeurRequest(
-                    "CH-VD-" + suffixe, "Dupont", "Jean", null, null, null, null, null, null, null, null,
-                    null, null, null, null, null, null, null, null, null, null, null, null, null,
-                    null, null, null, List.of(), 2100)),
+                new ChauffeurRequest("CH-VD-" + suffixe, "Dupont", "Jean", null, List.of(), 2100)),
             "/api/v1/chauffeurs");
 
     Instant depart = Instant.now();
@@ -423,7 +458,8 @@ class VoyageDossierControllerIT extends AbstractIntegrationTest {
                 "Palettes",
                 null,
                 null,
-                List.of(new LigneMarchandise(marchandiseId, poidsKg, volumeM3, 10, null, null, true)),
+                List.of(
+                    new LigneMarchandise(marchandiseId, poidsKg, volumeM3, 10, null, null, true)),
                 List.of(
                     new Segment(
                         TypeSegment.CHARGEMENT,

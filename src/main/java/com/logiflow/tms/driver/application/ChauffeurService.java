@@ -3,10 +3,13 @@ package com.logiflow.tms.driver.application;
 import com.logiflow.tms.document.api.DocumentApi;
 import com.logiflow.tms.driver.api.ChauffeurApi;
 import com.logiflow.tms.driver.api.dto.ChauffeurSummary;
+import com.logiflow.tms.driver.api.dto.ExigencesAffectationDto;
 import com.logiflow.tms.driver.application.command.CreerChauffeurCommand;
 import com.logiflow.tms.driver.application.command.MajChauffeurCommand;
+import com.logiflow.tms.driver.domain.model.CategoriePermis;
 import com.logiflow.tms.driver.domain.model.Chauffeur;
 import com.logiflow.tms.driver.domain.model.DisponibiliteChauffeur;
+import com.logiflow.tms.driver.domain.model.ExigencesAffectation;
 import com.logiflow.tms.driver.domain.model.StatutChauffeur;
 import com.logiflow.tms.driver.domain.port.out.ChauffeurRepository;
 import com.logiflow.tms.driver.domain.service.DriverDomainService;
@@ -47,30 +50,7 @@ public class ChauffeurService implements ChauffeurApi {
             command.matricule(),
             command.nom(),
             command.prenom(),
-            command.cin(),
-            command.dateNaissance(),
-            command.lieuNaissance(),
-            command.nationalite(),
-            command.telephone(),
-            command.email(),
-            command.adresse(),
-            command.numeroPermis(),
-            command.categoriePermis(),
-            command.dateObtentionPermis(),
-            command.dateExpirationPermis(),
-            command.numeroPasseport(),
-            command.dateDelivrancePasseport(),
-            command.dateExpirationPasseport(),
-            command.paysDelivrancePasseport(),
-            command.numeroVisa(),
-            command.typeVisa(),
-            command.paysVisa(),
-            command.dateDelivranceVisa(),
-            command.dateExpirationVisa(),
-            command.dateEmbauche(),
-            command.typeContrat(),
-            command.experienceAnnees(),
-            command.specialisation(),
+            command.profil(),
             command.habilitations(),
             Duration.ofMinutes(command.soldeTempsConduiteInitialMinutes()));
     return chauffeurRepository.sauvegarder(chauffeur).id();
@@ -80,6 +60,7 @@ public class ChauffeurService implements ChauffeurApi {
   public void modifierChauffeur(UUID id, MajChauffeurCommand command) {
     Chauffeur chauffeur = trouverOuEchouer(id);
     chauffeur.renommer(command.nom(), command.prenom());
+    chauffeur.mettreAJourProfil(command.profil());
     chauffeur.mettreAJourHabilitations(command.habilitations());
     chauffeurRepository.sauvegarder(chauffeur);
   }
@@ -108,6 +89,20 @@ public class ChauffeurService implements ChauffeurApi {
     return chauffeurRepository.rechercher(texteRecherche, pageRequest);
   }
 
+  /** Liste filtrée (texte, statut et disponibilité optionnels), pour l'écran de gestion. */
+  @Transactional(readOnly = true)
+  public Page<Chauffeur> listerChauffeurs(
+      String texteRecherche,
+      StatutChauffeur statut,
+      DisponibiliteChauffeur disponibilite,
+      PageRequest pageRequest) {
+    return chauffeurRepository.rechercherFiltre(
+        texteRecherche,
+        statut != null ? statut.name() : null,
+        disponibilite != null ? disponibilite.name() : null,
+        pageRequest);
+  }
+
   @Override
   @Transactional(readOnly = true)
   public Optional<ChauffeurSummary> consulter(UUID chauffeurId) {
@@ -134,6 +129,23 @@ public class ChauffeurService implements ChauffeurApi {
   public boolean documentsValides(UUID chauffeurId, LocalDate date) {
     return chauffeurRepository.parId(chauffeurId).isPresent()
         && documentApi.tousValides(TYPE_ENTITE_DOCUMENTABLE, chauffeurId, date);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<String> motifsNonAffectation(UUID chauffeurId, ExigencesAffectationDto exigences) {
+    return chauffeurRepository
+        .parId(chauffeurId)
+        .map(chauffeur -> chauffeur.motifsNonAffectation(versExigences(exigences)))
+        .orElseGet(() -> List.of("Chauffeur introuvable : " + chauffeurId));
+  }
+
+  private static ExigencesAffectation versExigences(ExigencesAffectationDto dto) {
+    CategoriePermis permis =
+        dto.permisRequis() == null || dto.permisRequis().isBlank()
+            ? null
+            : CategoriePermis.valueOf(dto.permisRequis());
+    return new ExigencesAffectation(dto.date(), dto.adr(), dto.international(), permis);
   }
 
   private ChauffeurSummary versResume(Chauffeur chauffeur) {

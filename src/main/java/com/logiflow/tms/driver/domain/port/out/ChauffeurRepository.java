@@ -25,4 +25,8 @@ public interface ChauffeurRepository {
    */
   Page<Chauffeur> rechercherParDisponibilite(
       String texteRecherche, String disponibilite, PageRequest pageRequest);
+
+  /** Recherche filtrée par texte, statut et disponibilité (tous optionnels, null = tous). */
+  Page<Chauffeur> rechercherFiltre(
+      String texteRecherche, String statut, String disponibilite, PageRequest pageRequest);
 }

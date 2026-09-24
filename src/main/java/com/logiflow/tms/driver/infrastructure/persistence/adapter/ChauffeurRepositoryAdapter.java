@@ -67,4 +67,16 @@ public class ChauffeurRepositoryAdapter implements ChauffeurRepository {
     var contenu = pageJpa.getContent().stream().map(mapper::versDomaine).toList();
     return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
   }
+
+  @Override
+  public Page<Chauffeur> rechercherFiltre(
+      String texteRecherche, String statut, String disponibilite, PageRequest pageRequest) {
+    var pageable =
+        org.springframework.data.domain.PageRequest.of(pageRequest.numero(), pageRequest.taille());
+    org.springframework.data.domain.Page<ChauffeurEntity> pageJpa =
+        jpaRepository.rechercherFiltre(
+            texteRecherche == null ? "" : texteRecherche.strip(), statut, disponibilite, pageable);
+    var contenu = pageJpa.getContent().stream().map(mapper::versDomaine).toList();
+    return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
+  }
 }

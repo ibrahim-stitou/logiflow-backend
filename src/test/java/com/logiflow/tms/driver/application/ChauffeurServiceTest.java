@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import com.logiflow.tms.document.api.DocumentApi;
 import com.logiflow.tms.driver.application.command.CreerChauffeurCommand;
 import com.logiflow.tms.driver.domain.model.Chauffeur;
+import com.logiflow.tms.driver.domain.model.ProfilChauffeur;
 import com.logiflow.tms.driver.domain.port.out.ChauffeurRepository;
 import com.logiflow.tms.driver.domain.service.DriverDomainService;
 import com.logiflow.tms.shared.domain.exception.ConflictException;
@@ -36,9 +37,7 @@ class ChauffeurServiceTest {
 
   private static CreerChauffeurCommand commandeChauffeur() {
     return new CreerChauffeurCommand(
-        "CH-001", "Dupont", "Jean", null, null, null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        List.of(), 2100);
+        "CH-001", "Dupont", "Jean", ProfilChauffeur.vide(), List.of(), 2100);
   }
 
   @Test

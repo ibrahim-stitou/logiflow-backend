@@ -76,7 +76,8 @@ class EvenementVoyageControllerIT extends AbstractIntegrationTest {
     UUID marchandiseId =
         creerId(
             objectMapper.writeValueAsString(
-                new MarchandiseRequest("MARCH-IT-TRACK", "Marchandise tracking", null, null, null, true)),
+                new MarchandiseRequest(
+                    "MARCH-IT-TRACK", "Marchandise tracking", null, null, null, true)),
             "/api/v1/marchandises");
     UUID commandeId =
         creerId(
@@ -126,17 +127,34 @@ class EvenementVoyageControllerIT extends AbstractIntegrationTest {
         creerId(
             objectMapper.writeValueAsString(
                 new VehiculeRequest(
-                    "TR-IT-001", TypeVehicule.PORTEUR, null, null, null, null, null, null, 19000,
-                    null, 9000, null, null, null, null, null, null, false, null, null, null, null,
+                    "TR-IT-001",
+                    TypeVehicule.PORTEUR,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    19000,
+                    null,
+                    9000,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
                     null)),
             "/api/v1/vehicules");
     UUID chauffeurId =
         creerId(
             objectMapper.writeValueAsString(
-                new ChauffeurRequest(
-                    "CH-IT-TRACK", "Tracking", "Jean", null, null, null, null, null, null, null,
-                    null, null, null, null, null, null, null, null, null, null, null, null, null,
-                    null, null, null, null, List.of(), 2100)),
+                new ChauffeurRequest("CH-IT-TRACK", "Tracking", "Jean", null, List.of(), 2100)),
             "/api/v1/chauffeurs");
 
     Trajet trajet =

@@ -28,4 +28,7 @@ public interface VoyageRepository {
   Page<Voyage> rechercherParStatut(String texteRecherche, String statut, PageRequest pageRequest);
 
   List<Voyage> parDossierId(UUID dossierId);
+
+  /** Voyages où le chauffeur est affecté (titulaire ou renfort), du plus récent au plus ancien. */
+  List<Voyage> parChauffeurId(UUID chauffeurId);
 }

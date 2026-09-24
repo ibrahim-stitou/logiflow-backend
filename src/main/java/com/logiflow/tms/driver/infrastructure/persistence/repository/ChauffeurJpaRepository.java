@@ -30,4 +30,18 @@ public interface ChauffeurJpaRepository extends JpaRepository<ChauffeurEntity, U
       @Param("q") String texteRecherche,
       @Param("disponibilite") String disponibilite,
       Pageable pageable);
+
+  @Query(
+      """
+      SELECT e FROM ChauffeurEntity e
+      WHERE (:statut IS NULL OR e.statut = :statut)
+        AND (:disponibilite IS NULL OR e.disponibilite = :disponibilite)
+        AND (:q = '' OR LOWER(e.nom) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(e.prenom) LIKE LOWER(CONCAT('%', :q, '%')) OR LOWER(e.matricule) LIKE LOWER(CONCAT('%', :q, '%')))
+      ORDER BY e.nom ASC, e.prenom ASC
+      """)
+  Page<ChauffeurEntity> rechercherFiltre(
+      @Param("q") String texteRecherche,
+      @Param("statut") String statut,
+      @Param("disponibilite") String disponibilite,
+      Pageable pageable);
 }

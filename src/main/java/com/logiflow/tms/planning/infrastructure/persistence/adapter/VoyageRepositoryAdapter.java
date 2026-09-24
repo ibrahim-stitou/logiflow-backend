@@ -78,4 +78,10 @@ public class VoyageRepositoryAdapter implements VoyageRepository {
     String fragment = "[\"" + dossierId + "\"]";
     return jpaRepository.findByDossierId(fragment).stream().map(mapper::versDomaine).toList();
   }
+
+  @Override
+  public List<Voyage> parChauffeurId(UUID chauffeurId) {
+    String fragment = "[{\"chauffeurId\":\"" + chauffeurId + "\"}]";
+    return jpaRepository.findByChauffeurId(fragment).stream().map(mapper::versDomaine).toList();
+  }
 }

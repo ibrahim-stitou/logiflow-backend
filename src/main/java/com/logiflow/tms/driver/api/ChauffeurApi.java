@@ -1,6 +1,7 @@
 package com.logiflow.tms.driver.api;
 
 import com.logiflow.tms.driver.api.dto.ChauffeurSummary;
+import com.logiflow.tms.driver.api.dto.ExigencesAffectationDto;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
 import java.time.LocalDate;
@@ -38,4 +39,11 @@ public interface ChauffeurApi {
 
   /** Valeurs possibles du filtre de {@link #rechercher}. */
   List<String> disponibilitesConnues();
+
+  /**
+   * Raisons pour lesquelles le chauffeur ne peut pas être affecté à un voyage ayant ces exigences :
+   * statut, disponibilité, permis, habilitations (dont ADR), passeport/visa. Liste vide =
+   * affectable ; chauffeur inconnu = un motif.
+   */
+  List<String> motifsNonAffectation(UUID chauffeurId, ExigencesAffectationDto exigences);
 }
