@@ -116,6 +116,14 @@ logiflow:
     callback-api-key: ${AI_SERVICE_CALLBACK_API_KEY:local-dev-callback-key}
     # Durée de validité du jeton de contexte transmis au service IA pour un message du copilote.
     contexte-ttl: ${AI_SERVICE_CONTEXTE_TTL:5m}
+  ai:
+    maintenance:
+      # Agent de maintenance prédictive : analyse de toute la flotte chaque nuit (heure de Paris)
+      # et réanalyse d'un engin après clôture d'OT, sinistre ou document. Scores enregistrés.
+      analyse-nocturne: ${AI_MAINTENANCE_ANALYSE_NOCTURNE:true}
+      cron: ${AI_MAINTENANCE_CRON:0 0 5 * * *}
+      reanalyse-sur-evenement: ${AI_MAINTENANCE_REANALYSE_EVENEMENT:true}
+      horizon-jours: ${AI_MAINTENANCE_HORIZON_JOURS:30}
 
 logging:
   pattern:

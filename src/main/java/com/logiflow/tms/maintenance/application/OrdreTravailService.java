@@ -1,5 +1,6 @@
 package com.logiflow.tms.maintenance.application;
 
+import com.logiflow.tms.maintenance.api.EtatMaintenanceEnginModifieEvent;
 import com.logiflow.tms.maintenance.domain.model.OrdreTravail;
 import com.logiflow.tms.maintenance.domain.model.OrigineOT;
 import com.logiflow.tms.maintenance.domain.model.PlanEntretien;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +44,7 @@ public class OrdreTravailService {
   private final SequenceReferenceGenerator referenceGenerator;
   private final PrestataireService prestataireService;
   private final EnginsFlotte enginsFlotte;
+  private final ApplicationEventPublisher eventPublisher;
 
   /** Création d'un OT ; {@code lignes} (devis) facultatives. */
   public record CreerOrdreTravail(
@@ -125,7 +128,16 @@ public class OrdreTravailService {
       planRepository.sauvegarder(plan);
     }
     remettreEnServiceSiLibre(sauve.engin());
+    publierEtatModifie(sauve.engin(), "Clôture de l'OT " + sauve.reference().valeur());
     return sauve;
+  }
+
+  /**
+   * Signale aux autres modules (agent de maintenance prédictive) un changement d'état de l'engin.
+   */
+  void publierEtatModifie(EnginRef engin, String motif) {
+    eventPublisher.publishEvent(
+        new EtatMaintenanceEnginModifieEvent(engin.type().name(), engin.id(), motif));
   }
 
   @Transactional(readOnly = true)

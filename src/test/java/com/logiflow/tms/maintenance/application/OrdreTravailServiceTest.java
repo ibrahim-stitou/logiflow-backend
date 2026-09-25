@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.logiflow.tms.maintenance.api.EtatMaintenanceEnginModifieEvent;
 import com.logiflow.tms.maintenance.application.OrdreTravailService.CreerOrdreTravail;
 import com.logiflow.tms.maintenance.domain.model.NatureIntervention;
 import com.logiflow.tms.maintenance.domain.model.OrdreTravail;
@@ -38,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
 class OrdreTravailServiceTest {
@@ -49,6 +51,7 @@ class OrdreTravailServiceTest {
   @Mock private SequenceReferenceGenerator referenceGenerator;
   @Mock private PrestataireService prestataireService;
   @Mock private EnginsFlotte enginsFlotte;
+  @Mock private ApplicationEventPublisher eventPublisher;
 
   /** Dépôt en mémoire : suffisant pour suivre les OT d'un engin. */
   private final Map<UUID, OrdreTravail> ordres = new HashMap<>();
@@ -101,7 +104,8 @@ class OrdreTravailServiceTest {
             sinistreRepository,
             referenceGenerator,
             prestataireService,
-            enginsFlotte);
+            enginsFlotte,
+            eventPublisher);
   }
 
   private OrdreTravail creer(UUID planId) {
@@ -162,6 +166,10 @@ class OrdreTravailServiceTest {
     assertThat(plan.derniereRealisation().kilometrage()).isEqualTo(151_000);
     assertThat(plan.derniereRealisation().date()).isEqualTo(LocalDate.of(2026, 10, 1));
     verify(enginsFlotte).remettreEnService(camion);
+    verify(eventPublisher)
+        .publishEvent(
+            new EtatMaintenanceEnginModifieEvent(
+                "VEHICULE", camion.id(), "Clôture de l'OT " + ot.reference().valeur()));
   }
 
   @Test

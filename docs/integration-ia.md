@@ -273,6 +273,29 @@ S'y ajoutent `synthese` et `sourceRedaction` (LLM ou GABARIT).
   `AGENT_IA`, type, priorité, créneau et justification.
 - Service IA indisponible → 503 : échéances, OT et scores restent consultables et saisissables.
 
+**Déclencheurs.** L'agent se lance de trois façons, toutes sur `MaintenancePredictiveService` :
+
+- **À la demande** :
+  - le bouton « Lancer l'analyse » du tableau de bord Maintenance (flotte entière, scores
+    enregistrés) ;
+  - l'outil copilote `analyser_maintenance_predictive`, en lecture seule.
+- **Chaque nuit** : `AnalyseMaintenanceNocturne` analyse toute la flotte et enregistre les scores.
+  - Par défaut à 5 h, heure de Paris (`logiflow.ai.maintenance.cron`) ; désactivable par
+    `logiflow.ai.maintenance.analyse-nocturne=false`.
+  - Instance unique supposée : en multi-instances, ajouter un verrou partagé (ShedLock).
+- **Après un événement métier** : `ReanalyseMaintenanceListener` réanalyse l'engin concerné, de
+  façon asynchrone et après validation de la transaction. Déclencheurs :
+  - `EtatMaintenanceEnginModifieEvent`, publié par le module maintenance à la clôture d'un OT, à
+    la déclaration d'un sinistre, à un changement d'immobilisation ou à sa clôture ;
+  - `DocumentEntiteModificationEvent` sur un véhicule ou une remorque (contrôle technique,
+    assurance…).
+  - Désactivable par `logiflow.ai.maintenance.reanalyse-sur-evenement=false`.
+
+Ces déclenchements automatiques ne sont jamais bloquants : si le service IA est indisponible ou si
+l'engin est hors service, l'échec est seulement journalisé. Une seule analyse de flotte et une seule
+réanalyse par engin s'exécutent à la fois. Les deux déclenchements automatiques sont désactivés
+dans le profil de test.
+
 ### 4. Agent itinéraire — *implémenté*
 
 `POST /internal/ai/v1/itinerary/calculer`

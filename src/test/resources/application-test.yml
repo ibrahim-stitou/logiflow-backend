@@ -19,6 +19,11 @@ logiflow:
     # Les tests d'intégration authentifient via SecurityMockMvcRequestPostProcessors.jwt(), qui
     # injecte directement l'Authentication : aucun IdP réel n'est nécessaire ni disponible ici.
     permissive-local-profile: true
+  ai:
+    maintenance:
+      # Pas d'appel automatique au service IA pendant les tests d'intégration.
+      analyse-nocturne: false
+      reanalyse-sur-evenement: false
 
 logging:
   level:

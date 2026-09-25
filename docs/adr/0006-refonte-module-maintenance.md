@@ -67,6 +67,9 @@ maintenance prédictive :
     temps, avec l'usage réel et les voyages planifiés.
   - Il analyse aussi les remorques et tient compte des sinistres et des OT ouverts.
   - Sa proposition « Planifier l'OT » ouvre un OT d'origine `AGENT_IA` sur le créneau proposé.
+  - Il ne dépend plus d'un clic : une analyse de la flotte tourne chaque nuit, et chaque engin est
+    réanalysé après la clôture d'un OT, un sinistre ou une modification de ses documents
+    (`EtatMaintenanceEnginModifieEvent`).
 - **Copilote.** `consulter_maintenance` couvre les remorques ; deux outils s'ajoutent,
   `rechercher_sinistres` et `couts_maintenance`.
 - **Frontend.** Le module est rebâti : tableau de bord, OT, plans, sinistres, coûts,

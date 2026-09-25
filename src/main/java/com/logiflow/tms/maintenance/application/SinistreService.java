@@ -68,6 +68,7 @@ public class SinistreService {
     if (circonstances.enginImmobilise()) {
       engins.forEach(e -> enginsFlotte.immobiliser(e, true));
     }
+    publierEtatModifie(engins, "Déclaration du sinistre " + sauve.reference().valeur());
     return sauve;
   }
 
@@ -85,6 +86,10 @@ public class SinistreService {
     } else if (etaitImmobilise && !circonstances.enginImmobilise()) {
       engins.forEach(ordreTravailService::remettreEnServiceSiLibre);
     }
+    if (etaitImmobilise != circonstances.enginImmobilise()) {
+      publierEtatModifie(
+          engins, "Immobilisation modifiée du sinistre " + sauve.reference().valeur());
+    }
     return sauve;
   }
 
@@ -98,7 +103,15 @@ public class SinistreService {
     if (sauve.estTermine() && sauve.circonstances().enginImmobilise()) {
       engins(sauve.circonstances()).forEach(ordreTravailService::remettreEnServiceSiLibre);
     }
+    if (sauve.estTermine()) {
+      publierEtatModifie(
+          engins(sauve.circonstances()), "Clôture du sinistre " + sauve.reference().valeur());
+    }
     return sauve;
+  }
+
+  private void publierEtatModifie(List<EnginRef> engins, String motif) {
+    engins.forEach(e -> ordreTravailService.publierEtatModifie(e, motif));
   }
 
   /** Crée l'OT de réparation d'un engin du sinistre et passe le sinistre EN_REPARATION. */
