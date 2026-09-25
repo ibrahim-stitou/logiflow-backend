@@ -94,6 +94,7 @@ de branches, definition of done.
 | Commande        | Effet                                                 |
 | --------------- | ----------------------------------------------------- |
 | `make up`       | Démarre PostgreSQL (+ pgAdmin) via Docker Compose     |
+| `make keycloak` | Démarre Keycloak local (OIDC, port 8081)              |
 | `make down`     | Arrête l'infrastructure locale                        |
 | `make build`    | Compile sans exécuter les tests                       |
 | `make test`     | Exécute la totalité des tests (`./mvnw clean verify`) |

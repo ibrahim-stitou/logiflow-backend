@@ -6,6 +6,10 @@ COMPOSE_FILE=docker/docker-compose.yml
 up:
 	docker compose -f $(COMPOSE_FILE) up -d
 
+## Démarre Keycloak (realm logiflow importé, port 8081)
+keycloak:
+	docker compose -f $(COMPOSE_FILE) up -d keycloak
+
 ## Arrête l'infrastructure locale
 down:
 	docker compose -f $(COMPOSE_FILE) down

@@ -198,7 +198,34 @@ Sous préfixe `logiflow.security.mfa` :
 méthodes `GET, POST, PUT, PATCH, DELETE, OPTIONS` ; en-têtes autorisés `Authorization`,
 `Content-Type`, `X-Correlation-Id` ; en-tête exposé `X-Correlation-Id` ; `allowCredentials=true`.
 
-## 7. Points de renforcement recommandés (non implémentés)
+## 7. Mode Keycloak local (frontend + profil `dev`)
+
+Stack minimale pour une connexion réelle en développement :
+
+1. `make keycloak` (ou `docker compose … up -d keycloak`) — realm `logiflow` sur le port **8081**.
+2. Backend avec le profil **`dev`** (JWT obligatoire, pas d'utilisateur fictif) :
+
+   ```bash
+   export OAUTH2_ISSUER_URI=http://localhost:8081/realms/logiflow
+   export OAUTH2_JWK_SET_URI=http://localhost:8081/realms/logiflow/protocol/openid-connect/certs
+   export CORS_ALLOWED_ORIGINS=http://localhost:4200
+   export MFA_REQUIRED=false
+   ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+   ```
+
+3. Frontend Angular : `pnpm start:keycloak` (client `logiflow-frontend`, PKCE, jeton sur `/api/`).
+
+Le profil **`local`** reste disponible pour le mode démo frontend (`pnpm start`) sans IdP.
+
+Vérification rapide (après connexion dans le navigateur, copier l'access token) :
+
+```bash
+curl -i -H "Authorization: Bearer <access_token>" http://localhost:8080/api/v1/voyages
+```
+
+Sans en-tête `Authorization`, la même URL renvoie **401**.
+
+## 8. Points de renforcement recommandés (non implémentés)
 
 Sont laissés volontairement à la charge de l'IdP et de l'infrastructure, hors périmètre du backend :
 
@@ -209,7 +236,7 @@ Sont laissés volontairement à la charge de l'IdP et de l'infrastructure, hors 
 - **Audit des connexions** : les événements de login/MFA sont déjà journalisés par Keycloak ;
 - **Objectifs SLA de sécurité** à inscrire si besoin dans une politique de sécurité du projet.
 
-## 8. Références
+## 9. Références
 
 - [docs/adr/0002-connexion-mfa-keycloak.md](adr/0002-connexion-mfa-keycloak.md) — décision MFA
 - [docs/architecture.md](architecture.md) — place du module `iam` (aucune dépendance sortante)

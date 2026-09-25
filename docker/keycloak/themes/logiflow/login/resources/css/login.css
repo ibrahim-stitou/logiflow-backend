@@ -1,0 +1,302 @@
+/* LogiFlow Keycloak login theme — mirrors Angular /connexion aesthetics.
+   Parent: keycloak.v2 (PatternFly 5). */
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap");
+
+:root {
+  --lf-canvas: #f7f7f5;
+  --lf-surface: #ffffff;
+  --lf-ink: #171717;
+  --lf-muted: #737373;
+  --lf-pine: #215544;
+  --lf-line: #e5e5e5;
+  --lf-brake: #b42318;
+  --lf-amber: #c27803;
+  --lf-radius-shell: 1.5rem;
+  --lf-radius-control: 0.75rem;
+  --lf-font-display: "Fraunces", ui-serif, Georgia, serif;
+  --lf-font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --lf-font-mono: "Geist Mono", ui-monospace, monospace;
+}
+
+html,
+body {
+  min-height: 100%;
+  font-family: var(--lf-font-sans);
+  color: var(--lf-ink);
+  background: var(--lf-canvas);
+}
+
+/* Hide PatternFly default brand chrome; we rebuild the layout. */
+.pf-v5-c-login {
+  min-height: 100dvh;
+  padding: 1.25rem 1rem;
+  background: var(--lf-canvas);
+  background-image:
+    radial-gradient(
+      ellipse 40% 35% at 85% 0%,
+      color-mix(in srgb, var(--lf-pine) 16%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 45% 40% at 5% 100%,
+      color-mix(in srgb, var(--lf-amber) 10%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(color-mix(in srgb, var(--lf-line) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--lf-line) 55%, transparent) 1px, transparent 1px);
+  background-size: auto, auto, 3rem 3rem, 3rem 3rem;
+  background-attachment: fixed;
+}
+
+.pf-v5-c-login__container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 1.25rem 0;
+}
+
+.pf-v5-c-login__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.pf-v5-c-login__header img {
+  display: none !important;
+}
+
+.pf-v5-c-login__header::before {
+  content: "";
+  display: block;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 1rem;
+  background-color: var(--lf-pine);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 17h4V5H2v12h3'/%3E%3Cpath d='M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1'/%3E%3Ccircle cx='7.5' cy='17.5' r='2.5'/%3E%3Ccircle cx='17.5' cy='17.5' r='2.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 1.5rem;
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 8px 20px color-mix(in srgb, var(--lf-pine) 40%, transparent);
+}
+
+/* Replace Keycloak brand chrome with Angular-matching stack:
+   Fret routier (eyebrow) → LogiFlow (display). */
+#kc-header-wrapper.pf-v5-c-brand {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  font-size: 0;
+  line-height: 0;
+  color: transparent;
+  text-indent: 0;
+  background: none !important;
+}
+
+#kc-header-wrapper.pf-v5-c-brand > * {
+  display: none !important;
+}
+
+#kc-header-wrapper.pf-v5-c-brand::before {
+  content: "Fret routier";
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: var(--lf-font-sans);
+  font-size: 0.68rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.24em;
+  color: var(--lf-pine);
+  text-transform: uppercase;
+}
+
+#kc-header-wrapper.pf-v5-c-brand::after {
+  content: "LogiFlow";
+  display: block;
+  font-family: var(--lf-font-display);
+  font-size: clamp(2.25rem, 5vw, 2.65rem);
+  font-weight: 500;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  color: var(--lf-ink);
+  text-transform: none;
+}
+
+.pf-v5-c-login__header .pf-v5-c-title,
+.pf-v5-c-login__header h1 {
+  margin: 0;
+  font-family: var(--lf-font-display);
+  font-size: clamp(2.25rem, 5vw, 2.65rem);
+  font-weight: 500;
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  color: var(--lf-ink);
+  text-transform: none !important;
+}
+
+.pf-v5-c-login__main {
+  width: 100%;
+  overflow: hidden;
+  background: var(--lf-surface);
+  border: 1px solid color-mix(in srgb, var(--lf-line) 80%, transparent);
+  border-radius: var(--lf-radius-shell);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.04),
+    0 8px 24px rgb(0 0 0 / 0.05),
+    0 24px 48px rgb(0 0 0 / 0.04);
+}
+
+.pf-v5-c-login__main-header {
+  padding: 1.5rem 1.75rem 0;
+  border: none;
+  background: transparent;
+}
+
+.pf-v5-c-login__main-header .pf-v5-c-title,
+#kc-page-title {
+  margin: 0;
+  font-family: var(--lf-font-sans);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--lf-ink);
+}
+
+.pf-v5-c-login__main-header::after {
+  content: "Mot de passe et second facteur (OTP) lorsque requis.";
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--lf-muted);
+}
+
+.pf-v5-c-login__main-body {
+  padding: 1.5rem 1.75rem 1.5rem;
+}
+
+.pf-v5-c-form__group {
+  margin-bottom: 1.1rem;
+}
+
+.pf-v5-c-form__label,
+.pf-v5-c-form__label-text {
+  font-size: 0.7rem !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em;
+  color: var(--lf-muted) !important;
+}
+
+.pf-v5-c-form-control,
+.pf-v5-c-form-control > input,
+input.pf-v5-c-form-control,
+.pf-v5-c-text-input-group {
+  min-height: 2.75rem;
+  font-family: var(--lf-font-mono) !important;
+  font-size: 0.9rem !important;
+  color: var(--lf-ink) !important;
+  background: var(--lf-canvas) !important;
+  border: 1px solid var(--lf-line) !important;
+  border-radius: var(--lf-radius-control) !important;
+  box-shadow: none !important;
+}
+
+.pf-v5-c-form-control:focus-within,
+.pf-v5-c-form-control > input:focus,
+input.pf-v5-c-form-control:focus {
+  background: var(--lf-surface) !important;
+  border-color: var(--lf-pine) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--lf-pine) 14%, transparent) !important;
+}
+
+.pf-v5-c-button.pf-m-primary,
+#kc-login,
+input[type="submit"].pf-v5-c-button {
+  min-height: 2.75rem;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.65rem 1rem;
+  font-family: var(--lf-font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--lf-surface) !important;
+  background: var(--lf-pine) !important;
+  border: none !important;
+  border-radius: var(--lf-radius-control) !important;
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 6px 16px color-mix(in srgb, var(--lf-pine) 35%, transparent);
+}
+
+.pf-v5-c-button.pf-m-primary:hover,
+#kc-login:hover {
+  background: color-mix(in srgb, var(--lf-pine) 88%, black) !important;
+}
+
+.pf-v5-c-alert.pf-m-danger,
+.pf-v5-c-alert.pf-m-inline.pf-m-danger,
+#input-error,
+.kc-feedback-text {
+  padding: 0.65rem 0.85rem;
+  font-size: 0.875rem;
+  color: var(--lf-brake) !important;
+  background: color-mix(in srgb, var(--lf-brake) 6%, var(--lf-surface)) !important;
+  border: 1px solid color-mix(in srgb, var(--lf-brake) 22%, transparent) !important;
+  border-radius: var(--lf-radius-control) !important;
+}
+
+.pf-v5-c-login__main-footer,
+.pf-v5-c-login__footer {
+  padding: 0 1.75rem 1.25rem;
+  border: none;
+  background: transparent;
+}
+
+.pf-v5-c-login__main-footer-band,
+.pf-v5-c-login__main-footer-links {
+  justify-content: center;
+}
+
+.pf-v5-c-login__main-footer a,
+#kc-registration span a,
+.pf-v5-c-login__footer a {
+  font-size: 0.8rem;
+  color: var(--lf-pine);
+  text-decoration: none;
+}
+
+#kc-locale,
+.pf-v5-c-login__main-header-utilities {
+  opacity: 0.85;
+}
+
+/* OTP / TOTP screens share the same card. */
+#kc-otp-login-form .pf-v5-c-form-control,
+#kc-totp-settings-form .pf-v5-c-form-control {
+  font-family: var(--lf-font-mono);
+}
+
+@media (max-width: 480px) {
+  .pf-v5-c-login__main-header,
+  .pf-v5-c-login__main-body,
+  .pf-v5-c-login__main-footer {
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+  }
+}
