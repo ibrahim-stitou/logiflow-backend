@@ -188,6 +188,7 @@ Décisions d'architecture (`docs/adr/`) :
 | Commande | Effet |
 |---|---|
 | `make up` | Démarre PostgreSQL et pgAdmin (Docker Compose) |
+| `make keycloak` | Démarre Keycloak local (OIDC, port 8081) |
 | `make down` | Arrête l'infrastructure locale |
 | `make run` | Démarre l'application en profil `local` |
 | `make build` | Compile et package sans tests |
