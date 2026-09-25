@@ -6,7 +6,9 @@ package com.logiflow.tms.ai.domain.model;
  */
 public enum TypeInteractionIa {
   COPILOTE,
+  /** Ancien agent de groupage, conservé pour l'historique du journal. */
   GROUPAGE,
+  PLANIFICATION,
   MAINTENANCE,
   ITINERAIRE
 }

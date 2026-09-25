@@ -43,7 +43,8 @@ class DossierTransportServiceTest {
   @BeforeEach
   void setUp() {
     dossierService =
-        new DossierTransportService(dossierRepository, referenceGenerator, commandeApi, marchandiseApi);
+        new DossierTransportService(
+            dossierRepository, referenceGenerator, commandeApi, marchandiseApi);
   }
 
   private CreerDossierCommand commandeType(UUID commandeId) {

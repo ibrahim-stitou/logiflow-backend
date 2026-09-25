@@ -118,6 +118,9 @@ public class ChauffeurEntity extends BaseEntity {
   @Column(name = "habilitations_json", columnDefinition = "text")
   private String habilitationsJson;
 
+  @Column(name = "site_rattachement_id")
+  private UUID siteRattachementId;
+
   protected ChauffeurEntity() {}
 
   @Builder
@@ -153,7 +156,8 @@ public class ChauffeurEntity extends BaseEntity {
       String statut,
       String disponibilite,
       long soldeTempsConduiteMinutes,
-      String habilitationsJson) {
+      String habilitationsJson,
+      UUID siteRattachementId) {
     definirId(id);
     this.matricule = matricule;
     this.nom = nom;
@@ -186,5 +190,6 @@ public class ChauffeurEntity extends BaseEntity {
     this.disponibilite = disponibilite;
     this.soldeTempsConduiteMinutes = soldeTempsConduiteMinutes;
     this.habilitationsJson = habilitationsJson;
+    this.siteRattachementId = siteRattachementId;
   }
 }

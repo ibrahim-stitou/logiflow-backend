@@ -32,10 +32,12 @@ import com.logiflow.tms.planning.infrastructure.web.dto.AjouterDossierVoyageRequ
 import com.logiflow.tms.planning.infrastructure.web.dto.VoyageRequest;
 import com.logiflow.tms.referential.infrastructure.web.dto.ClientRequest;
 import com.logiflow.tms.referential.infrastructure.web.dto.MarchandiseRequest;
+import com.logiflow.tms.referential.infrastructure.web.dto.SiteRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
 import com.logiflow.tms.shared.domain.vo.GeoPoint;
 import com.logiflow.tms.shared.domain.vo.Money;
 import com.logiflow.tms.shared.domain.vo.TimeWindow;
+import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -43,7 +45,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.Currency;
 import java.util.List;
 import java.util.UUID;
-import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -150,8 +151,7 @@ class VoyageDossierControllerIT extends AbstractIntegrationTest {
         new AjouterDossierVoyageRequest(
             dossier2,
             new AjouterDossierVoyageRequest.SelectionArretRequest(
-                null,
-                new AjouterDossierVoyageRequest.NouvelArretRequest("Hors route", 0.5, 0.5)),
+                null, new AjouterDossierVoyageRequest.NouvelArretRequest("Hors route", 0.5, 0.5)),
             new AjouterDossierVoyageRequest.SelectionArretRequest(contexte.arretC(), null),
             1d);
 
@@ -324,24 +324,60 @@ class VoyageDossierControllerIT extends AbstractIntegrationTest {
         creerId(
             objectMapper.writeValueAsString(
                 new VehiculeRequest(
-                    immatVehicule, TypeVehicule.PORTEUR, null, null, null, null, null, null, 19000,
-                    null, 9000, null, null, null, null, null, null, false, null, null, null, null,
+                    immatVehicule,
+                    TypeVehicule.PORTEUR,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    19000,
+                    null,
+                    9000,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
                     null)),
             "/api/v1/vehicules");
     UUID remorqueId =
         creerId(
             objectMapper.writeValueAsString(
                 new RemorqueRequest(
-                    immatRemorque, null, "TAUTLINER", null, null, null, null, null, null, 80, 33,
-                    24000, null, null, null, false, null, null, null, null, null)),
+                    immatRemorque,
+                    null,
+                    "TAUTLINER",
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    80,
+                    33,
+                    24000,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null)),
             "/api/v1/remorques");
     UUID chauffeurId =
         creerId(
             objectMapper.writeValueAsString(
-                new ChauffeurRequest(
-                    "CH-VD-" + suffixe, "Dupont", "Jean", null, null, null, null, null, null, null, null,
-                    null, null, null, null, null, null, null, null, null, null, null, null, null,
-                    null, null, null, List.of(), 2100)),
+                new ChauffeurRequest("CH-VD-" + suffixe, "Dupont", "Jean", null, List.of(), 2100)),
             "/api/v1/chauffeurs");
 
     Instant depart = Instant.now();
@@ -370,6 +406,10 @@ class VoyageDossierControllerIT extends AbstractIntegrationTest {
                     trajet,
                     List.of(new Affectation(chauffeurId, RoleChauffeur.TITULAIRE, depart)))),
             "/api/v1/voyages");
+    // La création persiste les arrêts déduits des dossiers : ces tests posent leur propre
+    // itinéraire (coordonnées maîtrisées pour les calculs de déviation).
+    voyageArretRepository.supprimerParVoyageId(voyageId);
+    rafraichirContextePersistence();
 
     UUID arretA = UUID.randomUUID();
     UUID arretB = UUID.randomUUID();
@@ -413,6 +453,8 @@ class VoyageDossierControllerIT extends AbstractIntegrationTest {
   private UUID creerDossierAvecPoids(
       UUID commandeId, UUID marchandiseId, double poidsKg, double volumeM3) throws Exception {
     Instant maintenant = Instant.now();
+    UUID siteChargement = creerSite(45.76, 4.84);
+    UUID siteDechargement = creerSite(45.80, 4.90);
     return creerId(
         objectMapper.writeValueAsString(
             new DossierRequest(
@@ -423,24 +465,39 @@ class VoyageDossierControllerIT extends AbstractIntegrationTest {
                 "Palettes",
                 null,
                 null,
-                List.of(new LigneMarchandise(marchandiseId, poidsKg, volumeM3, 10, null, null, true)),
+                List.of(
+                    new LigneMarchandise(marchandiseId, poidsKg, volumeM3, 10, null, null, true)),
                 List.of(
                     new Segment(
                         TypeSegment.CHARGEMENT,
                         0,
-                        UUID.randomUUID(),
+                        siteChargement,
                         new TimeWindow(maintenant, maintenant.plus(2, ChronoUnit.HOURS)),
                         null),
                     new Segment(
                         TypeSegment.DECHARGEMENT,
                         1,
-                        UUID.randomUUID(),
+                        siteDechargement,
                         new TimeWindow(
                             maintenant.plus(1, ChronoUnit.DAYS),
                             maintenant.plus(1, ChronoUnit.DAYS).plus(2, ChronoUnit.HOURS)),
                         null)),
                 List.of())),
         "/api/v1/dossiers");
+  }
+
+  private UUID creerSite(double latitude, double longitude) throws Exception {
+    return creerId(
+        objectMapper.writeValueAsString(
+            new SiteRequest(
+                "SITE-VD-" + UUID.randomUUID().toString().substring(0, 8),
+                "Site voyage dossier",
+                null,
+                new GeoPoint(latitude, longitude),
+                null,
+                null,
+                null)),
+        "/api/v1/sites");
   }
 
   private UUID creerCommandeConfirmee(UUID clientId, UUID marchandiseId) throws Exception {

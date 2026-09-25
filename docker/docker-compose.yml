@@ -74,14 +74,24 @@ services:
 
   # Service IA : application Flask du dépôt séparé, jamais exposée publiquement (pas de mapping de
   # port vers l'hôte) — seul le backend Spring Boot, sur le même réseau interne, peut l'appeler.
-  # Décommenter et adapter `context`/`dockerfile` une fois ce dépôt Flask disponible.
-  # Voir docs/integration-ia.md.
+  # À décommenter avec le service `app` (en local, on lance plutôt Flask avec `make run`).
+  # Sa base propre `logiflow_ai` vit dans le conteneur postgres (init/02-ai-database.sql) ;
+  # Le LLM est un fournisseur cloud (clé API). Voir docs/integration-ia.md et l'ADR 0004.
   # ai-service:
   #   build:
   #     context: ../../logiflow-ai-service
   #   container_name: logiflow-ai-service
   #   restart: unless-stopped
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
   #   environment:
   #     INTERNAL_API_KEY: ${AI_SERVICE_API_KEY:-change-me-local-only}
+  #     DATABASE_URL: postgresql+psycopg://logiflow_ai:${AI_DB_PASSWORD:-change-me-local-only}@postgres:5432/logiflow_ai
+  #     LLM_BASE_URL: ${LLM_BASE_URL:-https://api.groq.com/openai/v1}
+  #     LLM_API_KEY: ${LLM_API_KEY}
+  #     LLM_MODEL: ${LLM_MODEL:-openai/gpt-oss-120b}
+  #     BACKEND_BASE_URL: http://app:8080
+  #     BACKEND_CALLBACK_API_KEY: ${AI_SERVICE_CALLBACK_API_KEY:-change-me-local-only}
   #   networks:
   #     - logiflow-net

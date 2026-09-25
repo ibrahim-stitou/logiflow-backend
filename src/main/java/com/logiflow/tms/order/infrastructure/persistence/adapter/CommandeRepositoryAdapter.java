@@ -26,7 +26,9 @@ public class CommandeRepositoryAdapter implements CommandeRepository {
     var entite = jpaRepository.save(mapper.versEntite(commande));
     ligneJpaRepository.deleteByCommandeId(entite.getId());
     var lignesEntites =
-        commande.lignes().stream().map(ligne -> mapper.versLigneEntite(entite.getId(), ligne)).toList();
+        commande.lignes().stream()
+            .map(ligne -> mapper.versLigneEntite(entite.getId(), ligne))
+            .toList();
     ligneJpaRepository.saveAll(lignesEntites);
     return mapper.versDomaine(entite, ligneJpaRepository.findByCommandeId(entite.getId()));
   }
@@ -42,7 +44,9 @@ public class CommandeRepositoryAdapter implements CommandeRepository {
   public Optional<Commande> parReference(String reference) {
     return jpaRepository
         .findByReference(reference)
-        .map(entite -> mapper.versDomaine(entite, ligneJpaRepository.findByCommandeId(entite.getId())));
+        .map(
+            entite ->
+                mapper.versDomaine(entite, ligneJpaRepository.findByCommandeId(entite.getId())));
   }
 
   @Override
@@ -53,6 +57,23 @@ public class CommandeRepositoryAdapter implements CommandeRepository {
         (texteRecherche == null || texteRecherche.isBlank())
             ? jpaRepository.findAll(pageable)
             : jpaRepository.findByReferenceContainingIgnoreCase(texteRecherche, pageable);
+    var contenu =
+        pageJpa.getContent().stream()
+            .map(
+                (CommandeEntity entite) ->
+                    mapper.versDomaine(entite, ligneJpaRepository.findByCommandeId(entite.getId())))
+            .toList();
+    return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
+  }
+
+  @Override
+  public Page<Commande> rechercherParStatut(
+      String texteRecherche, String statut, PageRequest pageRequest) {
+    var pageable =
+        org.springframework.data.domain.PageRequest.of(pageRequest.numero(), pageRequest.taille());
+    org.springframework.data.domain.Page<CommandeEntity> pageJpa =
+        jpaRepository.rechercherParStatut(
+            texteRecherche == null ? "" : texteRecherche.strip(), statut, pageable);
     var contenu =
         pageJpa.getContent().stream()
             .map(

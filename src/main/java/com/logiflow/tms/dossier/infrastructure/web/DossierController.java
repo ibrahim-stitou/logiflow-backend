@@ -62,7 +62,8 @@ public class DossierController {
       @RequestParam(required = false) String q,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size,
-      @RequestParam(required = false) UUID commandeId) {
+      @RequestParam(required = false) UUID commandeId,
+      @RequestParam(required = false) StatutDossier statut) {
     if (commandeId != null) {
       var dossiers = dossierService.listerParCommande(commandeId);
       return PageResponse.ofList(
@@ -70,7 +71,10 @@ public class DossierController {
               .map(dossier -> DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier)))
               .toList());
     }
-    var resultats = dossierService.listerDossiers(q, new PageRequest(page, size));
+    var resultats =
+        statut == null
+            ? dossierService.listerDossiers(q, new PageRequest(page, size))
+            : dossierService.listerDossiers(q, statut, new PageRequest(page, size));
     return PageResponse.of(
         resultats, dossier -> DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier)));
   }

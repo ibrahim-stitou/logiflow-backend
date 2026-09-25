@@ -30,7 +30,8 @@ class VehiculeServiceTest {
 
   @BeforeEach
   void setUp() {
-    vehiculeService = new VehiculeService(vehiculeRepository, new FleetDomainService(), documentApi);
+    vehiculeService =
+        new VehiculeService(vehiculeRepository, new FleetDomainService(), documentApi);
   }
 
   private static CreerVehiculeCommand commandeVehicule() {

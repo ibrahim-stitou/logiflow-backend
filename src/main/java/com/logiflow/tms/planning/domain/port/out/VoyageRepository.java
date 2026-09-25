@@ -3,6 +3,7 @@ package com.logiflow.tms.planning.domain.port.out;
 import com.logiflow.tms.planning.domain.model.Voyage;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,5 +22,20 @@ public interface VoyageRepository {
 
   Page<Voyage> rechercher(String texteRecherche, PageRequest pageRequest);
 
+  /**
+   * Recherche filtrée par statut (optionnel, {@code null} = tous) et texte (optionnel), triée de la
+   * plus récemment modifiée à la plus ancienne.
+   */
+  Page<Voyage> rechercherParStatut(String texteRecherche, String statut, PageRequest pageRequest);
+
   List<Voyage> parDossierId(UUID dossierId);
+
+  /** Voyages où le chauffeur est affecté (titulaire ou renfort), du plus récent au plus ancien. */
+  List<Voyage> parChauffeurId(UUID chauffeurId);
+
+  /**
+   * Voyages non annulés, non terminés et non clôturés dont la période [départ, arrivée] chevauche
+   * [debut, fin] : ils mobilisent leurs ressources sur cette période.
+   */
+  List<Voyage> actifsSurPeriode(Instant debut, Instant fin);
 }

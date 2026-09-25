@@ -13,6 +13,7 @@ import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat
 import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versEntier;
 import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versReel;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,10 +53,7 @@ public class PriseCarburantRepositoryAdapter implements PriseCarburantRepository
         org.springframework.data.domain.PageRequest.of(pageRequest.numero(), pageRequest.taille());
     var pageJpa =
         jpaRepository.rechercher(
-            texteRecherche,
-            voyageId,
-            statut != null ? statut.name() : null,
-            pageable);
+            texteRecherche, voyageId, statut != null ? statut.name() : null, pageable);
     var contenu = pageJpa.getContent().stream().map(mapper::versDomaine).toList();
     return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
   }
@@ -70,6 +68,17 @@ public class PriseCarburantRepositoryAdapter implements PriseCarburantRepository
             .findFirst()
             .map(JpaTupleAgregat::normaliserLigne)
             .orElse(null);
+    return versStats(totaux, jpaRepository.agregerParType(texteRecherche, voyageId, statutNom));
+  }
+
+  @Override
+  public PriseCarburantStats statsPeriode(UUID vehiculeId, Instant debut, Instant fin) {
+    return versStats(
+        JpaTupleAgregat.normaliserLigne(jpaRepository.agregerTotauxPeriode(vehiculeId, debut, fin)),
+        jpaRepository.agregerParTypePeriode(vehiculeId, debut, fin));
+  }
+
+  private static PriseCarburantStats versStats(Object[] totaux, List<Object[]> lignesParType) {
     long nombre = 0L;
     double litres = 0.0;
     BigDecimal montant = BigDecimal.ZERO;
@@ -80,7 +89,7 @@ public class PriseCarburantRepositoryAdapter implements PriseCarburantRepository
     }
 
     List<ParType> parType =
-        jpaRepository.agregerParType(texteRecherche, voyageId, statutNom).stream()
+        lignesParType.stream()
             .map(JpaTupleAgregat::normaliserLigne)
             .map(
                 row ->

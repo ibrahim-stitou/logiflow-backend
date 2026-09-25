@@ -27,6 +27,7 @@ import com.logiflow.tms.planning.domain.vo.Trajet;
 import com.logiflow.tms.planning.infrastructure.web.dto.VoyageRequest;
 import com.logiflow.tms.referential.infrastructure.web.dto.ClientRequest;
 import com.logiflow.tms.referential.infrastructure.web.dto.MarchandiseRequest;
+import com.logiflow.tms.referential.infrastructure.web.dto.SiteRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
 import com.logiflow.tms.shared.domain.vo.GeoPoint;
 import com.logiflow.tms.shared.domain.vo.Money;
@@ -68,7 +69,17 @@ class EvenementVoyageControllerIT extends AbstractIntegrationTest {
     return UUID.fromString(objectMapper.readTree(reponse).get("id").asText());
   }
 
+  private UUID creerSite(String code, double latitude, double longitude) throws Exception {
+    return creerId(
+        objectMapper.writeValueAsString(
+            new SiteRequest(
+                code, "Site tracking", null, new GeoPoint(latitude, longitude), null, null, null)),
+        "/api/v1/sites");
+  }
+
   private UUID creerVoyage() throws Exception {
+    UUID siteChargement = creerSite("SITE-IT-TRACK-A", 45.76, 4.84);
+    UUID siteDechargement = creerSite("SITE-IT-TRACK-B", 43.30, 5.37);
     UUID clientId =
         creerId(
             objectMapper.writeValueAsString(new ClientRequest("CLI-IT-TRACK", "Client tracking")),
@@ -76,7 +87,8 @@ class EvenementVoyageControllerIT extends AbstractIntegrationTest {
     UUID marchandiseId =
         creerId(
             objectMapper.writeValueAsString(
-                new MarchandiseRequest("MARCH-IT-TRACK", "Marchandise tracking", null, null, null, true)),
+                new MarchandiseRequest(
+                    "MARCH-IT-TRACK", "Marchandise tracking", null, null, null, true)),
             "/api/v1/marchandises");
     UUID commandeId =
         creerId(
@@ -108,13 +120,13 @@ class EvenementVoyageControllerIT extends AbstractIntegrationTest {
                         new Segment(
                             TypeSegment.CHARGEMENT,
                             0,
-                            UUID.randomUUID(),
+                            siteChargement,
                             new TimeWindow(maintenant, maintenant.plus(2, ChronoUnit.HOURS)),
                             null),
                         new Segment(
                             TypeSegment.DECHARGEMENT,
                             1,
-                            UUID.randomUUID(),
+                            siteDechargement,
                             new TimeWindow(
                                 maintenant.plus(1, ChronoUnit.DAYS),
                                 maintenant.plus(1, ChronoUnit.DAYS).plus(2, ChronoUnit.HOURS)),
@@ -126,17 +138,34 @@ class EvenementVoyageControllerIT extends AbstractIntegrationTest {
         creerId(
             objectMapper.writeValueAsString(
                 new VehiculeRequest(
-                    "TR-IT-001", TypeVehicule.PORTEUR, null, null, null, null, null, null, 19000,
-                    null, 9000, null, null, null, null, null, null, false, null, null, null, null,
+                    "TR-001-IT",
+                    TypeVehicule.PORTEUR,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    19000,
+                    null,
+                    9000,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null,
+                    null,
+                    null,
+                    null,
                     null)),
             "/api/v1/vehicules");
     UUID chauffeurId =
         creerId(
             objectMapper.writeValueAsString(
-                new ChauffeurRequest(
-                    "CH-IT-TRACK", "Tracking", "Jean", null, null, null, null, null, null, null,
-                    null, null, null, null, null, null, null, null, null, null, null, null, null,
-                    null, null, null, null, List.of(), 2100)),
+                new ChauffeurRequest("CH-IT-TRACK", "Tracking", "Jean", null, List.of(), 2100)),
             "/api/v1/chauffeurs");
 
     Trajet trajet =

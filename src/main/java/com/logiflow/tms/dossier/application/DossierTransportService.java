@@ -2,20 +2,28 @@ package com.logiflow.tms.dossier.application;
 
 import com.logiflow.tms.dossier.api.DossierApi;
 import com.logiflow.tms.dossier.api.dto.DossierCapaciteSummary;
+import com.logiflow.tms.dossier.api.dto.DossierPlanificationSummary;
 import com.logiflow.tms.dossier.api.dto.DossierSummary;
+import com.logiflow.tms.dossier.api.dto.SegmentPlanificationSummary;
 import com.logiflow.tms.dossier.application.command.CreerDossierCommand;
 import com.logiflow.tms.dossier.domain.model.DossierTransport;
 import com.logiflow.tms.dossier.domain.model.StatutDossier;
+import com.logiflow.tms.dossier.domain.model.TypeSegment;
 import com.logiflow.tms.dossier.domain.port.out.DossierTransportRepository;
 import com.logiflow.tms.dossier.domain.port.out.SequenceReferenceGenerator;
 import com.logiflow.tms.dossier.domain.vo.LigneMarchandise;
+import com.logiflow.tms.dossier.domain.vo.Segment;
 import com.logiflow.tms.order.api.CommandeApi;
 import com.logiflow.tms.referential.api.MarchandiseApi;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
+import com.logiflow.tms.shared.domain.vo.TimeWindow;
+import java.time.Instant;
 import java.time.Year;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -80,8 +88,7 @@ public class DossierTransportService implements DossierApi {
   @Transactional
   public void changerStatut(UUID id, StatutDossier statut) {
     if (statut == StatutDossier.PLANIFIE) {
-      throw new BusinessException(
-          "Le statut PLANIFIE est réservé à la planification d'un voyage");
+      throw new BusinessException("Le statut PLANIFIE est réservé à la planification d'un voyage");
     }
     DossierTransport dossier = trouverOuEchouer(id);
     if (dossier.statut() == StatutDossier.PLANIFIE && statut == StatutDossier.CREE) {
@@ -161,6 +168,12 @@ public class DossierTransportService implements DossierApi {
     return dossierRepository.rechercher(texteRecherche, pageRequest);
   }
 
+  @Transactional(readOnly = true)
+  public Page<DossierTransport> listerDossiers(
+      String texteRecherche, StatutDossier statut, PageRequest pageRequest) {
+    return dossierRepository.rechercherParStatut(texteRecherche, statut.name(), pageRequest);
+  }
+
   @Override
   @Transactional(readOnly = true)
   public Optional<DossierSummary> consulter(UUID dossierId) {
@@ -215,6 +228,59 @@ public class DossierTransportService implements DossierApi {
         dossierContientAdr(dossier));
   }
 
+  @Override
+  @Transactional(readOnly = true)
+  public List<DossierPlanificationSummary> consulterPourPlanification(List<UUID> dossierIds) {
+    return dossierIds.stream()
+        .map(dossierRepository::parId)
+        .flatMap(Optional::stream)
+        .map(this::versPlanification)
+        .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<DossierPlanificationSummary> candidatsPlanification(Instant debut, Instant fin) {
+    TimeWindow periode = new TimeWindow(debut, fin);
+    return dossierRepository.parStatut(StatutDossier.CREE).stream()
+        .filter(
+            dossier ->
+                dossier.segments().stream()
+                    .anyMatch(
+                        s ->
+                            s.type() == TypeSegment.CHARGEMENT
+                                && !s.estRealise()
+                                && s.fenetre().chevauche(periode)))
+        .map(this::versPlanification)
+        .toList();
+  }
+
+  private DossierPlanificationSummary versPlanification(DossierTransport dossier) {
+    return new DossierPlanificationSummary(
+        dossier.id(),
+        dossier.reference().valeur(),
+        dossier.statut().name(),
+        dossier.typeTransport().name(),
+        dossier.groupable(),
+        dossier.poidsBrutKg(),
+        dossier.volumeM3(),
+        dossier.nbPalettes(),
+        dossierContientAdr(dossier),
+        dossier.carrosserieRequise() == null ? null : dossier.carrosserieRequise().name(),
+        dossier.temperatureRequise(),
+        dossier.segments().stream()
+            .sorted(Comparator.comparingInt(Segment::ordre))
+            .map(
+                s ->
+                    new SegmentPlanificationSummary(
+                        s.type().name(),
+                        s.ordre(),
+                        s.siteId(),
+                        s.fenetre().debut(),
+                        s.fenetre().fin()))
+            .toList());
+  }
+
   private DossierCapaciteSummary versCapacite(DossierTransport dossier) {
     return new DossierCapaciteSummary(
         dossier.id(),
@@ -231,5 +297,16 @@ public class DossierTransportService implements DossierApi {
             () ->
                 new NotFoundException(
                     "Aucun dossier de transport trouvé pour l'identifiant " + id));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<DossierSummary> rechercher(String texte, String statut, PageRequest pageRequest) {
+    return dossierRepository.rechercherParStatut(texte, statut, pageRequest).map(this::versResume);
+  }
+
+  @Override
+  public List<String> statutsConnus() {
+    return Arrays.stream(StatutDossier.values()).map(Enum::name).toList();
   }
 }

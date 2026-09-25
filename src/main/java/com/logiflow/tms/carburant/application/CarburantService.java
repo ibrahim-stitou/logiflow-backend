@@ -1,6 +1,7 @@
 package com.logiflow.tms.carburant.application;
 
 import com.logiflow.tms.carburant.api.CarburantApi;
+import com.logiflow.tms.carburant.api.dto.ConsommationCarburantSummary;
 import com.logiflow.tms.carburant.application.command.CreerPriseCarburantCommand;
 import com.logiflow.tms.carburant.application.command.CreerStationCommand;
 import com.logiflow.tms.carburant.application.command.MajPriseCarburantCommand;
@@ -17,6 +18,8 @@ import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,8 +39,7 @@ public class CarburantService implements CarburantApi {
     stationDomainService.verifierCodeDisponible(
         command.code(), stationRepository.existeParCode(command.code()));
     Station station =
-        Station.creer(
-            UUID.randomUUID(), command.code(), command.libelle(), command.adresse());
+        Station.creer(UUID.randomUUID(), command.code(), command.libelle(), command.adresse());
     return stationRepository.sauvegarder(station).id();
   }
 
@@ -165,6 +167,33 @@ public class CarburantService implements CarburantApi {
     return priseCarburantRepository
         .parId(id)
         .orElseThrow(
-            () -> new NotFoundException("Aucune prise de carburant trouvée pour l'identifiant " + id));
+            () ->
+                new NotFoundException(
+                    "Aucune prise de carburant trouvée pour l'identifiant " + id));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public ConsommationCarburantSummary consommation(
+      UUID vehiculeId, LocalDate debut, LocalDate fin) {
+    ZoneId zone = ZoneId.of("Europe/Paris");
+    var stats =
+        priseCarburantRepository.statsPeriode(
+            vehiculeId,
+            debut.atStartOfDay(zone).toInstant(),
+            fin.plusDays(1).atStartOfDay(zone).toInstant());
+    return new ConsommationCarburantSummary(
+        vehiculeId,
+        debut,
+        fin,
+        stats.nombre(),
+        stats.litresTotal(),
+        stats.montantTotal(),
+        stats.parType().stream()
+            .map(
+                t ->
+                    new ConsommationCarburantSummary.ParType(
+                        t.type().name(), t.nombre(), t.litres(), t.montant()))
+            .toList());
   }
 }

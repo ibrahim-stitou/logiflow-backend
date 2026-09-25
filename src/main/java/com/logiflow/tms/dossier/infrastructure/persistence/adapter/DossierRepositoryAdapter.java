@@ -1,6 +1,7 @@
 package com.logiflow.tms.dossier.infrastructure.persistence.adapter;
 
 import com.logiflow.tms.dossier.domain.model.DossierTransport;
+import com.logiflow.tms.dossier.domain.model.StatutDossier;
 import com.logiflow.tms.dossier.domain.port.out.DossierTransportRepository;
 import com.logiflow.tms.dossier.infrastructure.persistence.entity.DossierEntity;
 import com.logiflow.tms.dossier.infrastructure.persistence.mapper.DossierMapper;
@@ -61,6 +62,15 @@ public class DossierRepositoryAdapter implements DossierTransportRepository {
   }
 
   @Override
+  public List<DossierTransport> parStatut(StatutDossier statut) {
+    return jpaRepository.findByStatut(statut.name()).stream()
+        .map(
+            (DossierEntity entite) ->
+                mapper.versDomaine(entite, ligneJpaRepository.findByDossierId(entite.getId())))
+        .toList();
+  }
+
+  @Override
   public List<DossierTransport> parCommandeId(UUID commandeId) {
     return jpaRepository.findByCommandeId(commandeId).stream()
         .map(
@@ -77,6 +87,23 @@ public class DossierRepositoryAdapter implements DossierTransportRepository {
         (texteRecherche == null || texteRecherche.isBlank())
             ? jpaRepository.findAll(pageable)
             : jpaRepository.findByReferenceContainingIgnoreCase(texteRecherche, pageable);
+    var contenu =
+        pageJpa.getContent().stream()
+            .map(
+                (DossierEntity entite) ->
+                    mapper.versDomaine(entite, ligneJpaRepository.findByDossierId(entite.getId())))
+            .toList();
+    return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
+  }
+
+  @Override
+  public Page<DossierTransport> rechercherParStatut(
+      String texteRecherche, String statut, PageRequest pageRequest) {
+    var pageable =
+        org.springframework.data.domain.PageRequest.of(pageRequest.numero(), pageRequest.taille());
+    org.springframework.data.domain.Page<DossierEntity> pageJpa =
+        jpaRepository.rechercherParStatut(
+            texteRecherche == null ? "" : texteRecherche.strip(), statut, pageable);
     var contenu =
         pageJpa.getContent().stream()
             .map(

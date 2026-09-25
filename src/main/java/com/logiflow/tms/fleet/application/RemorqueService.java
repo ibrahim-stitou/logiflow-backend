@@ -1,6 +1,8 @@
 package com.logiflow.tms.fleet.application;
 
+import com.logiflow.tms.document.api.DocumentApi;
 import com.logiflow.tms.fleet.api.RemorqueApi;
+import com.logiflow.tms.fleet.api.dto.RemorquePlanificationSummary;
 import com.logiflow.tms.fleet.api.dto.RemorqueSummary;
 import com.logiflow.tms.fleet.application.command.CreerRemorqueCommand;
 import com.logiflow.tms.fleet.domain.model.Remorque;
@@ -14,6 +16,9 @@ import com.logiflow.tms.shared.domain.vo.Capacite;
 import com.logiflow.tms.shared.domain.vo.Immatriculation;
 import com.logiflow.tms.shared.domain.vo.Poids;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +31,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class RemorqueService implements RemorqueApi {
 
   private final RemorqueRepository remorqueRepository;
+  private static final String TYPE_ENTITE_DOCUMENTABLE = "REMORQUE";
+  private static final int PAGE_PLANIFICATION = 100;
+
   private final FleetDomainService fleetDomainService;
+  private final DocumentApi documentApi;
 
   @Transactional
   public UUID creerRemorque(CreerRemorqueCommand command) {
@@ -110,6 +119,54 @@ public class RemorqueService implements RemorqueApi {
     return remorqueRepository.parId(remorqueId).map(Remorque::estDisponible).orElse(false);
   }
 
+  @Override
+  @Transactional(readOnly = true)
+  public boolean documentsValides(UUID remorqueId, LocalDate date) {
+    return remorqueRepository.parId(remorqueId).isPresent()
+        && documentApi.tousValides(TYPE_ENTITE_DOCUMENTABLE, remorqueId, date);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Optional<RemorquePlanificationSummary> consulterPourPlanification(
+      UUID remorqueId, LocalDate date) {
+    return remorqueRepository.parId(remorqueId).map(r -> versPlanification(r, date));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<RemorquePlanificationSummary> listerPourPlanification(LocalDate date) {
+    List<RemorquePlanificationSummary> resultat = new ArrayList<>();
+    PageRequest page = PageRequest.premiere(PAGE_PLANIFICATION);
+    Page<Remorque> courante;
+    do {
+      courante = remorqueRepository.rechercherParStatut("", null, page);
+      courante.contenu().stream()
+          .filter(r -> r.statut() != StatutVehicule.HORS_SERVICE)
+          .map(r -> versPlanification(r, date))
+          .forEach(resultat::add);
+      page = new PageRequest(page.numero() + 1, PAGE_PLANIFICATION);
+    } while (page.numero() < courante.totalPages());
+    return resultat;
+  }
+
+  private RemorquePlanificationSummary versPlanification(Remorque remorque, LocalDate date) {
+    var capacite = remorque.capaciteUtile();
+    return new RemorquePlanificationSummary(
+        remorque.id(),
+        remorque.immatriculation().valeur(),
+        remorque.type() == null ? null : remorque.type().name(),
+        remorque.carrosserie() == null ? null : remorque.carrosserie().name(),
+        capacite.poidsKg(),
+        capacite.volumeM3(),
+        capacite.positionsPalettes(),
+        remorque.groupeFroid(),
+        remorque.temperatureMin(),
+        remorque.temperatureMax(),
+        remorque.statut().name(),
+        documentApi.tousValides(TYPE_ENTITE_DOCUMENTABLE, remorque.id(), date));
+  }
+
   private RemorqueSummary versResume(Remorque remorque) {
     var capacite = remorque.capaciteUtile();
     return new RemorqueSummary(
@@ -126,5 +183,16 @@ public class RemorqueService implements RemorqueApi {
         .parId(id)
         .orElseThrow(
             () -> new NotFoundException("Aucune remorque trouvée pour l'identifiant " + id));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<RemorqueSummary> rechercher(String texte, String statut, PageRequest pageRequest) {
+    return remorqueRepository.rechercherParStatut(texte, statut, pageRequest).map(this::versResume);
+  }
+
+  @Override
+  public List<String> statutsConnus() {
+    return Arrays.stream(StatutVehicule.values()).map(Enum::name).toList();
   }
 }

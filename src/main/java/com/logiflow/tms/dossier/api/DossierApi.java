@@ -1,7 +1,11 @@
 package com.logiflow.tms.dossier.api;
 
 import com.logiflow.tms.dossier.api.dto.DossierCapaciteSummary;
+import com.logiflow.tms.dossier.api.dto.DossierPlanificationSummary;
 import com.logiflow.tms.dossier.api.dto.DossierSummary;
+import com.logiflow.tms.shared.application.Page;
+import com.logiflow.tms.shared.application.PageRequest;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,8 +42,8 @@ public interface DossierApi {
   void replanifierApresAnnulationVoyage(List<UUID> dossierIds);
 
   /**
-   * Affecte les arrêts voyage de chargement/déchargement à un dossier déjà planifié (sans changer le
-   * statut).
+   * Affecte les arrêts voyage de chargement/déchargement à un dossier déjà planifié (sans changer
+   * le statut).
    */
   void affecterArretsVoyage(UUID dossierId, UUID arretChargementId, UUID arretDechargementId);
 
@@ -49,4 +53,25 @@ public interface DossierApi {
    */
   void planifierSurVoyageAvecArrets(
       UUID dossierId, UUID arretChargementId, UUID arretDechargementId);
+
+  /**
+   * Recherche paginée pour la consultation transverse (copilote IA). {@code statut} optionnel
+   * ({@code null} = tous), doit appartenir à {@link #statutsConnus()} ; {@code texte} optionnel.
+   */
+  Page<DossierSummary> rechercher(String texte, String statut, PageRequest pageRequest);
+
+  /** Valeurs possibles du filtre de {@link #rechercher}. */
+  List<String> statutsConnus();
+
+  /**
+   * Vues de planification des dossiers demandés, dans l'ordre fourni. Les identifiants inconnus
+   * sont ignorés.
+   */
+  List<DossierPlanificationSummary> consulterPourPlanification(List<UUID> dossierIds);
+
+  /**
+   * Dossiers {@code CREE} planifiables sur la période [debut, fin[ : au moins une fenêtre de
+   * chargement chevauche la période.
+   */
+  List<DossierPlanificationSummary> candidatsPlanification(Instant debut, Instant fin);
 }

@@ -5,9 +5,11 @@ import com.logiflow.tms.driver.domain.vo.Habilitation.TypeHabilitation;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -17,39 +19,26 @@ import java.util.UUID;
  * débité explicitement. Son calcul réglementaire complet (basé sur l'historique réel de conduite)
  * appartiendra au module {@code tracking} une fois le suivi d'exécution implémenté.
  *
- * <p>La photo du chauffeur ne fait pas partie de cet agrégat : elle est gérée par le module {@code
- * document} (relation polymorphe sur cet identifiant), comme pour les véhicules et remorques.
+ * <p>La photo et les pièces justificatives (permis, carte conducteur…) ne font pas partie de cet
+ * agrégat : elles sont gérées, de façon optionnelle, par le module {@code document}.
  */
 public final class Chauffeur {
+
+  /**
+   * Habilitations vérifiées dès qu'elles sont déclarées : présentes mais expirées à la date du
+   * voyage, elles bloquent l'affectation. Absentes, elles ne bloquent pas (saisie déclarative).
+   */
+  private static final Set<TypeHabilitation> HABILITATIONS_CONTROLEES =
+      Set.of(
+          TypeHabilitation.FIMO_FCO,
+          TypeHabilitation.CARTE_CONDUCTEUR,
+          TypeHabilitation.VISITE_MEDICALE);
 
   private final UUID id;
   private final String matricule;
   private String nom;
   private String prenom;
-  private final String cin;
-  private final LocalDate dateNaissance;
-  private final String lieuNaissance;
-  private final String nationalite;
-  private final String telephone;
-  private final String email;
-  private final String adresse;
-  private final String numeroPermis;
-  private final String categoriePermis;
-  private final LocalDate dateObtentionPermis;
-  private final LocalDate dateExpirationPermis;
-  private final String numeroPasseport;
-  private final LocalDate dateDelivrancePasseport;
-  private final LocalDate dateExpirationPasseport;
-  private final String paysDelivrancePasseport;
-  private final String numeroVisa;
-  private final String typeVisa;
-  private final String paysVisa;
-  private final LocalDate dateDelivranceVisa;
-  private final LocalDate dateExpirationVisa;
-  private final LocalDate dateEmbauche;
-  private final TypeContrat typeContrat;
-  private final Integer experienceAnnees;
-  private final String specialisation;
+  private ProfilChauffeur profil;
   private StatutChauffeur statut;
   private DisponibiliteChauffeur disponibilite;
   private List<Habilitation> habilitations;
@@ -60,30 +49,7 @@ public final class Chauffeur {
       String matricule,
       String nom,
       String prenom,
-      String cin,
-      LocalDate dateNaissance,
-      String lieuNaissance,
-      String nationalite,
-      String telephone,
-      String email,
-      String adresse,
-      String numeroPermis,
-      String categoriePermis,
-      LocalDate dateObtentionPermis,
-      LocalDate dateExpirationPermis,
-      String numeroPasseport,
-      LocalDate dateDelivrancePasseport,
-      LocalDate dateExpirationPasseport,
-      String paysDelivrancePasseport,
-      String numeroVisa,
-      String typeVisa,
-      String paysVisa,
-      LocalDate dateDelivranceVisa,
-      LocalDate dateExpirationVisa,
-      LocalDate dateEmbauche,
-      TypeContrat typeContrat,
-      Integer experienceAnnees,
-      String specialisation,
+      ProfilChauffeur profil,
       StatutChauffeur statut,
       DisponibiliteChauffeur disponibilite,
       List<Habilitation> habilitations,
@@ -92,33 +58,10 @@ public final class Chauffeur {
     this.matricule = validerMatricule(matricule);
     this.nom = validerTexteObligatoire(nom, "Le nom");
     this.prenom = validerTexteObligatoire(prenom, "Le prénom");
-    this.cin = cin;
-    this.dateNaissance = dateNaissance;
-    this.lieuNaissance = lieuNaissance;
-    this.nationalite = nationalite;
-    this.telephone = telephone;
-    this.email = email;
-    this.adresse = adresse;
-    this.numeroPermis = numeroPermis;
-    this.categoriePermis = categoriePermis;
-    this.dateObtentionPermis = dateObtentionPermis;
-    this.dateExpirationPermis = dateExpirationPermis;
-    this.numeroPasseport = numeroPasseport;
-    this.dateDelivrancePasseport = dateDelivrancePasseport;
-    this.dateExpirationPasseport = dateExpirationPasseport;
-    this.paysDelivrancePasseport = paysDelivrancePasseport;
-    this.numeroVisa = numeroVisa;
-    this.typeVisa = typeVisa;
-    this.paysVisa = paysVisa;
-    this.dateDelivranceVisa = dateDelivranceVisa;
-    this.dateExpirationVisa = dateExpirationVisa;
-    this.dateEmbauche = dateEmbauche;
-    this.typeContrat = typeContrat;
-    this.experienceAnnees = experienceAnnees;
-    this.specialisation = specialisation;
+    this.profil = profil != null ? profil : ProfilChauffeur.vide();
     this.statut = Objects.requireNonNull(statut, "Le statut est obligatoire");
     this.disponibilite = Objects.requireNonNull(disponibilite, "La disponibilité est obligatoire");
-    this.habilitations = List.copyOf(habilitations);
+    this.habilitations = habilitations != null ? List.copyOf(habilitations) : List.of();
     Objects.requireNonNull(soldeTempsConduite, "Le solde de temps de conduite est obligatoire");
     if (soldeTempsConduite.isNegative()) {
       throw new IllegalArgumentException("Le solde de temps de conduite ne peut pas être négatif");
@@ -134,41 +77,16 @@ public final class Chauffeur {
       String prenom,
       List<Habilitation> habilitations,
       Duration soldeInitial) {
-    return creer(
-        id, matricule, nom, prenom, null, null, null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        habilitations, soldeInitial);
+    return creer(id, matricule, nom, prenom, ProfilChauffeur.vide(), habilitations, soldeInitial);
   }
 
+  /** Un nouveau chauffeur est ACTIF et DISPONIBLE. */
   public static Chauffeur creer(
       UUID id,
       String matricule,
       String nom,
       String prenom,
-      String cin,
-      LocalDate dateNaissance,
-      String lieuNaissance,
-      String nationalite,
-      String telephone,
-      String email,
-      String adresse,
-      String numeroPermis,
-      String categoriePermis,
-      LocalDate dateObtentionPermis,
-      LocalDate dateExpirationPermis,
-      String numeroPasseport,
-      LocalDate dateDelivrancePasseport,
-      LocalDate dateExpirationPasseport,
-      String paysDelivrancePasseport,
-      String numeroVisa,
-      String typeVisa,
-      String paysVisa,
-      LocalDate dateDelivranceVisa,
-      LocalDate dateExpirationVisa,
-      LocalDate dateEmbauche,
-      TypeContrat typeContrat,
-      Integer experienceAnnees,
-      String specialisation,
+      ProfilChauffeur profil,
       List<Habilitation> habilitations,
       Duration soldeInitial) {
     return new Chauffeur(
@@ -176,30 +94,7 @@ public final class Chauffeur {
         matricule,
         nom,
         prenom,
-        cin,
-        dateNaissance,
-        lieuNaissance,
-        nationalite,
-        telephone,
-        email,
-        adresse,
-        numeroPermis,
-        categoriePermis,
-        dateObtentionPermis,
-        dateExpirationPermis,
-        numeroPasseport,
-        dateDelivrancePasseport,
-        dateExpirationPasseport,
-        paysDelivrancePasseport,
-        numeroVisa,
-        typeVisa,
-        paysVisa,
-        dateDelivranceVisa,
-        dateExpirationVisa,
-        dateEmbauche,
-        typeContrat,
-        experienceAnnees,
-        specialisation,
+        profil,
         StatutChauffeur.ACTIF,
         DisponibiliteChauffeur.DISPONIBLE,
         habilitations,
@@ -211,30 +106,7 @@ public final class Chauffeur {
       String matricule,
       String nom,
       String prenom,
-      String cin,
-      LocalDate dateNaissance,
-      String lieuNaissance,
-      String nationalite,
-      String telephone,
-      String email,
-      String adresse,
-      String numeroPermis,
-      String categoriePermis,
-      LocalDate dateObtentionPermis,
-      LocalDate dateExpirationPermis,
-      String numeroPasseport,
-      LocalDate dateDelivrancePasseport,
-      LocalDate dateExpirationPasseport,
-      String paysDelivrancePasseport,
-      String numeroVisa,
-      String typeVisa,
-      String paysVisa,
-      LocalDate dateDelivranceVisa,
-      LocalDate dateExpirationVisa,
-      LocalDate dateEmbauche,
-      TypeContrat typeContrat,
-      Integer experienceAnnees,
-      String specialisation,
+      ProfilChauffeur profil,
       StatutChauffeur statut,
       DisponibiliteChauffeur disponibilite,
       List<Habilitation> habilitations,
@@ -244,30 +116,7 @@ public final class Chauffeur {
         matricule,
         nom,
         prenom,
-        cin,
-        dateNaissance,
-        lieuNaissance,
-        nationalite,
-        telephone,
-        email,
-        adresse,
-        numeroPermis,
-        categoriePermis,
-        dateObtentionPermis,
-        dateExpirationPermis,
-        numeroPasseport,
-        dateDelivrancePasseport,
-        dateExpirationPasseport,
-        paysDelivrancePasseport,
-        numeroVisa,
-        typeVisa,
-        paysVisa,
-        dateDelivranceVisa,
-        dateExpirationVisa,
-        dateEmbauche,
-        typeContrat,
-        experienceAnnees,
-        specialisation,
+        profil,
         statut,
         disponibilite,
         habilitations,
@@ -277,6 +126,10 @@ public final class Chauffeur {
   public void renommer(String nom, String prenom) {
     this.nom = validerTexteObligatoire(nom, "Le nom");
     this.prenom = validerTexteObligatoire(prenom, "Le prénom");
+  }
+
+  public void mettreAJourProfil(ProfilChauffeur profil) {
+    this.profil = Objects.requireNonNull(profil, "Le profil est obligatoire");
   }
 
   public void changerStatut(StatutChauffeur nouveauStatut) {
@@ -289,7 +142,7 @@ public final class Chauffeur {
   }
 
   public void mettreAJourHabilitations(List<Habilitation> habilitations) {
-    this.habilitations = List.copyOf(habilitations);
+    this.habilitations = habilitations != null ? List.copyOf(habilitations) : List.of();
   }
 
   public void consommerTempsConduite(Duration duree) {
@@ -321,6 +174,55 @@ public final class Chauffeur {
 
   public boolean estDisponible() {
     return disponibilite == DisponibiliteChauffeur.DISPONIBLE;
+  }
+
+  /**
+   * Raisons pour lesquelles ce chauffeur ne peut pas être affecté à un voyage ayant ces exigences
+   * (liste vide = affectable). Règle unique, partagée par la création de voyage et l'agent de
+   * planification.
+   */
+  public List<String> motifsNonAffectation(ExigencesAffectation exigences) {
+    Objects.requireNonNull(exigences, "Les exigences sont obligatoires");
+    LocalDate date = exigences.date();
+    String qui = "Chauffeur " + matricule;
+    List<String> motifs = new ArrayList<>();
+    if (statut != StatutChauffeur.ACTIF) {
+      motifs.add(qui + " : statut " + statut.name());
+    }
+    // EN_VOYAGE décrit l'instant présent : le chevauchement de période avec d'autres voyages est
+    // contrôlé par le module planning. Les autres indisponibilités (congé, repos…) bloquent.
+    if (!estDisponible() && disponibilite != DisponibiliteChauffeur.EN_VOYAGE) {
+      motifs.add(qui + " : non disponible (" + disponibilite.name() + ")");
+    }
+    if (profil.dateExpirationPermis() != null && profil.dateExpirationPermis().isBefore(date)) {
+      motifs.add(qui + " : permis de conduire expiré le " + profil.dateExpirationPermis());
+    }
+    CategoriePermis requis = exigences.permisRequis();
+    if (requis != null
+        && !profil.categoriesPermis().isEmpty()
+        && !requis.estCouvertePar(profil.categoriesPermis())) {
+      motifs.add(qui + " : permis " + requis.name() + " requis");
+    }
+    for (TypeHabilitation type : HABILITATIONS_CONTROLEES) {
+      boolean declaree = habilitations.stream().anyMatch(h -> h.type() == type);
+      if (declaree && !possedeHabilitation(type, date)) {
+        motifs.add(qui + " : habilitation " + type.name() + " non valide au " + date);
+      }
+    }
+    if (exigences.adr() && !possedeHabilitation(TypeHabilitation.ADR_BASE, date)) {
+      motifs.add(qui + " : habilitation ADR requise (marchandises dangereuses)");
+    }
+    if (exigences.international()) {
+      if (profil.numeroPasseport() == null
+          || profil.dateExpirationPasseport() == null
+          || profil.dateExpirationPasseport().isBefore(date)) {
+        motifs.add(qui + " : passeport valide requis pour un voyage international");
+      }
+      if (profil.dateExpirationVisa() != null && profil.dateExpirationVisa().isBefore(date)) {
+        motifs.add(qui + " : visa expiré le " + profil.dateExpirationVisa());
+      }
+    }
+    return List.copyOf(motifs);
   }
 
   private static String validerMatricule(String matricule) {
@@ -356,100 +258,8 @@ public final class Chauffeur {
     return prenom;
   }
 
-  public String cin() {
-    return cin;
-  }
-
-  public LocalDate dateNaissance() {
-    return dateNaissance;
-  }
-
-  public String lieuNaissance() {
-    return lieuNaissance;
-  }
-
-  public String nationalite() {
-    return nationalite;
-  }
-
-  public String telephone() {
-    return telephone;
-  }
-
-  public String email() {
-    return email;
-  }
-
-  public String adresse() {
-    return adresse;
-  }
-
-  public String numeroPermis() {
-    return numeroPermis;
-  }
-
-  public String categoriePermis() {
-    return categoriePermis;
-  }
-
-  public LocalDate dateObtentionPermis() {
-    return dateObtentionPermis;
-  }
-
-  public LocalDate dateExpirationPermis() {
-    return dateExpirationPermis;
-  }
-
-  public String numeroPasseport() {
-    return numeroPasseport;
-  }
-
-  public LocalDate dateDelivrancePasseport() {
-    return dateDelivrancePasseport;
-  }
-
-  public LocalDate dateExpirationPasseport() {
-    return dateExpirationPasseport;
-  }
-
-  public String paysDelivrancePasseport() {
-    return paysDelivrancePasseport;
-  }
-
-  public String numeroVisa() {
-    return numeroVisa;
-  }
-
-  public String typeVisa() {
-    return typeVisa;
-  }
-
-  public String paysVisa() {
-    return paysVisa;
-  }
-
-  public LocalDate dateDelivranceVisa() {
-    return dateDelivranceVisa;
-  }
-
-  public LocalDate dateExpirationVisa() {
-    return dateExpirationVisa;
-  }
-
-  public LocalDate dateEmbauche() {
-    return dateEmbauche;
-  }
-
-  public TypeContrat typeContrat() {
-    return typeContrat;
-  }
-
-  public Integer experienceAnnees() {
-    return experienceAnnees;
-  }
-
-  public String specialisation() {
-    return specialisation;
+  public ProfilChauffeur profil() {
+    return profil;
   }
 
   public StatutChauffeur statut() {
@@ -473,10 +283,10 @@ public final class Chauffeur {
     if (this == o) {
       return true;
     }
-    if (!(o instanceof Chauffeur chauffeur)) {
+    if (!(o instanceof Chauffeur autre)) {
       return false;
     }
-    return id.equals(chauffeur.id);
+    return id.equals(autre.id);
   }
 
   @Override

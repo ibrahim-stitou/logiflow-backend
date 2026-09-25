@@ -7,6 +7,7 @@ import com.logiflow.tms.planning.infrastructure.persistence.mapper.VoyageMapper;
 import com.logiflow.tms.planning.infrastructure.persistence.repository.VoyageJpaRepository;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -62,8 +63,31 @@ public class VoyageRepositoryAdapter implements VoyageRepository {
   }
 
   @Override
+  public Page<Voyage> rechercherParStatut(
+      String texteRecherche, String statut, PageRequest pageRequest) {
+    var pageable =
+        org.springframework.data.domain.PageRequest.of(pageRequest.numero(), pageRequest.taille());
+    org.springframework.data.domain.Page<VoyageEntity> pageJpa =
+        jpaRepository.rechercherParStatut(
+            texteRecherche == null ? "" : texteRecherche.strip(), statut, pageable);
+    var contenu = pageJpa.getContent().stream().map(mapper::versDomaine).toList();
+    return Page.of(contenu, pageJpa.getNumber(), pageJpa.getSize(), pageJpa.getTotalElements());
+  }
+
+  @Override
   public List<Voyage> parDossierId(UUID dossierId) {
     String fragment = "[\"" + dossierId + "\"]";
     return jpaRepository.findByDossierId(fragment).stream().map(mapper::versDomaine).toList();
+  }
+
+  @Override
+  public List<Voyage> parChauffeurId(UUID chauffeurId) {
+    String fragment = "[{\"chauffeurId\":\"" + chauffeurId + "\"}]";
+    return jpaRepository.findByChauffeurId(fragment).stream().map(mapper::versDomaine).toList();
+  }
+
+  @Override
+  public List<Voyage> actifsSurPeriode(Instant debut, Instant fin) {
+    return jpaRepository.actifsSurPeriode(debut, fin).stream().map(mapper::versDomaine).toList();
   }
 }

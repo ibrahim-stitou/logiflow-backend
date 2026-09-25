@@ -2,6 +2,7 @@ package com.logiflow.tms.shared.application;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 /**
  * Page de résultats indépendante de Spring Data, utilisée dans les ports applicatifs pour ne pas
@@ -20,6 +21,12 @@ public record Page<T>(List<T> contenu, int numero, int taille, long totalElement
 
   public int totalPages() {
     return taille == 0 ? 0 : (int) Math.ceil((double) totalElements / taille);
+  }
+
+  /** Transforme le contenu en conservant la pagination. */
+  public <R> Page<R> map(Function<? super T, ? extends R> transformation) {
+    return new Page<>(
+        contenu.stream().<R>map(transformation).toList(), numero, taille, totalElements);
   }
 
   public boolean estVide() {

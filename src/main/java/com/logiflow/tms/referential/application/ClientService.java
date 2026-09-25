@@ -57,12 +57,17 @@ public class ClientService implements ClientApi {
   @Override
   @Transactional(readOnly = true)
   public Optional<ClientSummary> consulter(UUID clientId) {
-    return clientRepository
-        .parId(clientId)
-        .map(
-            client ->
-                new ClientSummary(
-                    client.id(), client.code(), client.raisonSociale(), client.estActif()));
+    return clientRepository.parId(clientId).map(this::versResume);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Page<ClientSummary> rechercher(String texte, PageRequest pageRequest) {
+    return clientRepository.rechercher(texte, pageRequest).map(this::versResume);
+  }
+
+  private ClientSummary versResume(Client client) {
+    return new ClientSummary(client.id(), client.code(), client.raisonSociale(), client.estActif());
   }
 
   @Override

@@ -36,7 +36,8 @@ public class CapaciteTronconDomainService {
       double depassementKg,
       double depassementM3) {}
 
-  public record ResultatVerification(boolean compatible, List<TronconInsuffisant> tronconsDepasses) {}
+  public record ResultatVerification(
+      boolean compatible, List<TronconInsuffisant> tronconsDepasses) {}
 
   public List<UtilisationTroncon> calculerUtilisation(
       List<ArretVoyage> arrets, List<DossierSurTroncons> dossiers) {
@@ -102,7 +103,8 @@ public class CapaciteTronconDomainService {
                 nouveauPoids - capaciteMax.poidsKg(),
                 0));
       }
-      if (nouveauVolume > capaciteMax.volumeM3()) {
+      // Volume utile à 0 = non renseigné (porteur sans volume déclaré) : non contrôlé.
+      if (capaciteMax.volumeM3() > 0 && nouveauVolume > capaciteMax.volumeM3()) {
         depassements.add(
             new TronconInsuffisant(
                 troncon.arretDepartId(),
