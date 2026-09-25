@@ -1,10 +1,12 @@
 -- Arrêts d'itinéraire et liaisons dossier ↔ arrêts pour les voyages démo avec remorque.
--- Dérivé des segments des dossiers rattachés (ordre de visite = chargement puis déchargement par dossier).
+-- Dérivé des segments des dossiers rattachés (tous les sites dans l'ordre, y compris escales).
 
 DO $$
 DECLARE
     v record;
     d_id text;
+    seg jsonb;
+    site_id uuid;
     site_ch uuid;
     site_de uuid;
     ordered_sites uuid[] := '{}';
@@ -14,8 +16,6 @@ DECLARE
     voyage_num integer;
     ch_arret uuid;
     de_arret uuid;
-    ch_idx int;
-    de_idx int;
     site_libelle text;
     site_lat double precision;
     site_lng double precision;
@@ -36,19 +36,18 @@ BEGIN
 
         FOR d_id IN SELECT jsonb_array_elements_text(v.dossiers)
         LOOP
-            SELECT
-                (dt.segments_json::json->0->>'siteId')::uuid,
-                (dt.segments_json::json->1->>'siteId')::uuid
-            INTO site_ch, site_de
-            FROM dossier.dossier_transport dt
-            WHERE dt.id = d_id::uuid;
-
-            IF site_ch IS NOT NULL AND NOT site_ch = ANY (ordered_sites) THEN
-                ordered_sites := array_append(ordered_sites, site_ch);
-            END IF;
-            IF site_de IS NOT NULL AND NOT site_de = ANY (ordered_sites) THEN
-                ordered_sites := array_append(ordered_sites, site_de);
-            END IF;
+            FOR seg IN
+                SELECT value
+                FROM dossier.dossier_transport dt,
+                     LATERAL jsonb_array_elements(dt.segments_json::jsonb) WITH ORDINALITY AS t(value, ord)
+                WHERE dt.id = d_id::uuid
+                ORDER BY (value->>'ordre')::int, ord
+            LOOP
+                site_id := (seg->>'siteId')::uuid;
+                IF site_id IS NOT NULL AND NOT site_id = ANY (ordered_sites) THEN
+                    ordered_sites := array_append(ordered_sites, site_id);
+                END IF;
+            END LOOP;
         END LOOP;
 
         IF coalesce(array_length(ordered_sites, 1), 0) < 2 THEN
@@ -93,8 +92,20 @@ BEGIN
         FOR d_id IN SELECT jsonb_array_elements_text(v.dossiers)
         LOOP
             SELECT
-                (dt.segments_json::json->0->>'siteId')::uuid,
-                (dt.segments_json::json->1->>'siteId')::uuid
+                (
+                    SELECT (s->>'siteId')::uuid
+                    FROM jsonb_array_elements(dt.segments_json::jsonb) s
+                    WHERE s->>'type' = 'CHARGEMENT'
+                    ORDER BY (s->>'ordre')::int
+                    LIMIT 1
+                ),
+                (
+                    SELECT (s->>'siteId')::uuid
+                    FROM jsonb_array_elements(dt.segments_json::jsonb) s
+                    WHERE s->>'type' = 'DECHARGEMENT'
+                    ORDER BY (s->>'ordre')::int DESC
+                    LIMIT 1
+                )
             INTO site_ch, site_de
             FROM dossier.dossier_transport dt
             WHERE dt.id = d_id::uuid;

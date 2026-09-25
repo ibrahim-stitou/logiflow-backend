@@ -16,6 +16,9 @@ import org.springframework.web.client.RestClientException;
 @RequiredArgsConstructor
 public class OsrmRouteGeometryAdapter implements RouteGeometryPort {
 
+  /** Écart max. (km) entre la fin OSRM et la destination de l'étape avant relance routière / raccord. */
+  private static final double ECART_DESTINATION_KM = 5.0;
+
   private final RestClient osrmRestClient;
 
   @Override
@@ -24,11 +27,77 @@ public class OsrmRouteGeometryAdapter implements RouteGeometryPort {
       return List.of();
     }
 
+    List<GeoPoint> geometrie = new ArrayList<>();
+    for (int i = 0; i < points.size() - 1; i++) {
+      GeoPoint depart = points.get(i).position();
+      GeoPoint arrivee = points.get(i + 1).position();
+      List<GeoPoint> etape = resoudreEtape(depart, arrivee);
+      fusionnerEtape(geometrie, etape);
+    }
+
+    return geometrie.size() >= 2 ? geometrie : List.of();
+  }
+
+  private List<GeoPoint> resoudreEtape(GeoPoint depart, GeoPoint arrivee) {
+    List<GeoPoint> routee;
+    try {
+      routee = appelerOsrm(List.of(depart, arrivee));
+    } catch (ServiceIndisponibleException e) {
+      return segmentDroit(depart, arrivee);
+    }
+
+    if (routee.size() < 2) {
+      return segmentDroit(depart, arrivee);
+    }
+
+    // OSRM (ex. extract Europe) peut snapper loin du vrai départ (Marrakech → Tarifa).
+    List<GeoPoint> resultat = new ArrayList<>();
+    GeoPoint debutRoutee = routee.getFirst();
+    if (debutRoutee.distanceHaversineKm(depart) > ECART_DESTINATION_KM) {
+      resultat.addAll(raccorderVers(debutRoutee, depart, true));
+    }
+    fusionnerEtape(resultat, routee);
+
+    GeoPoint finRoutee = resultat.get(resultat.size() - 1);
+    if (finRoutee.distanceHaversineKm(arrivee) > ECART_DESTINATION_KM) {
+      fusionnerEtape(resultat, raccorderVers(finRoutee, arrivee, false));
+    }
+
+    return resultat.size() >= 2 ? resultat : segmentDroit(depart, arrivee);
+  }
+
+  /**
+   * Relie un point hors graphe OSRM à un point routable : tente d'abord une route OSRM, sinon
+   * ligne droite (traversée maritime / continent hors couverture).
+   *
+   * @param depuisPointAncre point déjà sur la géométrie OSRM
+   * @param depuisOuVersDepart si true, ancre = début OSRM et cible = vrai départ (préfixe)
+   */
+  private List<GeoPoint> raccorderVers(
+      GeoPoint pointAncre, GeoPoint cible, boolean prefixeVersDepart) {
+    GeoPoint a = prefixeVersDepart ? cible : pointAncre;
+    GeoPoint b = prefixeVersDepart ? pointAncre : cible;
+    try {
+      List<GeoPoint> routee = appelerOsrm(List.of(a, b));
+      if (routee.size() >= 2
+          && routee.getFirst().distanceHaversineKm(a) <= ECART_DESTINATION_KM
+          && routee.get(routee.size() - 1).distanceHaversineKm(b) <= ECART_DESTINATION_KM) {
+        return routee;
+      }
+    } catch (ServiceIndisponibleException ignored) {
+      // Hors couverture OSRM (Afrique) ou traversée maritime.
+    }
+    return segmentDroit(a, b);
+  }
+
+  private List<GeoPoint> appelerOsrm(List<GeoPoint> waypoints) {
+    if (waypoints.size() < 2) {
+      return List.of();
+    }
+
     String coordinatePath =
-        points.stream()
-            .map(
-                point ->
-                    point.position().longitude() + "," + point.position().latitude())
+        waypoints.stream()
+            .map(point -> point.longitude() + "," + point.latitude())
             .reduce((left, right) -> left + ";" + right)
             .orElse("");
 
@@ -42,6 +111,7 @@ public class OsrmRouteGeometryAdapter implements RouteGeometryPort {
                           .path("/route/v1/driving/{coordinates}")
                           .queryParam("overview", "full")
                           .queryParam("geometries", "geojson")
+                          .queryParam("continue_straight", "false")
                           .build(coordinatePath))
               .retrieve()
               .body(OsrmRouteResponse.class);
@@ -79,5 +149,45 @@ public class OsrmRouteGeometryAdapter implements RouteGeometryPort {
       throw new ServiceIndisponibleException(
           "Le moteur de routage OSRM est momentanément indisponible", e);
     }
+  }
+
+  private static void fusionnerEtape(List<GeoPoint> accum, List<GeoPoint> etape) {
+    if (etape.isEmpty()) {
+      return;
+    }
+    if (accum.isEmpty()) {
+      accum.addAll(etape);
+      return;
+    }
+    GeoPoint dernier = accum.get(accum.size() - 1);
+    int debut = 0;
+    if (pointsProches(dernier, etape.getFirst())) {
+      debut = 1;
+    }
+    if (debut < etape.size()) {
+      accum.addAll(etape.subList(debut, etape.size()));
+    }
+  }
+
+  private static boolean pointsProches(GeoPoint a, GeoPoint b) {
+    return a.distanceHaversineKm(b) < 0.05;
+  }
+
+  /** Interpolation linéaire (traversée maritime ou raccord quand OSRM ne relie pas deux rives). */
+  private static List<GeoPoint> segmentDroit(GeoPoint depart, GeoPoint arrivee) {
+    double distanceKm = depart.distanceHaversineKm(arrivee);
+    if (distanceKm < 0.05) {
+      return List.of(depart, arrivee);
+    }
+    int pas = Math.max(2, (int) Math.ceil(distanceKm / 15.0));
+    List<GeoPoint> points = new ArrayList<>(pas + 1);
+    for (int i = 0; i <= pas; i++) {
+      double t = (double) i / pas;
+      points.add(
+          new GeoPoint(
+              depart.latitude() + t * (arrivee.latitude() - depart.latitude()),
+              depart.longitude() + t * (arrivee.longitude() - depart.longitude())));
+    }
+    return points;
   }
 }

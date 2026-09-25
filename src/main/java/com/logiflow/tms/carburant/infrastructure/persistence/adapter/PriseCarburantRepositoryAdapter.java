@@ -8,6 +8,10 @@ import com.logiflow.tms.carburant.infrastructure.persistence.mapper.PriseCarbura
 import com.logiflow.tms.carburant.infrastructure.persistence.repository.PriseCarburantJpaRepository;
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
+import com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat;
+import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versBigDecimal;
+import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versEntier;
+import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versReel;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -58,7 +62,9 @@ public class PriseCarburantRepositoryAdapter implements PriseCarburantRepository
   public PriseCarburantStats stats(String texteRecherche, UUID voyageId, StatutPrise statut) {
     String statutNom = statut != null ? statut.name() : null;
     return versStats(
-        jpaRepository.agregerTotaux(texteRecherche, voyageId, statutNom),
+        jpaRepository.agregerTotaux(texteRecherche, voyageId, statutNom).stream()
+            .findFirst()
+            .orElse(null),
         jpaRepository.agregerParType(texteRecherche, voyageId, statutNom));
   }
 
@@ -69,26 +75,43 @@ public class PriseCarburantRepositoryAdapter implements PriseCarburantRepository
         jpaRepository.agregerParTypePeriode(vehiculeId, debut, fin));
   }
 
-  private static PriseCarburantStats versStats(Object[] totaux, List<Object[]> lignesParType) {
-    // Une requête agrégée JPQL à plusieurs colonnes peut revenir enveloppée dans un Object[].
-    if (totaux.length == 1 && totaux[0] instanceof Object[] imbrique) {
-      totaux = imbrique;
+  /**
+   * Totaux (nombre, litres, montant) et répartition par type. Les tuples agrégés JPQL sont
+   * normalisés par {@link JpaTupleAgregat} (ligne simple ou enveloppée selon Hibernate).
+   */
+  private static PriseCarburantStats versStats(Object totauxBruts, List<Object[]> lignesParType) {
+    Object[] totaux = JpaTupleAgregat.normaliserLigne(totauxBruts);
+    long nombre = 0L;
+    double litres = 0.0;
+    BigDecimal montant = BigDecimal.ZERO;
+    if (totaux != null) {
+      nombre = versEntier(totaux[0]);
+      litres = versReel(totaux[1]);
+      montant = versBigDecimal(totaux[2]);
     }
-    long nombre = totaux[0] != null ? ((Number) totaux[0]).longValue() : 0L;
-    double litres = totaux[1] != null ? ((Number) totaux[1]).doubleValue() : 0.0;
-    BigDecimal montant = totaux[2] != null ? (BigDecimal) totaux[2] : BigDecimal.ZERO;
 
     List<ParType> parType =
         lignesParType.stream()
+            .map(JpaTupleAgregat::normaliserLigne)
             .map(
                 row ->
                     new ParType(
-                        TypeCarburant.valueOf((String) row[0]),
-                        ((Number) row[1]).longValue(),
-                        ((Number) row[2]).doubleValue(),
-                        (BigDecimal) row[3]))
+                        versTypeCarburant(row[0]),
+                        versEntier(row[1]),
+                        versReel(row[2]),
+                        versBigDecimal(row[3])))
             .toList();
 
     return new PriseCarburantStats(nombre, litres, montant, parType);
+  }
+
+  private static TypeCarburant versTypeCarburant(Object value) {
+    if (value instanceof TypeCarburant type) {
+      return type;
+    }
+    if (value instanceof String name) {
+      return TypeCarburant.valueOf(name);
+    }
+    throw new IllegalStateException("Type carburant inattendu: " + value.getClass().getName());
   }
 }

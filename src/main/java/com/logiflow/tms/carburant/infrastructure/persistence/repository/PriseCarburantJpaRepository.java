@@ -42,7 +42,7 @@ public interface PriseCarburantJpaRepository extends JpaRepository<PriseCarburan
           OR LOWER(s.libelle) LIKE LOWER(CONCAT('%', :q, '%'))
         )
       """)
-  Object[] agregerTotaux(
+  java.util.List<Object[]> agregerTotaux(
       @Param("q") String texteRecherche,
       @Param("voyageId") UUID voyageId,
       @Param("statut") String statut);
