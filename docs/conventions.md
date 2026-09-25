@@ -4,7 +4,7 @@
 
 - **Code** (classes, méthodes, variables, packages) : **anglais**, à l'exception assumée des
   concepts métier sans traduction naturelle et consensuelle dans l'équipe (`Voyage`, `Trajet`,
-  `Groupage`, `DossierTransport`, `Horaires`...), conservés en français pour rester alignés sur le
+  `DossierTransport`, `OrdreTravail`, `Sinistre`, `Horaires`...), conservés en français pour rester alignés sur le
   vocabulaire métier utilisé avec les parties prenantes. Cette exception est appliquée de façon
   cohérente : un concept métier gardé en français l'est partout (classe, variable, méthode), pas
   seulement dans certains fichiers.
@@ -72,4 +72,9 @@ Une fonctionnalité est terminée quand :
    contrôleurs et DTO annotés).
 6. Les migrations Flyway associées sont versionnées, idempotentes si possible, et rollback-aware
    (pas de suppression destructive sans confirmation explicite dans la PR).
-7. La pull request a été revue et approuvée.
+7. La documentation est à jour :
+   - le README du module concerné (`src/main/java/com/logiflow/tms/<module>/README.md`) ;
+   - `docs/architecture.md` si une dépendance ou un événement entre modules change ;
+   - `docs/agents-ia.md` et `docs/integration-ia.md` pour tout changement touchant l'IA ;
+   - un ADR pour toute décision structurante.
+8. La pull request a été revue et approuvée.

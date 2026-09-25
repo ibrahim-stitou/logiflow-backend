@@ -79,16 +79,42 @@ L'accès aux ressources se contrôle ensuite avec `hasRole("...")` / `@PreAuthor
 module `iam` définit les rôles applicatifs (`RoleUtilisateur` : `ADMINISTRATEUR`, `RESPONSABLE_EXPLOITATION`,
 `EXPLOITANT`, `COMMERCIAL`, `ATELIER`, `CHAUFFEUR`).
 
-### 2.2 Mode permissif local (`logiflow.security.permissive-local-profile`)
+### 2.2 Modes locaux sans fournisseur d'identité
 
-En profil `local`/`test`, **aucun IdP n'est configuré**. Quand `permissive-local-profile=true`,
-`SecurityConfig` **n'appelle pas du tout** `oauth2ResourceServer()` (sinon Spring exigerait un
-`JwtDecoder` au démarrage) : les routes protégées sont alors inaccessibles sans authentification --
-les tests d'intégration injectent l'authentification via
-`SecurityMockMvcRequestPostProcessors.jwt()`.
+Deux propriétés permettent de travailler sans Keycloak :
 
-> ⚠️ Ce mode est exclusivement réservé au développement local : `dev`/`prod` le désactivent
-> explicitement (`false`). Ne jamais activer ailleurs.
+| Propriété | `local` | `test` (IT) | `dev` / prod | Effet |
+|---|---|---|---|---|
+| `logiflow.security.permissive-local-profile` | `true` | `true` | `false` | `SecurityConfig` **n'appelle pas** `oauth2ResourceServer()`, sinon Spring exigerait un `JwtDecoder` au démarrage |
+| `logiflow.security.anonymous-local-access` | `true` | `false` | `false` | `LocalDevAuthenticationFilter` authentifie **toute requête** avec l'utilisateur fictif `local-dev`, de rôle `ADMINISTRATEUR` |
+
+Conséquences :
+
+- **En `local`**, le frontend Angular appelle l'API sans jeton. Sa **session de démonstration**
+  (connexion `admin`, `exploitant`, `atelier`… / mot de passe `demo`) ne sert qu'à adapter
+  l'interface au rôle choisi : **le backend traite toujours l'utilisateur comme
+  ADMINISTRATEUR**. Le copilote voit donc tous les outils.
+- **En `test`**, aucune authentification automatique : les tests d'intégration injectent un JWT
+  via `SecurityMockMvcRequestPostProcessors.jwt()`, avec les rôles voulus.
+- **En `dev` et en production**, le JWT Keycloak est obligatoire pour toute route non publique.
+
+> ⚠️ Ces modes sont exclusivement réservés au développement : `dev` et la production les
+> désactivent explicitement (`false`). Ne jamais les activer ailleurs.
+
+### 2.3 Routes internes du copilote (`/internal/copilote/**`)
+
+Le service IA rappelle Spring pour exécuter les outils du copilote. Ces routes ont leur propre
+`SecurityFilterChain` (`CopiloteSecurityConfig`), placée avant la chaîne principale. Un JWT
+utilisateur n'y est **pas** accepté. `CopiloteOutilsAuthFilter` exige :
+
+- `X-Internal-Api-Key` égal à la **clé de rappel** (`AI_SERVICE_CALLBACK_API_KEY`, distincte de
+  la clé Spring → IA) ;
+- `X-Copilote-Contexte` égal à un **jeton de contexte** émis par Spring pour un message du
+  copilote. Le jeton est aléatoire (256 bits), valable 5 minutes au plus, révoqué en fin de
+  message, et lié à l'utilisateur et à ses rôles.
+
+Les outils s'exécutent avec les rôles de cet utilisateur, jamais avec des droits annoncés par le
+service IA. Détail et diagramme de séquence : [agents-ia.md §3](agents-ia.md#3-authentification-et-sécurité-des-flux).
 
 ## 3. Utilisateur courant et audit
 

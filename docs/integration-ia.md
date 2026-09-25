@@ -1,4 +1,9 @@
-# Intégration avec le service IA (Flask)
+# Intégration avec le service IA (Flask) — contrat d'API
+
+Ce document est le **contrat** entre Spring Boot et le service IA : routes, champs, codes de
+retour, configuration. Pour comprendre **le fonctionnement** des agents (flux de connexion,
+diagrammes de séquence, règles de calcul, dégradation, dépannage), lire d'abord
+[agents-ia.md](agents-ia.md).
 
 ## Principe
 
@@ -80,6 +85,7 @@ connaissances du LLM (`openai/gpt-oss-120b` chez Groq par défaut). Les réponse
 
 | Méthode | Route | Rôle |
 |---|---|---|
+| `GET` | `/api/v1/ia/copilote/etat` | État du service IA, du LLM (`UP`, `CLE_ABSENTE`, `CLE_INVALIDE`, `MODELE_ABSENT`, `DOWN`) et de la base |
 | `GET` | `/api/v1/ia/copilote/conversations?limite=&decalage=` | Conversations de l'utilisateur, les plus récentes d'abord |
 | `POST` | `/api/v1/ia/copilote/conversations` | Crée une conversation (`{"titre": null}`) |
 | `GET` | `/api/v1/ia/copilote/conversations/{id}` | Conversation + messages (avec sources) |
@@ -99,12 +105,13 @@ Même format sur les deux sauts (Flask → Spring → Angular) : `event: <nom>` 
 | Événement | Données | Sens |
 |---|---|---|
 | `meta` | `{conversationId, messageId}` | Début de réponse |
+| `attente` | `{}` | Battement toutes les 10 s tant que rien n'est produit (garde la connexion ouverte) |
 | `outil` | `{nom, libelle, statut}` (`debut`, `fin` ou `erreur`) | Outil métier en cours d'exécution |
 | `token` | `{texte}` | Fragment de réponse (Markdown) |
 | `sources` | `{sources: [{type, reference, id}]}` | Entités citées (liens vers les fiches) |
 | `titre` | `{titre}` | Titre généré au premier échange |
 | `fin` | `{messageId, tokensPrompt, tokensCompletion, dureeMs}` | Réponse complète |
-| `erreur` | `{code, message}` | `LLM_INDISPONIBLE`, `SERVICE_INDISPONIBLE`, `CONVERSATION_INTROUVABLE` |
+| `erreur` | `{code, message}` | `LLM_INDISPONIBLE`, `QUOTA_LLM` (Flask) ; `SERVICE_INDISPONIBLE`, `CONVERSATION_INTROUVABLE` (Spring) |
 
 Fermer la connexion (bouton Stop) interrompt la génération : Spring ferme le flux vers Flask, qui
 enregistre la réponse partielle avec le statut `interrompu`.
@@ -332,7 +339,9 @@ Réponse attendue (200) :
 }
 ```
 
-Exposé au frontend par Spring Boot via `POST /api/v1/ia/itineraires/calcul`. Comme pour le
+Exposé au frontend par Spring Boot via `POST /api/v1/ia/itineraires/calcul`. Le tracé affiché
+sur la carte est obtenu par `POST /api/v1/ia/itineraires/geometrie`, que Spring sert en appelant
+directement OSRM (`OsrmRouteGeometryAdapter`). Comme pour le
 copilote, aucun repli déterministe pertinent en cas d'indisponibilité (503 RFC 7807) : une
 distance routière estimée sans moteur de routing serait trompeuse plutôt que simplement absente.
 
@@ -349,9 +358,10 @@ par le service IA dans sa base `logiflow_ai`.
 
 ## Environnements
 
-- **Local** : le service Flask (dépôt `logiflow-ai-service`) tourne à côté, avec une clé API LLM et OSRM
-  accessibles en local ou sur le réseau. Un bloc `ai-service` commenté est prévu dans
-  `docker/docker-compose.yml`, à décommenter une fois le dépôt Flask disponible. Tant qu'il n'est
+- **Local** : le service Flask (dépôt `logiflow-ai-service`) tourne à côté (`make run`, port
+  8000), avec une clé API LLM et OSRM accessibles sur le réseau. Sa base `logiflow_ai` est créée
+  dans le conteneur PostgreSQL par `docker/postgres/init/02-ai-database.sql`. Un bloc
+  `ai-service` commenté dans `docker/docker-compose.yml` permet de le lancer en conteneur. Tant qu'il n'est
   pas démarré, Spring Boot fonctionne normalement : seuls les endpoints `/api/v1/ia/**` sont
   affectés (503 pour le copilote, l'itinéraire et la planification assistée, qui renvoie vers la
   planification manuelle).
@@ -368,8 +378,9 @@ par le service IA dans sa base `logiflow_ai`.
   client-credentials ou mTLS avant toute mise en production réelle.
 - Jetons de contexte du copilote stockés en mémoire (`ContexteCopiloteStoreMemoire`) : en
   déploiement multi-instances de Spring, garantir l'affinité ou passer à un stockage partagé.
-- Le contrat exact des réponses Flask (noms de champs, formats) est une proposition côté Spring
-  Boot : à valider avec l'équipe qui implémente l'application Flask, et à ajuster dans
-  `ai.infrastructure.client.dto.*` en conséquence.
-- `RestClient` (Spring Framework 7) est utilisé pour l'appel HTTP synchrone : à confirmer que
-  l'API n'a pas changé par rapport aux versions Boot 3.2+ où elle a été introduite.
+- Analyse de maintenance de nuit : en déploiement multi-instances, ajouter un verrou partagé
+  (ShedLock) pour qu'elle ne s'exécute qu'une fois.
+- Tout changement de contrat doit être fait **des deux côtés** : records de
+  `ai.domain.model.*` côté Spring, schémas Pydantic `agents/<agent>/schemas.py` côté Flask. Les
+  deux utilisent le camelCase en JSON ; un champ inconnu est ignoré par Flask, et un champ absent
+  prend sa valeur par défaut.
