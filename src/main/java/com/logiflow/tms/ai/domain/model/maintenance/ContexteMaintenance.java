@@ -54,7 +54,7 @@ public record ContexteMaintenance(
 
   public record Sinistre(
       String reference,
-      LocalDate date,
+      LocalDate dateSurvenance,
       String type,
       String gravite,
       String responsabilite,

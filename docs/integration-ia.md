@@ -150,7 +150,10 @@ que Flask pourrait prétendre. Un JWT utilisateur n'ouvre pas ces routes.
 | `rechercher_chauffeurs` | exploitation | `ChauffeurApi.rechercher` |
 | `lister_vehicules` | exploitation, ATELIER | `VehiculeApi.rechercher` + `MaintenanceApi` |
 | `lister_remorques` | exploitation, ATELIER | `RemorqueApi.rechercher` |
-| `consulter_maintenance` | exploitation, ATELIER | `MaintenanceApi.ordresTravail` / `plansEntretien` |
+| `consulter_maintenance` | exploitation, ATELIER | `MaintenanceApi.ordresTravail` / `plansEntretien` (véhicules et remorques) |
+| `rechercher_sinistres` | exploitation, ATELIER | `MaintenanceApi.sinistres` (coût net, filtre `OUVERTS`) |
+| `couts_maintenance` | exploitation, ATELIER | `MaintenanceApi.couts` (totaux, répartitions, sinistralité) |
+| `analyser_maintenance_predictive` | exploitation, ATELIER | `MaintenancePredictiveService` (lecture seule, sans enregistrer les scores) |
 | `consommation_carburant` | exploitation, ATELIER | `CarburantApi.consommation` |
 | `proposer_voyages` | exploitation | `PlanificationVoyageService` (agent de planification) |
 
@@ -221,12 +224,54 @@ réparti sur l'équipage ; les fenêtres horaires hors période sont des avertis
 exposé à blanc par `POST /api/v1/voyages/conformite` ; les ressources libres par
 `GET /api/v1/voyages/ressources-disponibles?debut&fin`.
 
-### 3. Agent de maintenance prédictive — *contrat documenté, non implémenté*
+### 3. Agent de maintenance prédictive — *implémenté*
 
-`POST /internal/ai/v1/maintenance/recommander` — à faire une fois le besoin précisé côté Flask.
-Reprendrait le même schéma : Spring Boot assemble les données (`ScoreSante`, historique
-`OrdreTravail` via le module `maintenance`), les transmet à Flask, reçoit une recommandation
-hiérarchisée, la journalise et la renvoie au frontend.
+`POST /api/v1/ia/maintenance/analyse` (frontend) → `MaintenancePredictiveService` →
+`POST /internal/ai/v1/maintenance/recommander` (Flask). Voir aussi l'ADR 0006 (refonte du module
+maintenance).
+
+**Requête Spring → Flask.**
+
+- `dateReference`, `horizonJours` (1 à 180) et la liste `vehicules`. Chaque élément est un
+  **engin** : `typeEngin` vaut `VEHICULE` ou `REMORQUE` ; pour une remorque, `type` est la
+  carrosserie et `heuresMoteur` les heures du groupe froid.
+- Compteurs, `kmRealises` et `litresConsommes` sur 90 jours. Les kilomètres des remorques viennent
+  des voyages où elles sont attelées ; leur carburant vaut 0.
+- `plans` : périodicités, dernière réalisation (`derniereDate`, `derniereKm`), et échéance
+  **calculée par le module maintenance** (`kmRestant`, `dateEcheance`, `etat` = OK, ALERTE ou
+  ECHU).
+- `ordres` : référence, type, nature, statut, origine, `planId`, `datePlanifiee` (fin réelle si
+  terminé), immobilisation, `coutTtc`.
+- `documents` : type et date d'expiration.
+- `sinistres` des 12 derniers mois : `dateSurvenance`, type, gravité, responsabilité, statut,
+  `enginImmobilise`, `coutNet`.
+- `voyagesPlanifies` : départ, arrivée et distance, pour avancer les échéances et trouver un
+  créneau libre.
+
+**Réponse.** Pour chaque engin, du plus à risque au moins à risque :
+
+- identification : `vehiculeId` (identifiant de l'engin) et `typeEngin` ;
+- état : `score` (0 à 100), `statut` (BON, SURVEILLER, A_PLANIFIER ou CRITIQUE), `kmParJour`,
+  `consommationL100` ;
+- échéances : les `echeances` projetées, `kmAvantEcheance` et `dateEcheance` ;
+- `anomalies` : documents expirés, réparations répétées, sinistralité, immobilisation après
+  sinistre, OT en attente de pièces, surconsommation ;
+- `recommandations` : type d'intervention, priorité, date limite, créneau libre, `dejaPlanifie`
+  (vrai quand un OT ouvert est rattaché au plan) ;
+- `explication`.
+
+S'y ajoutent `synthese` et `sourceRedaction` (LLM ou GABARIT).
+
+**Traitement.**
+
+- Le calcul est déterministe côté Flask ; le LLM ne rédige que les explications et la synthèse
+  (repli par gabarit).
+- Spring journalise l'appel (`interaction_ia`, type MAINTENANCE).
+- Par défaut, Spring **enregistre le score de santé** de chaque engin dans le module
+  maintenance.
+- Dans l'écran Maintenance, « Planifier l'OT » ouvre le formulaire d'OT pré-rempli : origine
+  `AGENT_IA`, type, priorité, créneau et justification.
+- Service IA indisponible → 503 : échéances, OT et scores restent consultables et saisissables.
 
 ### 4. Agent itinéraire — *implémenté*
 
