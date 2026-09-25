@@ -139,6 +139,20 @@ public class MaintenanceService implements MaintenanceApi {
                     s.necessiteIntervention()));
   }
 
+  @Override
+  @Transactional
+  public ScoreSanteSummary enregistrerScoreSante(
+      UUID vehiculeId,
+      double score,
+      int kmAvantEcheance,
+      LocalDate dateEcheanceProjetee,
+      String recommandation) {
+    calculerScoreSante(
+        new CalculerScoreSanteCommand(
+            vehiculeId, score, kmAvantEcheance, dateEcheanceProjetee, recommandation));
+    return dernierScoreSante(vehiculeId).orElseThrow();
+  }
+
   private void verifierVehiculeExiste(UUID vehiculeId) {
     if (vehiculeApi.consulter(vehiculeId).isEmpty()) {
       throw new NotFoundException("Aucun véhicule trouvé pour l'identifiant " + vehiculeId);
@@ -182,6 +196,7 @@ public class MaintenanceService implements MaintenanceApi {
                     plan.libelle(),
                     plan.periodiciteKm(),
                     plan.periodiciteMois(),
-                    plan.seuilAlerteKm()));
+                    plan.seuilAlerteKm(),
+                    plan.dureeEstimeeMin()));
   }
 }

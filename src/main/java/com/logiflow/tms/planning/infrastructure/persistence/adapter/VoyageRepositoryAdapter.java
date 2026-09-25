@@ -90,4 +90,11 @@ public class VoyageRepositoryAdapter implements VoyageRepository {
   public List<Voyage> actifsSurPeriode(Instant debut, Instant fin) {
     return jpaRepository.actifsSurPeriode(debut, fin).stream().map(mapper::versDomaine).toList();
   }
+
+  @Override
+  public List<Voyage> nonAnnulesSurPeriode(Instant debut, Instant fin) {
+    return jpaRepository.nonAnnulesSurPeriode(debut, fin).stream()
+        .map(mapper::versDomaine)
+        .toList();
+  }
 }

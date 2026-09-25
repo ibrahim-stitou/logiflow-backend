@@ -2,6 +2,7 @@ package com.logiflow.tms.planning.application;
 
 import com.logiflow.tms.dossier.api.DossierApi;
 import com.logiflow.tms.planning.api.VoyageApi;
+import com.logiflow.tms.planning.api.dto.ActiviteVoyageSummary;
 import com.logiflow.tms.planning.api.dto.ConformiteVoyageSummary;
 import com.logiflow.tms.planning.api.dto.ProjetVoyageDto;
 import com.logiflow.tms.planning.api.dto.RessourcesOccupeesSummary;
@@ -157,6 +158,22 @@ public class VoyageService implements VoyageApi {
   @Transactional(readOnly = true)
   public Page<VoyageSummary> rechercher(String texte, String statut, PageRequest pageRequest) {
     return voyageRepository.rechercherParStatut(texte, statut, pageRequest).map(this::versResume);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<ActiviteVoyageSummary> activiteVehicules(Instant debut, Instant fin) {
+    return voyageRepository.nonAnnulesSurPeriode(debut, fin).stream()
+        .map(
+            v ->
+                new ActiviteVoyageSummary(
+                    v.vehiculeId(),
+                    v.reference().valeur(),
+                    v.statut().name(),
+                    v.departPrevu(),
+                    v.arriveePrevue(),
+                    v.trajet().distanceTotaleKm()))
+        .toList();
   }
 
   @Override

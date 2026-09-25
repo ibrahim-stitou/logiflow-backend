@@ -2,6 +2,7 @@ package com.logiflow.tms.fleet.application;
 
 import com.logiflow.tms.document.api.DocumentApi;
 import com.logiflow.tms.fleet.api.VehiculeApi;
+import com.logiflow.tms.fleet.api.dto.VehiculeEtatSummary;
 import com.logiflow.tms.fleet.api.dto.VehiculePlanificationSummary;
 import com.logiflow.tms.fleet.api.dto.VehiculeSummary;
 import com.logiflow.tms.fleet.application.command.CreerVehiculeCommand;
@@ -146,6 +147,32 @@ public class VehiculeService implements VehiculeApi {
       courante.contenu().stream()
           .filter(v -> v.statut() != StatutVehicule.HORS_SERVICE)
           .map(v -> versPlanification(v, date))
+          .forEach(resultat::add);
+      page = new PageRequest(page.numero() + 1, PAGE_PLANIFICATION);
+    } while (page.numero() < courante.totalPages());
+    return resultat;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<VehiculeEtatSummary> listerPourMaintenance() {
+    List<VehiculeEtatSummary> resultat = new ArrayList<>();
+    PageRequest page = PageRequest.premiere(PAGE_PLANIFICATION);
+    Page<Vehicule> courante;
+    do {
+      courante = vehiculeRepository.rechercherParStatut("", null, page);
+      courante.contenu().stream()
+          .filter(v -> v.statut() != StatutVehicule.HORS_SERVICE)
+          .map(
+              v ->
+                  new VehiculeEtatSummary(
+                      v.id(),
+                      v.immatriculation().valeur(),
+                      v.type().name(),
+                      v.statut().name(),
+                      v.kilometrage(),
+                      v.heuresMoteur(),
+                      v.anneeMiseEnCirculation()))
           .forEach(resultat::add);
       page = new PageRequest(page.numero() + 1, PAGE_PLANIFICATION);
     } while (page.numero() < courante.totalPages());

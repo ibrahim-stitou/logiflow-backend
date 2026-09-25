@@ -54,4 +54,11 @@ public interface VoyageJpaRepository extends JpaRepository<VoyageEntity, UUID> {
         AND e.arriveePrevue > :debut
       """)
   List<VoyageEntity> actifsSurPeriode(@Param("debut") Instant debut, @Param("fin") Instant fin);
+
+  @Query(
+      """
+      SELECT e FROM VoyageEntity e
+      WHERE e.statut <> 'ANNULE' AND e.departPrevu < :fin AND e.arriveePrevue > :debut
+      """)
+  List<VoyageEntity> nonAnnulesSurPeriode(@Param("debut") Instant debut, @Param("fin") Instant fin);
 }

@@ -1,5 +1,6 @@
 package com.logiflow.tms.fleet.api;
 
+import com.logiflow.tms.fleet.api.dto.VehiculeEtatSummary;
 import com.logiflow.tms.fleet.api.dto.VehiculePlanificationSummary;
 import com.logiflow.tms.fleet.api.dto.VehiculeSummary;
 import com.logiflow.tms.shared.application.Page;
@@ -39,4 +40,7 @@ public interface VehiculeApi {
 
   /** Véhicules en service (hors HORS_SERVICE), documents évalués à la date donnée. */
   List<VehiculePlanificationSummary> listerPourPlanification(LocalDate date);
+
+  /** État (compteurs, âge) des véhicules en service, pour l'analyse de maintenance. */
+  List<VehiculeEtatSummary> listerPourMaintenance();
 }

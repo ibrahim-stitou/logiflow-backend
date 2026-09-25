@@ -1,5 +1,6 @@
 package com.logiflow.tms.planning.api;
 
+import com.logiflow.tms.planning.api.dto.ActiviteVoyageSummary;
 import com.logiflow.tms.planning.api.dto.ConformiteVoyageSummary;
 import com.logiflow.tms.planning.api.dto.ProjetVoyageDto;
 import com.logiflow.tms.planning.api.dto.RessourcesOccupeesSummary;
@@ -37,4 +38,7 @@ public interface VoyageApi {
    * à revalider les propositions de l'agent de planification.
    */
   ConformiteVoyageSummary evaluerConformite(ProjetVoyageDto projet);
+
+  /** Voyages non annulés dont la période chevauche [debut, fin], tous véhicules confondus. */
+  List<ActiviteVoyageSummary> activiteVehicules(Instant debut, Instant fin);
 }

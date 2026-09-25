@@ -9,4 +9,5 @@ public record PlanEntretienSummary(
     String libelle,
     Integer periodiciteKm,
     Integer periodiciteMois,
-    int seuilAlerteKm) {}
+    int seuilAlerteKm,
+    int dureeEstimeeMin) {}

@@ -38,4 +38,7 @@ public interface VoyageRepository {
    * [debut, fin] : ils mobilisent leurs ressources sur cette période.
    */
   List<Voyage> actifsSurPeriode(Instant debut, Instant fin);
+
+  /** Voyages non annulés (réalisés compris) dont la période chevauche [debut, fin]. */
+  List<Voyage> nonAnnulesSurPeriode(Instant debut, Instant fin);
 }

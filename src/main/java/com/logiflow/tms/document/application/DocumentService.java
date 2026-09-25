@@ -2,6 +2,7 @@ package com.logiflow.tms.document.application;
 
 import com.logiflow.tms.document.api.DocumentApi;
 import com.logiflow.tms.document.api.DocumentEntiteModificationEvent;
+import com.logiflow.tms.document.api.DocumentSummary;
 import com.logiflow.tms.document.application.command.TeleverserDocumentCommand;
 import com.logiflow.tms.document.domain.model.Document;
 import com.logiflow.tms.document.domain.model.TypeEntiteDocumentable;
@@ -59,6 +60,14 @@ public class DocumentService implements DocumentApi {
         new DocumentEntiteModificationEvent(document.typeEntite().name(), document.entiteId()));
     fileStorageService.supprimer(document.url());
     documentRepository.supprimer(id);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<DocumentSummary> lister(String typeEntite, UUID entiteId) {
+    return lister(TypeEntiteDocumentable.valueOf(typeEntite), entiteId).stream()
+        .map(d -> new DocumentSummary(d.typeDocument().name(), d.reference(), d.dateExpiration()))
+        .toList();
   }
 
   @Override
