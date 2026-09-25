@@ -39,13 +39,13 @@ INSERT INTO maintenance.contrat_assurance (id, assureur_id, numero_police, type_
     created_at, created_by, updated_at, updated_by, version)
 SELECT
     'dddddd01-0000-4000-8000-000000000001'::uuid, 'dddddd00-0000-4000-8000-000000000008'::uuid, 'MT-FLOTTE-2026-0457', 'FLOTTE',
-    '["RC","DOMMAGES","VOL","INCENDIE","BRIS_GLACE","ASSISTANCE"]', 1000.00, 86500.00,
+    '["RC","DOMMAGES","VOL","INCENDIE","BRIS_GLACE","ASSISTANCE"]', 10000.00, 865000.00,
     date_trunc('year', now())::date, (date_trunc('year', now()) + interval '1 year - 1 day')::date, '[]', true,
     now(), 'system', now(), 'system', 0
 UNION ALL
 SELECT
     'dddddd01-0000-4000-8000-000000000002'::uuid, 'dddddd00-0000-4000-8000-000000000009'::uuid, 'ATF-FRIGO-2026-0112', 'ENGIN',
-    '["DOMMAGES","MARCHANDISES"]', 500.00, 12400.00,
+    '["DOMMAGES","MARCHANDISES"]', 5000.00, 124000.00,
     (now() - interval '4 months')::date, (now() + interval '8 months')::date,
     (SELECT json_agg(json_build_object('type', 'REMORQUE', 'id', id))::text
      FROM fleet.remorque WHERE carrosserie = 'FRIGORIFIQUE'),
@@ -93,21 +93,21 @@ BEGIN
             duree_estimee_min, cout_estime, prestataire_id, actif, derniere_date, derniere_km, derniere_heures,
             created_at, created_by, updated_at, updated_by, version)
         VALUES (plan_id, 'VEHICULE', v.id, 'Révision périodique (vidange, filtres, graissage)', 'ENTRETIEN_PREVENTIF',
-            40000, 12, NULL, 2000, 15, 240, 650.00, garage, true,
+            40000, 12, NULL, 2000, 15, 240, 6500.00, garage, true,
             (now() - make_interval(days => decalage / 320))::date, greatest(v.kilometrage - decalage, 0), NULL,
             now(), 'system', now(), 'system', 0);
 
         -- OT de la dernière révision, terminé, rattaché au plan.
         seq_ot := seq_ot + 1;
         jour := (now() - make_interval(days => decalage / 320))::date;
-        mo := 3.5 * 68;
-        piece := 185 + (v.n % 5) * 22;
+        mo := 3.5 * 680;
+        piece := 1850 + (v.n % 5) * 220;
         ht := mo + piece;
         lignes := json_build_array(
             json_build_object('type', 'MAIN_OEUVRE', 'designation', 'Révision complète', 'referencePiece', NULL,
-                'quantite', 3.5, 'prixUnitaireHt', json_build_object('montant', 68.00, 'devise', 'EUR'), 'tauxTva', 20),
+                'quantite', 3.5, 'prixUnitaireHt', json_build_object('montant', 680.00, 'devise', 'MAD'), 'tauxTva', 20),
             json_build_object('type', 'PIECE', 'designation', 'Kit filtres + huile moteur 40 L', 'referencePiece', 'KIT-REV-' || (v.n % 5),
-                'quantite', 1, 'prixUnitaireHt', json_build_object('montant', piece, 'devise', 'EUR'), 'tauxTva', 20))::text;
+                'quantite', 1, 'prixUnitaireHt', json_build_object('montant', piece, 'devise', 'MAD'), 'tauxTva', 20))::text;
         INSERT INTO maintenance.ordre_travail (id, reference, type_engin, engin_id, origine, plan_id, sinistre_id,
             type_intervention, nature, priorite, titre, description, prestataire_id, debut_planifie, fin_planifiee,
             immobilisation, budget_estime, statut, lignes_json, total_ht, total_ttc, debut_reel, fin_reelle,
@@ -116,7 +116,7 @@ BEGIN
         VALUES (gen_random_uuid(), 'OT-' || extract(year FROM jour)::int || '-' || lpad(seq_ot::text, 6, '0'),
             'VEHICULE', v.id, 'PLAN_ENTRETIEN', plan_id, NULL,
             'ENTRETIEN_PREVENTIF', 'PREVENTIF', 'NORMALE', 'Révision périodique', NULL, garage,
-            jour + time '07:30', jour + time '11:30', true, 650.00, 'TERMINE', lignes, ht, round(ht * 1.2, 2),
+            jour + time '07:30', jour + time '11:30', true, 6500.00, 'TERMINE', lignes, ht, round(ht * 1.2, 2),
             jour + time '07:30', jour + time '11:15', greatest(v.kilometrage - decalage, 0), NULL,
             'RAS', 'Vidange moteur, remplacement des filtres, graissage', 'Garage PL Lyonnais',
             'FGPL-' || lpad(seq_ot::text, 5, '0'), jour, now(), 'system', now(), 'system', 0);
@@ -127,7 +127,7 @@ BEGIN
             duree_estimee_min, cout_estime, prestataire_id, actif, derniere_date, derniere_km, derniere_heures,
             created_at, created_by, updated_at, updated_by, version)
         VALUES (('dddddd03-0000-4000-8000-' || lpad(v.n::text, 12, '0'))::uuid, 'VEHICULE', v.id,
-            'Contrôle technique annuel', 'CONTROLE_TECHNIQUE', NULL, 12, NULL, 0, 30, 120, 180.00, ct, true,
+            'Contrôle technique annuel', 'CONTROLE_TECHNIQUE', NULL, 12, NULL, 0, 30, 120, 1800.00, ct, true,
             (now() - make_interval(days => 20 + (v.n * 37) % 360))::date, NULL, NULL,
             now(), 'system', now(), 'system', 0);
     END LOOP;
@@ -140,7 +140,7 @@ BEGIN
             duree_estimee_min, cout_estime, prestataire_id, actif, derniere_date, derniere_km, derniere_heures,
             created_at, created_by, updated_at, updated_by, version)
         VALUES (('dddddd04-0000-4000-8000-' || lpad(r.n::text, 12, '0'))::uuid, 'REMORQUE', r.id,
-            'Révision freinage et essieux', 'FREINAGE', 60000, 12, NULL, 3000, 15, 180, 420.00, garage, true,
+            'Révision freinage et essieux', 'FREINAGE', 60000, 12, NULL, 3000, 15, 180, 4200.00, garage, true,
             (now() - make_interval(days => 30 + (r.n * 53) % 330))::date,
             greatest(r.kilometrage - (8000 + (r.n * 6100) % 56000), 0), NULL,
             now(), 'system', now(), 'system', 0);
@@ -150,7 +150,7 @@ BEGIN
                 duree_estimee_min, cout_estime, prestataire_id, actif, derniere_date, derniere_km, derniere_heures,
                 created_at, created_by, updated_at, updated_by, version)
             VALUES (('dddddd05-0000-4000-8000-' || lpad(r.n::text, 12, '0'))::uuid, 'REMORQUE', r.id,
-                'Entretien groupe froid', 'GROUPE_FROID', NULL, 6, 1500, 0, 20, 150, 380.00, garage, true,
+                'Entretien groupe froid', 'GROUPE_FROID', NULL, 6, 1500, 0, 20, 150, 3800.00, garage, true,
                 (now() - interval '5 months')::date, NULL, greatest(r.heures_groupe_froid - 1300, 0),
                 now(), 'system', now(), 'system', 0);
         END IF;
@@ -167,17 +167,17 @@ BEGIN
         nature := CASE WHEN k = 1 THEN 'PREVENTIF' ELSE 'CORRECTIF' END;
         titre := (ARRAY['Fuite circuit de refroidissement', 'Remplacement de 2 pneus directeurs',
                         'Plaquettes et disques de frein AV', 'Voyant moteur : diagnostic électronique'])[k + 1];
-        mo := (1 + k) * 68;
-        piece := (ARRAY[320, 780, 540, 60])[k + 1] + (i % 3) * 25;
+        mo := (1 + k) * 680;
+        piece := (ARRAY[3200, 7800, 5400, 600])[k + 1] + (i % 3) * 250;
         ht := mo + piece;
         km_ot := greatest(v.kilometrage - i * 900, 0);
         lignes := json_build_array(
             json_build_object('type', 'MAIN_OEUVRE', 'designation', 'Main-d''œuvre atelier', 'referencePiece', NULL,
-                'quantite', 1 + k, 'prixUnitaireHt', json_build_object('montant', 68.00, 'devise', 'EUR'), 'tauxTva', 20),
+                'quantite', 1 + k, 'prixUnitaireHt', json_build_object('montant', 680.00, 'devise', 'MAD'), 'tauxTva', 20),
             json_build_object('type', CASE WHEN k = 3 THEN 'SOUS_TRAITANCE' ELSE 'PIECE' END,
                 'designation', (ARRAY['Durite + liquide de refroidissement', 'Pneus 315/70 R22.5 (x2)', 'Kit freins AV', 'Valise diagnostic constructeur'])[k + 1],
                 'referencePiece', (ARRAY['DUR-315', 'PN-31570', 'KFR-AV-22', NULL])[k + 1],
-                'quantite', 1, 'prixUnitaireHt', json_build_object('montant', piece, 'devise', 'EUR'), 'tauxTva', 20))::text;
+                'quantite', 1, 'prixUnitaireHt', json_build_object('montant', piece, 'devise', 'MAD'), 'tauxTva', 20))::text;
         INSERT INTO maintenance.ordre_travail (id, reference, type_engin, engin_id, origine, plan_id, sinistre_id,
             type_intervention, nature, priorite, titre, description, prestataire_id, debut_planifie, fin_planifiee,
             immobilisation, budget_estime, statut, lignes_json, total_ht, total_ttc, debut_reel, fin_reelle,
@@ -206,11 +206,11 @@ BEGIN
             'REPARATION', 'CORRECTIF', 'HAUTE',
             CASE WHEN v.type_engin = 'VEHICULE' THEN 'Remplacement embrayage' ELSE 'Remplacement coussins de suspension' END,
             'Immobilisé à l''atelier.', garage,
-            (now() - interval '1 day')::timestamp, (now() + interval '2 days')::timestamp, true, 1400.00,
+            (now() - interval '1 day')::timestamp, (now() + interval '2 days')::timestamp, true, 14000.00,
             CASE WHEN seq_ot % 3 = 0 THEN 'EN_ATTENTE_PIECES' ELSE 'EN_COURS' END,
             json_build_array(json_build_object('type', 'MAIN_OEUVRE', 'designation', 'Dépose / repose', 'referencePiece', NULL,
-                'quantite', 6, 'prixUnitaireHt', json_build_object('montant', 68.00, 'devise', 'EUR'), 'tauxTva', 20))::text,
-            408.00, 489.60, (now() - interval '1 day')::timestamp, now(), 'system', now(), 'system', 0);
+                'quantite', 6, 'prixUnitaireHt', json_build_object('montant', 680.00, 'devise', 'MAD'), 'tauxTva', 20))::text,
+            4080.00, 4896.00, (now() - interval '1 day')::timestamp, now(), 'system', now(), 'system', 0);
     END LOOP;
 
     -- OT planifiés à venir (révisions échues ou en alerte, pneus).
@@ -228,7 +228,7 @@ BEGIN
             NULL, CASE WHEN i % 2 = 0 THEN pneus ELSE garage END,
             (date_trunc('day', now()) + make_interval(days => 3 + i * 4, hours => 7))::timestamp,
             (date_trunc('day', now()) + make_interval(days => 3 + i * 4, hours => 12))::timestamp,
-            true, 450.00, 'PLANIFIE', '[]', 0, 0, now(), 'system', now(), 'system', 0);
+            true, 4500.00, 'PLANIFIE', '[]', 0, 0, now(), 'system', now(), 'system', 0);
     END LOOP;
 
     -- Sinistres : ouverts sur les véhicules IMMOBILISE, puis historique varié.
@@ -252,7 +252,7 @@ BEGIN
             CASE WHEN v.n % 2 = 0 THEN 'MT-SIN-' || lpad(seq_sin::text, 5, '0') END,
             CASE WHEN v.n % 2 = 0 THEN (now() - make_interval(days => 1 + v.n))::date END,
             CASE WHEN v.n % 2 = 0 THEN expert END, NULL,
-            6500 + v.n * 800, 1000.00, NULL,
+            65000 + v.n * 8000, 10000.00, NULL,
             CASE WHEN v.n % 2 = 0 THEN 'EN_EXPERTISE' ELSE 'DECLARE' END, NULL,
             now(), 'system', now(), 'system', 0);
     END LOOP;
@@ -292,9 +292,9 @@ BEGIN
             CASE WHEN i = 6 THEN 'dddddd01-0000-4000-8000-000000000002'::uuid ELSE 'dddddd01-0000-4000-8000-000000000001'::uuid END,
             'MT-SIN-' || lpad(seq_sin::text, 5, '0'), jour + 2,
             CASE WHEN i IN (3, 6) THEN expert END, CASE WHEN i IN (3, 6) THEN jour + 9 END,
-            (ARRAY[1800, 650, 7400, 900, 320, 4200, 380])[i],
-            CASE WHEN i = 6 THEN 500.00 ELSE 1000.00 END,
-            (ARRAY[800, 650, 6400, 900, NULL, 3700, NULL])[i],
+            (ARRAY[18000, 6500, 74000, 9000, 3200, 42000, 3800])[i],
+            CASE WHEN i = 6 THEN 5000.00 ELSE 10000.00 END,
+            (ARRAY[8000, 6500, 64000, 9000, NULL, 37000, NULL])[i],
             CASE WHEN i = 5 THEN 'CLASSE_SANS_SUITE' WHEN i = 1 THEN 'EN_REPARATION' ELSE 'CLOS' END,
             CASE WHEN i IN (1) THEN NULL ELSE jour + 40 END,
             now(), 'system', now(), 'system', 0);
@@ -302,8 +302,8 @@ BEGIN
         -- Réparation liée (sauf vol et dommage marchandise).
         IF i NOT IN (6, 7) THEN
             seq_ot := seq_ot + 1;
-            piece := (ARRAY[1100, 520, 5900, 700, 250])[i];
-            ht := piece + 4 * 68;
+            piece := (ARRAY[11000, 5200, 59000, 7000, 2500])[i];
+            ht := piece + 4 * 680;
             INSERT INTO maintenance.ordre_travail (id, reference, type_engin, engin_id, origine, plan_id, sinistre_id,
                 type_intervention, nature, priorite, titre, description, prestataire_id, debut_planifie, fin_planifiee,
                 immobilisation, budget_estime, statut, lignes_json, total_ht, total_ttc, debut_reel, fin_reelle,
@@ -319,9 +319,9 @@ BEGIN
                 CASE WHEN i = 1 THEN 'EN_COURS' ELSE 'TERMINE' END,
                 json_build_array(
                     json_build_object('type', 'MAIN_OEUVRE', 'designation', 'Carrosserie / peinture', 'referencePiece', NULL,
-                        'quantite', 4, 'prixUnitaireHt', json_build_object('montant', 68.00, 'devise', 'EUR'), 'tauxTva', 20),
+                        'quantite', 4, 'prixUnitaireHt', json_build_object('montant', 680.00, 'devise', 'MAD'), 'tauxTva', 20),
                     json_build_object('type', 'PIECE', 'designation', 'Pièces de carrosserie', 'referencePiece', NULL,
-                        'quantite', 1, 'prixUnitaireHt', json_build_object('montant', piece, 'devise', 'EUR'), 'tauxTva', 20))::text,
+                        'quantite', 1, 'prixUnitaireHt', json_build_object('montant', piece, 'devise', 'MAD'), 'tauxTva', 20))::text,
                 ht, round(ht * 1.2, 2), (jour + 12) + time '08:00',
                 CASE WHEN i = 1 THEN NULL ELSE (jour + 13) + time '16:00' END,
                 NULL, NULL, NULL, CASE WHEN i = 1 THEN NULL ELSE 'Remise en état, contrôle qualité.' END,

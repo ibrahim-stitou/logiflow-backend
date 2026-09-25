@@ -2,6 +2,7 @@ package com.logiflow.tms.ai.infrastructure.web;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.logiflow.tms.ai.infrastructure.web.dto.ItineraireRequest;
@@ -58,16 +59,22 @@ class ItineraireControllerIT extends AbstractIntegrationTest {
   }
 
   @Test
-  void calculerGeometrieSansOsrmDisponibleRenvoie503() throws Exception {
+  void calculerGeometrieSansOsrmDisponibleReplieSurDesSegmentsDroits() throws Exception {
     var requete = new ItineraireRequest(DEUX_POINTS);
 
+    // Sans moteur de routage, la carte trace des segments droits entre les points plutôt que
+    // de ne rien afficher.
     mockMvc
         .perform(
             post("/api/v1/ia/itineraires/geometrie")
                 .with(jwt())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requete)))
-        .andExpect(status().isServiceUnavailable());
+        .andExpect(status().isOk())
+        // Segment densifié (points intermédiaires) de Paris à Lyon.
+        .andExpect(jsonPath("$.geometrie[0].latitude").value(48.8566))
+        .andExpect(jsonPath("$.geometrie[-1].latitude").value(45.764))
+        .andExpect(jsonPath("$.geometrie.length()").value(org.hamcrest.Matchers.greaterThan(2)));
   }
 
   @Test

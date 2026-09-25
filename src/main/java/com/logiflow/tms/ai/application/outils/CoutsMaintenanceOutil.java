@@ -6,6 +6,7 @@ import com.logiflow.tms.ai.domain.model.copilote.SourceCopilote;
 import com.logiflow.tms.maintenance.api.MaintenanceApi;
 import com.logiflow.tms.maintenance.api.dto.CoutsMaintenanceSummary;
 import com.logiflow.tms.shared.domain.exception.ValidationException;
+import com.logiflow.tms.shared.domain.DeviseApplication;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -77,15 +78,16 @@ class CoutsMaintenanceOutil implements OutilCopilote {
         List.of(
             ligne(
                 "periode", c.debut() + " → " + c.fin(),
-                "totalHtEur", c.totalHt(),
-                "totalTtcEur", c.totalTtc(),
+                "devise", DeviseApplication.PAR_DEFAUT.getCurrencyCode(),
+                "totalHt", c.totalHt(),
+                "totalTtc", c.totalTtc(),
                 "ordresTermines", c.nombreOrdres(),
-                "budgetEstimeEur", c.budgetEstime(),
-                "ecartBudgetEur",
+                "budgetEstime", c.budgetEstime(),
+                "ecartBudget",
                     c.budgetEstime().signum() == 0 ? null : c.totalHt().subtract(c.budgetEstime()),
                 "sinistres", c.nombreSinistres(),
-                "coutNetSinistresEur", c.coutNetSinistres(),
-                "indemnitesPercuesEur", c.indemnitesPercues()),
+                "coutNetSinistres", c.coutNetSinistres(),
+                "indemnitesPercues", c.indemnitesPercues()),
             ligne("repartition", "PAR_TYPE", "postes", postes(c.parType())),
             ligne("repartition", "PAR_NATURE", "postes", postes(c.parNature())),
             ligne("repartition", "ENGINS_LES_PLUS_COUTEUX", "postes", postes(c.parEngin())));
@@ -97,7 +99,14 @@ class CoutsMaintenanceOutil implements OutilCopilote {
 
   private static List<String> postes(List<CoutsMaintenanceSummary.Poste> postes) {
     return postes.stream()
-        .map(p -> "%s : %s € HT (%d OT)".formatted(p.libelle(), p.totalHt(), p.nombre()))
+        .map(
+            p ->
+                "%s : %s %s HT (%d OT)"
+                    .formatted(
+                        p.libelle(),
+                        p.totalHt(),
+                        DeviseApplication.PAR_DEFAUT.getCurrencyCode(),
+                        p.nombre()))
         .toList();
   }
 }

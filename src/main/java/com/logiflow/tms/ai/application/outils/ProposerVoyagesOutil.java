@@ -8,6 +8,7 @@ import com.logiflow.tms.ai.application.PlanificationVoyageService.PropositionsVo
 import com.logiflow.tms.ai.application.command.ProposerVoyagesCommand;
 import com.logiflow.tms.ai.domain.model.copilote.SourceCopilote;
 import com.logiflow.tms.ai.domain.model.planification.ResultatPlanification.Indicateurs;
+import com.logiflow.tms.shared.domain.DeviseApplication;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -150,8 +151,10 @@ class ProposerVoyagesOutil implements OutilCopilote {
         i.distanceKm(),
         "remplissagePct",
         Math.round(Math.max(i.tauxRemplissagePoids(), i.tauxRemplissageVolume()) * 100),
-        "coutEstimeEur",
+        "coutEstime",
         Math.round(i.coutEstime()),
+        "devise",
+        DeviseApplication.PAR_DEFAUT.getCurrencyCode(),
         "alertes",
         option.alertes(),
         "anomaliesBloquantes",

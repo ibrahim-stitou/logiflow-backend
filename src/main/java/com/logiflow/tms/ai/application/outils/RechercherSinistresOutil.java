@@ -5,6 +5,7 @@ import static com.logiflow.tms.ai.application.outils.Lignes.ligne;
 import com.logiflow.tms.ai.domain.model.copilote.SourceCopilote;
 import com.logiflow.tms.maintenance.api.MaintenanceApi;
 import com.logiflow.tms.maintenance.api.dto.SinistreSummary;
+import com.logiflow.tms.shared.domain.DeviseApplication;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -116,7 +117,8 @@ class RechercherSinistresOutil implements OutilCopilote {
               "responsabilite", s.responsabilite(),
               "statut", s.statut(),
               "enginImmobilise", s.enginImmobilise(),
-              "coutNetEur", s.coutNet()));
+              "coutNet", s.coutNet(),
+              "devise", DeviseApplication.PAR_DEFAUT.getCurrencyCode()));
       sources.add(new SourceCopilote("SINISTRE", s.reference(), s.id().toString()));
     }
     return new ResultatOutil(lignes, sinistres.size(), sources);

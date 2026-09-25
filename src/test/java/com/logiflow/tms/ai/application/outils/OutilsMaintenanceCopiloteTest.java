@@ -108,7 +108,8 @@ class OutilsMaintenanceCopiloteTest {
         .containsExactly(recent.reference(), ancien.reference());
     assertThat(resultat.resultats().getFirst())
         .containsEntry("engins", List.of("FR-456-GH"))
-        .containsEntry("coutNetEur", new BigDecimal("850.00"));
+        .containsEntry("coutNet", new BigDecimal("850.00"))
+        .containsEntry("devise", "MAD");
     assertThat(resultat.sources())
         .contains(new SourceCopilote("SINISTRE", recent.reference(), recent.id().toString()));
   }
@@ -142,11 +143,11 @@ class OutilsMaintenanceCopiloteTest {
                         "depuis", "2026-01-01", "jusqua", "2026-06-30", "typeEngin", "remorque")));
 
     assertThat(resultat.resultats().getFirst())
-        .containsEntry("totalHtEur", new BigDecimal("4200.00"))
-        .containsEntry("ecartBudgetEur", new BigDecimal("200.00"))
-        .containsEntry("coutNetSinistresEur", new BigDecimal("500.00"));
+        .containsEntry("totalHt", new BigDecimal("4200.00"))
+        .containsEntry("ecartBudget", new BigDecimal("200.00"))
+        .containsEntry("coutNetSinistres", new BigDecimal("500.00"));
     assertThat(resultat.resultats().get(1))
-        .containsEntry("postes", List.of("GROUPE_FROID : 3000.00 € HT (2 OT)"));
+        .containsEntry("postes", List.of("GROUPE_FROID : 3000.00 MAD HT (2 OT)"));
     assertThat(resultat.sources())
         .extracting(SourceCopilote::type)
         .containsExactly("COUTS_MAINTENANCE");

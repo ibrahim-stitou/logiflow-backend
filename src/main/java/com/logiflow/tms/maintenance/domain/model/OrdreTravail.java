@@ -8,6 +8,7 @@ import com.logiflow.tms.shared.domain.vo.Reference;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import com.logiflow.tms.shared.domain.DeviseApplication;
 import java.util.Currency;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,8 @@ import java.util.UUID;
  */
 public final class OrdreTravail {
 
-  public static final Currency DEVISE = Currency.getInstance("EUR");
+  /** Devise des montants de maintenance : celle de l'application. */
+  public static final Currency DEVISE = DeviseApplication.PAR_DEFAUT;
 
   private static final Map<StatutOT, Set<StatutOT>> TRANSITIONS =
       Map.of(

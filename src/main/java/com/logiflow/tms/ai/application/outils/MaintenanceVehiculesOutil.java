@@ -4,6 +4,7 @@ import static com.logiflow.tms.ai.application.outils.Lignes.ligne;
 
 import com.logiflow.tms.ai.domain.model.copilote.SourceCopilote;
 import com.logiflow.tms.maintenance.api.MaintenanceApi;
+import com.logiflow.tms.shared.domain.DeviseApplication;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +79,8 @@ class MaintenanceVehiculesOutil implements OutilCopilote {
               "statut", ot.statut(),
               "debutPlanifie", ot.debutPlanifie() == null ? null : ot.debutPlanifie().toString(),
               "finReelle", ot.finReelle() == null ? null : ot.finReelle().toString(),
-              "coutTtcEur", ot.totalTtc()));
+              "coutTtc", ot.totalTtc(),
+              "devise", DeviseApplication.PAR_DEFAUT.getCurrencyCode()));
       sources.add(new SourceCopilote("ORDRE_TRAVAIL", ot.reference(), ot.id().toString()));
     }
     for (var plan : plans.contenu()) {

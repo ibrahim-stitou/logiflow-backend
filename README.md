@@ -72,7 +72,11 @@ Ensuite, démarrer le service IA (voir son README) et le frontend (`pnpm start` 
 
 ### Données de démonstration
 
-Le profil `local` charge `db/migration/seed`. Il contient, entre autres :
+> Les seeds de démonstration évoluent avec le projet. Après une mise à jour qui les modifie,
+> recréez la base locale : `make db-reset`, puis relancez l'application.
+
+Le profil `local` charge `db/migration/seed` (données situées au Maroc, montants en dirhams). Il
+contient, entre autres :
 
 - des sites, des clients et des marchandises ;
 - une trentaine de véhicules, une quinzaine de remorques et des chauffeurs complets ;
@@ -225,7 +229,7 @@ Décisions d'architecture (`docs/adr/`) :
 | `UnsupportedClassVersionError` au démarrage | `JAVA_HOME` pointe vers un JDK trop ancien : `export JAVA_HOME="/c/Program Files/Java/jdk-24"` (adapter le chemin), puis relancer |
 | `Connection refused` sur le port 5433 | `make up` n'a pas été lancé, ou le conteneur n'est pas encore sain (`make logs`) |
 | `Port 8080 was already in use` | Une autre instance tourne déjà : l'arrêter, ou changer `SERVER_PORT` |
-| Erreurs Flyway après un changement de migration existante | Base locale incohérente : `make db-reset` (destructif) |
+| `Validate failed: Migrations have failed validation` (checksum mismatch) au démarrage | Les données de démonstration (`db/migration/seed`) ont évolué depuis la création de la base locale : `make db-reset` (destructif), puis relancer |
 | `/api/v1/ia/**` répond 503 | Le service IA n'est pas démarré : les fonctions sans IA restent utilisables. Voir [docs/agents-ia.md §15](docs/agents-ia.md#15-dépannage) |
 | Le frontend reçoit des erreurs CORS | Ajouter son origine à `CORS_ALLOWED_ORIGINS` (par défaut `http://localhost:4200`) |
 

@@ -250,6 +250,7 @@ maintenance/
 | Sujet | Mise en œuvre |
 |---|---|
 | Erreurs | `GlobalExceptionHandler` → RFC 7807 (`ProblemDetail`) : 400 validation, 404, 409, 422 règle métier, 503 service externe |
+| Devise | `shared.domain.DeviseApplication` : dirham marocain (MAD) pour tous les montants (commandes, carburant, maintenance, coûts des agents IA) ; affichage « DH » côté interface |
 | Corrélation | `CorrelationIdFilter` : en-tête `X-Correlation-Id`, repris dans les logs et transmis au service IA |
 | Audit | Colonnes `created_by`, `updated_by`, `created_at`, `updated_at` ; utilisateur issu du JWT (`system` pour les tâches planifiées) |
 | Asynchrone | Threads virtuels (`AsyncConfig`) : écouteurs d'événements, relais SSE du copilote |
