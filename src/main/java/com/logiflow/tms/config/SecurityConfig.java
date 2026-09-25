@@ -18,7 +18,9 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -88,7 +90,15 @@ public class SecurityConfig {
                     .anyRequest()
                     .authenticated());
 
-    if (!permissiveLocalProfile) {
+    if (permissiveLocalProfile) {
+      // Sans resource server, Spring Security retombe sur Http403ForbiddenEntryPoint : une requête
+      // non authentifiée recevrait 403. On garde la sémantique du mode JWT (401 = pas authentifié,
+      // 403 = authentifié sans les droits).
+      http.exceptionHandling(
+          exceptions ->
+              exceptions.authenticationEntryPoint(
+                  new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
+    } else {
       // Aucun IdP configuré en mode permissif : ne pas appeler oauth2ResourceServer().jwt() du
       // tout, sinon Spring Security exige quand même un bean JwtDecoder au démarrage.
       http.oauth2ResourceServer(

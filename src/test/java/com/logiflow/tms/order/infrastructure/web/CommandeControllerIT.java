@@ -136,7 +136,7 @@ class CommandeControllerIT extends AbstractIntegrationTest {
         .perform(
             get("/api/v1/commandes")
                 .with(jwt())
-                .param("q", reference.substring(0, 6))
+                .param("q", reference)
                 .param("page", "0")
                 .param("size", "10"))
         .andExpect(status().isOk())

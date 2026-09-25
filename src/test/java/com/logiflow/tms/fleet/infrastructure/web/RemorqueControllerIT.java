@@ -58,7 +58,8 @@ class RemorqueControllerIT extends AbstractIntegrationTest {
         .andExpect(status().isCreated());
 
     mockMvc
-        .perform(get("/api/v1/remorques").with(jwt()))
+        // Filtre sur l'immatriculation : la base de test contient aussi les données de démo.
+        .perform(get("/api/v1/remorques").param("q", "RM-001-TM").with(jwt()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content[0].immatriculation").value("RM-001-TM"))
         .andExpect(jsonPath("$.totalElements").value(1));

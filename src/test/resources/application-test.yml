@@ -13,6 +13,10 @@ logiflow:
   osrm:
     # URL volontairement injoignable : les IT exercent le chemin 503 sans appel réseau externe.
     base-url: http://127.0.0.1:19999
+  ai-service:
+    # Service IA volontairement injoignable (même si Flask tourne en local sur 8000) : les IT
+    # exercent le chemin de dégradation ; les tests d'agents simulent le port client.
+    base-url: http://127.0.0.1:19998
   cors:
     allowed-origins: http://localhost:4200
   security:

@@ -108,10 +108,10 @@ class VehiculeControllerIT extends AbstractIntegrationTest {
 
   @Test
   void creerUnVehiculeAvecUneImmatriculationVideRenvoie400() throws Exception {
+    // Corps complet (Jackson rejette les primitives absentes avant la validation) : seule
+    // l'immatriculation est invalide.
     String corpsInvalide =
-        """
-        {"immatriculation": "", "type": "TRACTEUR", "ptacKg": 19000, "chargeUtileKg": 9000}
-        """;
+        objectMapper.writeValueAsString(requeteMinimale("", TypeVehicule.TRACTEUR));
 
     mockMvc
         .perform(
