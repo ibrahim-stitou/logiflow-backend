@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Réponse de l'agent de maintenance prédictive : analyse par véhicule (du plus à risque au moins à
+ * Réponse de l'agent de maintenance prédictive : analyse par engin (du plus à risque au moins à
  * risque) et synthèse de flotte. {@code sourceRedaction} vaut LLM ou GABARIT.
  */
 public record ResultatMaintenance(
@@ -29,8 +29,10 @@ public record ResultatMaintenance(
       String justification,
       boolean dejaPlanifie) {}
 
+  /** Analyse d'un engin : {@code vehiculeId} porte l'identifiant du véhicule ou de la remorque. */
   public record AnalyseVehicule(
       String vehiculeId,
+      String typeEngin,
       String immatriculation,
       double score,
       String statut,

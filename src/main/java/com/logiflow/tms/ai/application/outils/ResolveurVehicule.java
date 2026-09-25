@@ -46,7 +46,7 @@ class ResolveurVehicule {
     return immatriculation.replaceAll("[^A-Za-z0-9]", "").toUpperCase(Locale.ROOT);
   }
 
-  private static Set<String> variantes(String saisie) {
+  static Set<String> variantes(String saisie) {
     Set<String> variantes = new LinkedHashSet<>();
     variantes.add(saisie.strip());
     String brut = normaliser(saisie);

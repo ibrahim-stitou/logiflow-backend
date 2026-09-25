@@ -1,5 +1,6 @@
 package com.logiflow.tms.maintenance.api;
 
+import com.logiflow.tms.maintenance.api.dto.CoutsMaintenanceSummary;
 import com.logiflow.tms.maintenance.api.dto.IndisponibiliteSummary;
 import com.logiflow.tms.maintenance.api.dto.OrdreTravailSummary;
 import com.logiflow.tms.maintenance.api.dto.PlanEntretienSummary;
@@ -33,6 +34,12 @@ public interface MaintenanceApi {
    * tous les plans), des plus urgentes aux plus lointaines.
    */
   List<PlanEntretienSummary> echeances(Integer horizonJours);
+
+  /**
+   * Coûts de maintenance et sinistralité entre deux dates incluses ; {@code typeEngin} (VEHICULE ou
+   * REMORQUE) facultatif.
+   */
+  CoutsMaintenanceSummary couts(LocalDate debut, LocalDate fin, String typeEngin);
 
   /** Sinistres survenus entre deux dates incluses, d'un engin ou de toute la flotte. */
   List<SinistreSummary> sinistres(UUID enginId, LocalDate debut, LocalDate fin);

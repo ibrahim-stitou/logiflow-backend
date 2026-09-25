@@ -3,11 +3,8 @@ package com.logiflow.tms.ai.application.outils;
 import static com.logiflow.tms.ai.application.outils.Lignes.ligne;
 
 import com.logiflow.tms.ai.domain.model.copilote.SourceCopilote;
-import com.logiflow.tms.fleet.api.VehiculeApi;
-import com.logiflow.tms.fleet.api.dto.VehiculeSummary;
 import com.logiflow.tms.maintenance.api.MaintenanceApi;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,14 +15,11 @@ import org.springframework.stereotype.Component;
 class MaintenanceVehiculesOutil implements OutilCopilote {
 
   private final MaintenanceApi maintenanceApi;
-  private final VehiculeApi vehiculeApi;
-  private final ResolveurVehicule resolveurVehicule;
+  private final ResolveurEngin resolveurEngin;
 
-  MaintenanceVehiculesOutil(
-      MaintenanceApi maintenanceApi, VehiculeApi vehiculeApi, ResolveurVehicule resolveurVehicule) {
+  MaintenanceVehiculesOutil(MaintenanceApi maintenanceApi, ResolveurEngin resolveurEngin) {
     this.maintenanceApi = maintenanceApi;
-    this.vehiculeApi = vehiculeApi;
-    this.resolveurVehicule = resolveurVehicule;
+    this.resolveurEngin = resolveurEngin;
   }
 
   @Override
@@ -40,17 +34,18 @@ class MaintenanceVehiculesOutil implements OutilCopilote {
 
   @Override
   public String description() {
-    return "Consulte la maintenance d'un véhicule (par immatriculation) ou de toute la flotte : "
-        + "ordres de travail (type d'intervention, statut, date planifiée, coût) et plans "
-        + "d'entretien préventif (périodicité en km/mois). Chaque ligne indique sa nature : "
-        + "ORDRE_TRAVAIL ou PLAN_ENTRETIEN.";
+    return "Consulte la maintenance d'un véhicule ou d'une remorque (par immatriculation) ou de "
+        + "toute la flotte : ordres de travail (type, nature, origine, statut, dates, coût TTC) et "
+        + "plans d'entretien (périodicité km/mois/heures, dernière réalisation, prochaine échéance "
+        + "et état OK/ALERTE/ECHU). Chaque ligne indique sa nature : ORDRE_TRAVAIL ou "
+        + "PLAN_ENTRETIEN. Pour les sinistres, utiliser rechercher_sinistres.";
   }
 
   @Override
   public Map<String, Object> parametres() {
     return SchemaOutil.objet(
         SchemaOutil.texte(
-            "immatriculation", "Immatriculation du véhicule (absent = toute la flotte)"),
+            "immatriculation", "Immatriculation de l'engin (absent = toute la flotte)"),
         SchemaOutil.limite());
   }
 
@@ -62,52 +57,48 @@ class MaintenanceVehiculesOutil implements OutilCopilote {
   @Override
   public ResultatOutil executer(ArgumentsOutil arguments) {
     String immatriculation = arguments.texte("immatriculation");
-    UUID vehiculeId =
-        immatriculation == null ? null : resolveurVehicule.parImmatriculation(immatriculation).id();
-    var ordres = maintenanceApi.ordresTravail(vehiculeId, arguments.premierePage());
-    var plans = maintenanceApi.plansEntretien(vehiculeId, arguments.premierePage());
+    UUID enginId =
+        immatriculation == null ? null : resolveurEngin.parImmatriculation(immatriculation).id();
+    var ordres = maintenanceApi.ordresTravail(enginId, arguments.premierePage());
+    var plans = maintenanceApi.plansEntretien(enginId, arguments.premierePage());
 
-    Map<UUID, String> immatriculations = new HashMap<>();
+    var libelles = resolveurEngin.libelles();
     List<Map<String, Object>> lignes = new ArrayList<>();
+    List<SourceCopilote> sources = new ArrayList<>();
     for (var ot : ordres.contenu()) {
       lignes.add(
           ligne(
               "nature", "ORDRE_TRAVAIL",
               "reference", ot.reference(),
-              "engin", immatriculation(ot.enginId(), immatriculations),
+              "engin", libelles.immatriculation(ot.enginId()),
               "titre", ot.titre(),
               "type", ot.type(),
+              "natureIntervention", ot.nature(),
+              "origine", ot.origine(),
               "statut", ot.statut(),
               "debutPlanifie", ot.debutPlanifie() == null ? null : ot.debutPlanifie().toString(),
               "finReelle", ot.finReelle() == null ? null : ot.finReelle().toString(),
               "coutTtcEur", ot.totalTtc()));
+      sources.add(new SourceCopilote("ORDRE_TRAVAIL", ot.reference(), ot.id().toString()));
     }
     for (var plan : plans.contenu()) {
       lignes.add(
           ligne(
               "nature", "PLAN_ENTRETIEN",
-              "engin", immatriculation(plan.enginId(), immatriculations),
+              "engin", libelles.immatriculation(plan.enginId()),
               "libelle", plan.libelle(),
+              "type", plan.type(),
               "periodiciteKm", plan.periodiciteKm(),
               "periodiciteMois", plan.periodiciteMois(),
+              "periodiciteHeures", plan.periodiciteHeures(),
+              "derniereRealisation",
+                  plan.derniereDate() == null ? null : plan.derniereDate().toString(),
+              "derniereKm", plan.derniereKm(),
               "kmRestant", plan.kmRestant(),
               "dateEcheance", plan.dateEcheance() == null ? null : plan.dateEcheance().toString(),
               "etat", plan.etat()));
     }
-    List<SourceCopilote> sources =
-        immatriculations.entrySet().stream()
-            .filter(e -> e.getValue() != null)
-            .map(e -> new SourceCopilote("VEHICULE", e.getValue(), e.getKey().toString()))
-            .toList();
+    sources.addAll(libelles.sources());
     return new ResultatOutil(lignes, ordres.totalElements() + plans.totalElements(), sources);
-  }
-
-  private String immatriculation(UUID vehiculeId, Map<UUID, String> cache) {
-    if (vehiculeId == null) {
-      return null;
-    }
-    return cache.computeIfAbsent(
-        vehiculeId,
-        id -> vehiculeApi.consulter(id).map(VehiculeSummary::immatriculation).orElse(null));
   }
 }

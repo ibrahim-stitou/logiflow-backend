@@ -3,6 +3,7 @@ package com.logiflow.tms.maintenance.application;
 import com.logiflow.tms.fleet.api.RemorqueApi;
 import com.logiflow.tms.fleet.api.VehiculeApi;
 import com.logiflow.tms.maintenance.api.MaintenanceApi;
+import com.logiflow.tms.maintenance.api.dto.CoutsMaintenanceSummary;
 import com.logiflow.tms.maintenance.api.dto.IndisponibiliteSummary;
 import com.logiflow.tms.maintenance.api.dto.OrdreTravailSummary;
 import com.logiflow.tms.maintenance.api.dto.PlanEntretienSummary;
@@ -15,6 +16,7 @@ import com.logiflow.tms.maintenance.domain.model.PlanEntretien;
 import com.logiflow.tms.maintenance.domain.model.ScoreSante;
 import com.logiflow.tms.maintenance.domain.model.Sinistre;
 import com.logiflow.tms.maintenance.domain.model.StatutOT;
+import com.logiflow.tms.maintenance.domain.model.TypeEngin;
 import com.logiflow.tms.maintenance.domain.port.out.OrdreTravailRepository;
 import com.logiflow.tms.maintenance.domain.port.out.PlanEntretienRepository;
 import com.logiflow.tms.maintenance.domain.port.out.ScoreSanteRepository;
@@ -49,6 +51,7 @@ public class MaintenanceService implements MaintenanceApi {
   private final PlanEntretienRepository planEntretienRepository;
   private final SinistreRepository sinistreRepository;
   private final PlanEntretienService planEntretienService;
+  private final CoutsMaintenanceService coutsMaintenanceService;
   private final EnginsFlotte enginsFlotte;
   private final VehiculeApi vehiculeApi;
   private final RemorqueApi remorqueApi;
@@ -148,6 +151,33 @@ public class MaintenanceService implements MaintenanceApi {
   }
 
   @Override
+  public CoutsMaintenanceSummary couts(LocalDate debut, LocalDate fin, String typeEngin) {
+    var c =
+        coutsMaintenanceService.couts(
+            debut, fin, typeEngin == null ? null : TypeEngin.valueOf(typeEngin), null);
+    return new CoutsMaintenanceSummary(
+        c.debut(),
+        c.fin(),
+        c.totalHt(),
+        c.totalTtc(),
+        c.nombreOrdres(),
+        c.budgetEstime(),
+        postes(c.parType()),
+        postes(c.parNature()),
+        postes(c.parEngin()),
+        c.nombreSinistres(),
+        c.coutNetSinistres(),
+        c.indemnitesPercues());
+  }
+
+  private static List<CoutsMaintenanceSummary.Poste> postes(
+      List<CoutsMaintenanceService.Repartition> repartitions) {
+    return repartitions.stream()
+        .map(r -> new CoutsMaintenanceSummary.Poste(r.cle(), r.libelle(), r.totalHt(), r.nombre()))
+        .toList();
+  }
+
+  @Override
   @Transactional(readOnly = true)
   public List<SinistreSummary> sinistres(UUID enginId, LocalDate debut, LocalDate fin) {
     return sinistreRepository
@@ -210,6 +240,9 @@ public class MaintenanceService implements MaintenanceApi {
         o.details().type().name(),
         o.details().nature().name(),
         o.statut().name(),
+        o.origine().name(),
+        o.planId(),
+        o.sinistreId(),
         o.details().titre(),
         o.details().debutPlanifie(),
         o.details().finPlanifiee(),

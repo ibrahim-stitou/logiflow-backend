@@ -107,6 +107,7 @@ class MaintenancePredictiveControllerIT extends AbstractIntegrationTest {
         List.of(
             new ResultatMaintenance.AnalyseVehicule(
                 vehicule.id(),
+                vehicule.typeEngin(),
                 vehicule.immatriculation(),
                 52,
                 "A_PLANIFIER",
@@ -157,6 +158,14 @@ class MaintenancePredictiveControllerIT extends AbstractIntegrationTest {
                 "titre", "Révision",
                 "debutPlanifie", LocalDateTime.now().minusDays(100).withNano(0).toString())),
         "/api/v1/maintenance/ordres-travail");
+    creerId(
+        Map.of(
+            "vehiculeId", vehiculeId,
+            "dateSurvenance", LocalDateTime.now().minusDays(20).withNano(0).toString(),
+            "type", "ACCROCHAGE",
+            "gravite", "MATERIEL_LEGER",
+            "description", "Rétroviseur arraché sur un quai."),
+        "/api/v1/maintenance/sinistres");
     AtomicReference<ContexteMaintenance> recu = new AtomicReference<>();
     when(clientPort.recommander(any()))
         .thenAnswer(
@@ -174,6 +183,7 @@ class MaintenancePredictiveControllerIT extends AbstractIntegrationTest {
                 .content(objectMapper.writeValueAsString(Map.of("vehiculeId", vehiculeId))))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.vehicules[0].statut").value("A_PLANIFIER"))
+        .andExpect(jsonPath("$.vehicules[0].typeEngin").value("VEHICULE"))
         .andExpect(jsonPath("$.vehicules[0].recommandations[0].priorite").value("HAUTE"))
         .andExpect(jsonPath("$.synthese").value("Une révision à planifier."));
 
@@ -185,10 +195,25 @@ class MaintenancePredictiveControllerIT extends AbstractIntegrationTest {
             p -> {
               assertThat(p.periodiciteKm()).isEqualTo(40000);
               assertThat(p.dureeEstimeeMin()).isEqualTo(150);
+              assertThat(p.type()).isEqualTo("ENTRETIEN_PREVENTIF");
+              assertThat(p.etat()).isNotNull();
             });
+    assertThat(envoye.typeEngin()).isEqualTo("VEHICULE");
     assertThat(envoye.ordres())
-        .extracting(ContexteMaintenance.Ordre::type)
-        .containsExactly("ENTRETIEN_PREVENTIF");
+        .singleElement()
+        .satisfies(
+            o -> {
+              assertThat(o.type()).isEqualTo("ENTRETIEN_PREVENTIF");
+              assertThat(o.origine()).isEqualTo("PLAN_ENTRETIEN");
+              assertThat(o.planId()).isEqualTo(planId.toString());
+            });
+    assertThat(envoye.sinistres())
+        .singleElement()
+        .satisfies(
+            sinistre -> {
+              assertThat(sinistre.type()).isEqualTo("ACCROCHAGE");
+              assertThat(sinistre.statut()).isEqualTo("DECLARE");
+            });
 
     mockMvc
         .perform(

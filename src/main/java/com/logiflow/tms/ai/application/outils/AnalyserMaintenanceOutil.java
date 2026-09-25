@@ -7,7 +7,6 @@ import com.logiflow.tms.ai.application.MaintenancePredictiveService.AnalyserMain
 import com.logiflow.tms.ai.domain.model.copilote.SourceCopilote;
 import com.logiflow.tms.ai.domain.model.maintenance.ResultatMaintenance;
 import com.logiflow.tms.ai.domain.model.maintenance.ResultatMaintenance.AnalyseVehicule;
-import com.logiflow.tms.fleet.api.dto.VehiculeSummary;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,12 +23,11 @@ class AnalyserMaintenanceOutil implements OutilCopilote {
   private static final int VEHICULES_MAX = 10;
 
   private final MaintenancePredictiveService service;
-  private final ResolveurVehicule resolveurVehicule;
+  private final ResolveurEngin resolveurEngin;
 
-  AnalyserMaintenanceOutil(
-      MaintenancePredictiveService service, ResolveurVehicule resolveurVehicule) {
+  AnalyserMaintenanceOutil(MaintenancePredictiveService service, ResolveurEngin resolveurEngin) {
     this.service = service;
-    this.resolveurVehicule = resolveurVehicule;
+    this.resolveurEngin = resolveurEngin;
   }
 
   @Override
@@ -44,18 +42,19 @@ class AnalyserMaintenanceOutil implements OutilCopilote {
 
   @Override
   public String description() {
-    return "Analyse prédictive de la maintenance d'un véhicule (par immatriculation) ou de toute "
-        + "la flotte sur les 30 prochains jours : score de santé, échéances d'entretien projetées "
-        + "à partir de l'usage réel et des voyages planifiés, documents à renouveler, pannes "
-        + "récurrentes, surconsommation, actions recommandées et créneau libre proposé. Pour la "
-        + "flotte, renvoie les véhicules les plus à risque d'abord.";
+    return "Analyse prédictive de la maintenance d'un véhicule ou d'une remorque (par "
+        + "immatriculation) ou de toute la flotte sur les 30 prochains jours : score de santé, "
+        + "échéances des plans d'entretien avancées par l'usage réel et les voyages planifiés, "
+        + "documents à renouveler, pannes récurrentes, sinistralité, surconsommation, actions "
+        + "recommandées et créneau libre proposé. Pour la flotte, renvoie les engins les plus à "
+        + "risque d'abord.";
   }
 
   @Override
   public Map<String, Object> parametres() {
     return SchemaOutil.objet(
         SchemaOutil.texte(
-            "immatriculation", "Immatriculation du véhicule (absent = toute la flotte)"));
+            "immatriculation", "Immatriculation de l'engin (absent = toute la flotte)"));
   }
 
   @Override
@@ -66,18 +65,19 @@ class AnalyserMaintenanceOutil implements OutilCopilote {
   @Override
   public ResultatOutil executer(ArgumentsOutil arguments) {
     String immatriculation = arguments.texte("immatriculation");
-    VehiculeSummary vehicule =
-        immatriculation == null ? null : resolveurVehicule.parImmatriculation(immatriculation);
+    ResolveurEngin.Engin engin =
+        immatriculation == null ? null : resolveurEngin.parImmatriculation(immatriculation);
     ResultatMaintenance resultat =
         service.analyser(
-            new AnalyserMaintenanceCommand(vehicule == null ? null : vehicule.id(), 30, false));
+            new AnalyserMaintenanceCommand(engin == null ? null : engin.id(), 30, false));
 
     List<Map<String, Object>> lignes = new ArrayList<>();
     List<SourceCopilote> sources = new ArrayList<>();
     for (AnalyseVehicule a : resultat.vehicules().stream().limit(VEHICULES_MAX).toList()) {
       lignes.add(
           ligne(
-              "vehicule", a.immatriculation(),
+              "engin", a.immatriculation(),
+              "typeEngin", a.typeEngin(),
               "score", Math.round(a.score()),
               "statut", a.statut(),
               "kmParJour", a.kmParJour(),
@@ -96,7 +96,11 @@ class AnalyserMaintenanceOutil implements OutilCopilote {
                                   + (r.dejaPlanifie() ? " (déjà planifié)" : ""))
                       .toList(),
               "explication", a.explication()));
-      sources.add(new SourceCopilote("VEHICULE", a.immatriculation(), a.vehiculeId()));
+      sources.add(
+          new SourceCopilote(
+              a.typeEngin() == null ? "VEHICULE" : a.typeEngin(),
+              a.immatriculation(),
+              a.vehiculeId()));
     }
     lignes.add(ligne("synthese", resultat.synthese()));
     return new ResultatOutil(lignes, resultat.vehicules().size(), sources);

@@ -232,6 +232,7 @@ class MaintenanceControllerIT extends AbstractIntegrationTest {
                 "Assureur IT",
                 "type",
                 "ASSUREUR"));
+    // Contrat dédié : il prime sur le contrat de flotte des données de démonstration.
     creer(
         "/api/v1/maintenance/contrats-assurance",
         Map.of(
@@ -240,7 +241,9 @@ class MaintenanceControllerIT extends AbstractIntegrationTest {
             "numeroPolice",
             "POL-IT",
             "type",
-            "FLOTTE",
+            "ENGIN",
+            "engins",
+            List.of(Map.of("type", "VEHICULE", "id", vehiculeId)),
             "garanties",
             List.of("RC", "DOMMAGES"),
             "franchise",

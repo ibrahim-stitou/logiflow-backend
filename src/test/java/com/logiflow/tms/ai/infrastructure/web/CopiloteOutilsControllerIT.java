@@ -114,6 +114,8 @@ class CopiloteOutilsControllerIT extends AbstractIntegrationTest {
           "lister_remorques",
           "rechercher_chauffeurs",
           "consulter_maintenance",
+          "rechercher_sinistres",
+          "couts_maintenance",
           "consommation_carburant"
         }) {
       mockMvc

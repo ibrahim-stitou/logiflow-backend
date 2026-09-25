@@ -168,6 +168,7 @@ public class VoyageService implements VoyageApi {
             v ->
                 new ActiviteVoyageSummary(
                     v.vehiculeId(),
+                    v.remorqueId(),
                     v.reference().valeur(),
                     v.statut().name(),
                     v.departPrevu(),
