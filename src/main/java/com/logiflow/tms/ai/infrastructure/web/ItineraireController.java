@@ -25,7 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
  * ItineraireService}).
  */
 @RestController
-@Tag(name = "itineraire-controller", description = "Calcul d'itinéraire et géométrie routière (OSRM)")
+@Tag(
+    name = "itineraire-controller",
+    description = "Calcul d'itinéraire et géométrie routière (OSRM)")
 @RequiredArgsConstructor
 public class ItineraireController {
 

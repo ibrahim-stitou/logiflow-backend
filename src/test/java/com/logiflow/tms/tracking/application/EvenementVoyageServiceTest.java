@@ -55,12 +55,7 @@ class EvenementVoyageServiceTest {
         .thenReturn(
             Optional.of(
                 new VoyageSummary(
-                    voyageId,
-                    "VOY-2026-000001",
-                    "BROUILLON",
-                    UUID.randomUUID(),
-                    null,
-                    List.of())));
+                    voyageId, "VOY-2026-000001", "BROUILLON", UUID.randomUUID(), null, List.of())));
     when(evenementRepository.dernierParVoyageId(voyageId)).thenReturn(Optional.empty());
     when(evenementRepository.sauvegarder(any(EvenementVoyage.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));

@@ -16,7 +16,10 @@ import org.springframework.web.client.RestClientException;
 @RequiredArgsConstructor
 public class OsrmRouteGeometryAdapter implements RouteGeometryPort {
 
-  /** Écart max. (km) entre la fin OSRM et la destination de l'étape avant relance routière / raccord. */
+  /**
+   * Écart max. (km) entre la fin OSRM et la destination de l'étape avant relance routière /
+   * raccord.
+   */
   private static final double ECART_DESTINATION_KM = 5.0;
 
   private final RestClient osrmRestClient;
@@ -67,8 +70,8 @@ public class OsrmRouteGeometryAdapter implements RouteGeometryPort {
   }
 
   /**
-   * Relie un point hors graphe OSRM à un point routable : tente d'abord une route OSRM, sinon
-   * ligne droite (traversée maritime / continent hors couverture).
+   * Relie un point hors graphe OSRM à un point routable : tente d'abord une route OSRM, sinon ligne
+   * droite (traversée maritime / continent hors couverture).
    *
    * @param depuisPointAncre point déjà sur la géométrie OSRM
    * @param depuisOuVersDepart si true, ancre = début OSRM et cible = vrai départ (préfixe)

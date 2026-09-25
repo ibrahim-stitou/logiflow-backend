@@ -94,8 +94,7 @@ public final class ArretVoyage {
   }
 
   public ArretVoyage avecIndiceSequence(int nouvelIndice) {
-    return reconstituer(
-        id, voyageId, nouvelIndice, libelle, localisation, siteId, estOriginal);
+    return reconstituer(id, voyageId, nouvelIndice, libelle, localisation, siteId, estOriginal);
   }
 
   @Override

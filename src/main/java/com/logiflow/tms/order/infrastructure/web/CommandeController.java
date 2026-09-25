@@ -32,7 +32,10 @@ public class CommandeController {
     UUID id =
         commandeService.creerCommande(
             new CreerCommandeCommand(
-                request.clientId(), request.dateSouhaitee(), request.prixNegocie(), request.lignes()));
+                request.clientId(),
+                request.dateSouhaitee(),
+                request.prixNegocie(),
+                request.lignes()));
     CommandeResponse reponse = CommandeResponse.depuis(commandeService.consulterCommande(id));
     URI location =
         ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(id).toUri();

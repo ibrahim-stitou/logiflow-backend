@@ -15,8 +15,7 @@ public record ItineraireCalcule(
     geometrie = geometrie != null ? List.copyOf(geometrie) : List.of();
   }
 
-  public ItineraireCalcule(
-      double distanceKm, double dureeMin, List<SegmentItineraire> segments) {
+  public ItineraireCalcule(double distanceKm, double dureeMin, List<SegmentItineraire> segments) {
     this(distanceKm, dureeMin, segments, List.of());
   }
 }

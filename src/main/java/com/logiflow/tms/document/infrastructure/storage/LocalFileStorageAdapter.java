@@ -38,7 +38,8 @@ public class LocalFileStorageAdapter implements FileStorageService {
     if (url == null || !url.startsWith(CHEMIN_PUBLIC)) {
       return;
     }
-    Path fichier = Path.of(storageProperties.localPath()).resolve(url.substring(CHEMIN_PUBLIC.length()));
+    Path fichier =
+        Path.of(storageProperties.localPath()).resolve(url.substring(CHEMIN_PUBLIC.length()));
     try {
       Files.deleteIfExists(fichier);
     } catch (IOException e) {

@@ -16,8 +16,8 @@ import java.util.UUID;
  * ses propres données de planning.
  *
  * <p>Les documents administratifs et photos du véhicule ne font pas partie de cet agrégat : ils
- * sont gérés par le module {@code document} (relation polymorphe sur cet identifiant), consultés via
- * {@link com.logiflow.tms.fleet.api.VehiculeApi#documentsValides(UUID, LocalDate)}.
+ * sont gérés par le module {@code document} (relation polymorphe sur cet identifiant), consultés
+ * via {@link com.logiflow.tms.fleet.api.VehiculeApi#documentsValides(UUID, LocalDate)}.
  */
 public final class Vehicule {
 
@@ -135,12 +135,36 @@ public final class Vehicule {
     this.heuresMoteurSortie = heuresMoteurSortie;
   }
 
-  /** Création simplifiée, sans les attributs descriptifs optionnels (immatriculation SIV en test). */
+  /**
+   * Création simplifiée, sans les attributs descriptifs optionnels (immatriculation SIV en test).
+   */
   public static Vehicule creer(
       UUID id, Immatriculation immatriculation, TypeVehicule type, Poids ptac, Poids chargeUtile) {
     return creer(
-        id, immatriculation, type, null, null, null, null, null, null, ptac, null, chargeUtile,
-        null, null, null, null, null, null, false, null, null, null, null, null);
+        id,
+        immatriculation,
+        type,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        ptac,
+        null,
+        chargeUtile,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        false,
+        null,
+        null,
+        null,
+        null,
+        null);
   }
 
   public static Vehicule creer(
@@ -285,7 +309,10 @@ public final class Vehicule {
 
   /** Sort définitivement le véhicule du parc (réforme, vente, destruction...). */
   public void sortir(
-      LocalDate dateSortie, String motifSortie, Integer kilometrageSortie, Integer heuresMoteurSortie) {
+      LocalDate dateSortie,
+      String motifSortie,
+      Integer kilometrageSortie,
+      Integer heuresMoteurSortie) {
     this.dateSortie = Objects.requireNonNull(dateSortie, "La date de sortie est obligatoire");
     this.motifSortie = motifSortie;
     this.kilometrageSortie = kilometrageSortie;

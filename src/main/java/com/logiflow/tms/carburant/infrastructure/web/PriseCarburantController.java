@@ -4,8 +4,8 @@ import com.logiflow.tms.carburant.application.CarburantService;
 import com.logiflow.tms.carburant.application.command.CreerPriseCarburantCommand;
 import com.logiflow.tms.carburant.application.command.MajPriseCarburantCommand;
 import com.logiflow.tms.carburant.domain.model.PriseCarburant;
-import com.logiflow.tms.carburant.domain.model.StatutPrise;
 import com.logiflow.tms.carburant.domain.model.Station;
+import com.logiflow.tms.carburant.domain.model.StatutPrise;
 import com.logiflow.tms.carburant.infrastructure.web.dto.MajPriseCarburantRequest;
 import com.logiflow.tms.carburant.infrastructure.web.dto.PriseCarburantRequest;
 import com.logiflow.tms.carburant.infrastructure.web.dto.PriseCarburantResponse;
@@ -89,10 +89,7 @@ public class PriseCarburantController {
     carburantService.modifierPriseCarburant(
         id,
         new MajPriseCarburantCommand(
-            request.stationId(),
-            request.typeCarburant(),
-            request.litrage(),
-            request.montantTtc()));
+            request.stationId(), request.typeCarburant(), request.litrage(), request.montantTtc()));
     return versReponse(carburantService.consulterPriseCarburant(id));
   }
 
@@ -120,12 +117,8 @@ public class PriseCarburantController {
 
   private PriseCarburantResponse versReponse(PriseCarburant prise) {
     String voyageReference =
-        voyageApi
-            .consulter(prise.voyageId())
-            .map(voyage -> voyage.reference())
-            .orElse("—");
+        voyageApi.consulter(prise.voyageId()).map(voyage -> voyage.reference()).orElse("—");
     Station station = carburantService.consulterStation(prise.stationId());
-    return PriseCarburantResponse.depuis(
-        prise, voyageReference, station.code(), station.libelle());
+    return PriseCarburantResponse.depuis(prise, voyageReference, station.code(), station.libelle());
   }
 }

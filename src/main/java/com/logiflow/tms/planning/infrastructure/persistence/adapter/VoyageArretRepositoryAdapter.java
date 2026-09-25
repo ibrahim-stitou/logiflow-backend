@@ -26,9 +26,7 @@ public class VoyageArretRepositoryAdapter implements VoyageArretRepository {
 
   @Override
   public List<ArretVoyage> sauvegarderTous(List<ArretVoyage> arrets) {
-    return jpaRepository
-        .saveAll(arrets.stream().map(mapper::versEntite).toList())
-        .stream()
+    return jpaRepository.saveAll(arrets.stream().map(mapper::versEntite).toList()).stream()
         .map(mapper::versDomaine)
         .toList();
   }
@@ -53,9 +51,11 @@ public class VoyageArretRepositoryAdapter implements VoyageArretRepository {
 
   @Override
   @Transactional
-  public ArretVoyage insererApresIndice(UUID voyageId, ArretVoyage nouvelArret, int apresIndiceArret) {
+  public ArretVoyage insererApresIndice(
+      UUID voyageId, ArretVoyage nouvelArret, int apresIndiceArret) {
     var entites = jpaRepository.findByVoyageIdOrderByIndiceSequenceAsc(voyageId);
-    // Décaler via indices temporaires pour éviter la contrainte unique (voyage_id, indice_sequence).
+    // Décaler via indices temporaires pour éviter la contrainte unique (voyage_id,
+    // indice_sequence).
     for (var entite : entites) {
       if (entite.getIndiceSequence() > apresIndiceArret) {
         entite.mettreAJourIndiceSequence(entite.getIndiceSequence() + 10_000);

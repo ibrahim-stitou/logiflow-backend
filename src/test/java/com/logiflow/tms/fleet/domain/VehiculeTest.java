@@ -18,7 +18,8 @@ class VehiculeTest {
   @Test
   void creerUnVehiculeEstDisponibleParDefaut() {
     Vehicule vehicule =
-        Vehicule.creer(UUID.randomUUID(), IMMAT, TypeVehicule.PORTEUR, new Poids(19000), new Poids(9000));
+        Vehicule.creer(
+            UUID.randomUUID(), IMMAT, TypeVehicule.PORTEUR, new Poids(19000), new Poids(9000));
 
     assertThat(vehicule.estDisponible()).isTrue();
     assertThat(vehicule.statut()).isEqualTo(StatutVehicule.DISPONIBLE);
@@ -28,7 +29,8 @@ class VehiculeTest {
   @Test
   void relerverUnKilometrageInferieurEchoue() {
     Vehicule vehicule =
-        Vehicule.creer(UUID.randomUUID(), IMMAT, TypeVehicule.PORTEUR, new Poids(19000), new Poids(9000));
+        Vehicule.creer(
+            UUID.randomUUID(), IMMAT, TypeVehicule.PORTEUR, new Poids(19000), new Poids(9000));
     vehicule.relever(1000, 50);
 
     assertThatThrownBy(() -> vehicule.relever(500, 60))
@@ -38,7 +40,8 @@ class VehiculeTest {
   @Test
   void changerStatutMetAJourLaDisponibilite() {
     Vehicule vehicule =
-        Vehicule.creer(UUID.randomUUID(), IMMAT, TypeVehicule.TRACTEUR, new Poids(19000), new Poids(9000));
+        Vehicule.creer(
+            UUID.randomUUID(), IMMAT, TypeVehicule.TRACTEUR, new Poids(19000), new Poids(9000));
 
     vehicule.changerStatut(StatutVehicule.EN_MAINTENANCE);
 
@@ -48,7 +51,8 @@ class VehiculeTest {
   @Test
   void sortirDuParcMetLeVehiculeHorsService() {
     Vehicule vehicule =
-        Vehicule.creer(UUID.randomUUID(), IMMAT, TypeVehicule.TRACTEUR, new Poids(19000), new Poids(9000));
+        Vehicule.creer(
+            UUID.randomUUID(), IMMAT, TypeVehicule.TRACTEUR, new Poids(19000), new Poids(9000));
 
     vehicule.sortir(java.time.LocalDate.of(2026, 1, 1), "Réforme", 300000, 15000);
 

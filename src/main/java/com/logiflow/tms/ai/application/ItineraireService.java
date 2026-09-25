@@ -41,10 +41,7 @@ public class ItineraireService {
       List<GeoPoint> geometrie = resoudreGeometrieSansEchec(command.points());
       journaliser(true, debut, resume, null);
       return new ItineraireCalcule(
-          itineraire.distanceKm(),
-          itineraire.dureeMin(),
-          itineraire.segments(),
-          geometrie);
+          itineraire.distanceKm(), itineraire.dureeMin(), itineraire.segments(), geometrie);
     } catch (ServiceIndisponibleException e) {
       journaliser(false, debut, resume, e.getMessage());
       throw e;

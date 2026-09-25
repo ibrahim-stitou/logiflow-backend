@@ -12,8 +12,7 @@ public final class JpaTupleAgregat {
       return null;
     }
     if (!(raw instanceof Object[] line)) {
-      throw new IllegalStateException(
-          "Ligne agrégée inattendue: " + raw.getClass().getName());
+      throw new IllegalStateException("Ligne agrégée inattendue: " + raw.getClass().getName());
     }
     if (line.length == 1 && line[0] instanceof Object[] nested) {
       return nested;

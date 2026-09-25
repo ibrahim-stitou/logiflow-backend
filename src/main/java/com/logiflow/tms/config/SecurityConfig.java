@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,10 +19,9 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -64,8 +64,7 @@ public class SecurityConfig {
     boolean permissiveLocalProfile = properties.security().permissiveLocalProfile();
 
     if (properties.security().anonymousLocalAccess()) {
-      http.addFilterBefore(
-          new LocalDevAuthenticationFilter(), AnonymousAuthenticationFilter.class);
+      http.addFilterBefore(new LocalDevAuthenticationFilter(), AnonymousAuthenticationFilter.class);
     }
 
     http.cors(cors -> cors.configurationSource(corsConfigurationSource))
@@ -77,7 +76,8 @@ public class SecurityConfig {
                 authorize
                     // STATELESS : le SecurityContext ne survit pas au dispatch ERROR/FORWARD vers
                     // /error. Sans ceci, toute exception MVC (validation, 404, etc.) rebondit en
-                    // 403 vide au lieu du ProblemDetail. Idem pour le dispatch ASYNC qui clôt un flux
+                    // 403 vide au lieu du ProblemDetail. Idem pour le dispatch ASYNC qui clôt un
+                    // flux
                     // SSE (copilote) : la requête d'origine a déjà été autorisée.
                     .dispatcherTypeMatchers(
                         DispatcherType.FORWARD,

@@ -7,10 +7,7 @@ import com.logiflow.tms.shared.domain.vo.GeoPoint;
 import java.util.List;
 
 public record ItineraireResponse(
-    double distanceKm,
-    double dureeMin,
-    List<SegmentResponse> segments,
-    List<GeoPoint> geometrie) {
+    double distanceKm, double dureeMin, List<SegmentResponse> segments, List<GeoPoint> geometrie) {
 
   public record PointResponse(double latitude, double longitude, String libelle) {
     static PointResponse depuis(PointItineraire point) {

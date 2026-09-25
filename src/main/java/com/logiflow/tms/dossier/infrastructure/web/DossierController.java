@@ -45,7 +45,8 @@ public class DossierController {
                 request.segments(),
                 request.documents() != null ? request.documents() : List.of()));
     var dossier = dossierService.consulterDossier(id);
-    DossierResponse reponse = DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier));
+    DossierResponse reponse =
+        DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier));
     URI location =
         ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(id).toUri();
     return ResponseEntity.created(location).body(reponse);
@@ -68,7 +69,9 @@ public class DossierController {
       var dossiers = dossierService.listerParCommande(commandeId);
       return PageResponse.ofList(
           dossiers.stream()
-              .map(dossier -> DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier)))
+              .map(
+                  dossier ->
+                      DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier)))
               .toList());
     }
     var resultats =
@@ -76,7 +79,8 @@ public class DossierController {
             ? dossierService.listerDossiers(q, new PageRequest(page, size))
             : dossierService.listerDossiers(q, statut, new PageRequest(page, size));
     return PageResponse.of(
-        resultats, dossier -> DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier)));
+        resultats,
+        dossier -> DossierResponse.depuis(dossier, dossierService.dossierContientAdr(dossier)));
   }
 
   @PutMapping("/api/v1/dossiers/{id}/statut")

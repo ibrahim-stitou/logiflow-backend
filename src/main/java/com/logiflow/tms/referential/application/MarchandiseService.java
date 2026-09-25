@@ -23,12 +23,18 @@ public class MarchandiseService implements MarchandiseApi {
 
   @Transactional
   public UUID creerMarchandise(
-      String code, String libelle, String famille, String classeAdr, String numeroOnu, boolean gerbable) {
+      String code,
+      String libelle,
+      String famille,
+      String classeAdr,
+      String numeroOnu,
+      boolean gerbable) {
     if (marchandiseRepository.existeParCode(code)) {
       throw new ConflictException("Une marchandise avec le code '%s' existe déjà".formatted(code));
     }
     Marchandise marchandise =
-        Marchandise.creer(UUID.randomUUID(), code, libelle, famille, classeAdr, numeroOnu, gerbable);
+        Marchandise.creer(
+            UUID.randomUUID(), code, libelle, famille, classeAdr, numeroOnu, gerbable);
     return marchandiseRepository.sauvegarder(marchandise).id();
   }
 

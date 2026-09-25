@@ -36,7 +36,9 @@ public interface VehiculeMapper {
         entity.getHauteurM(),
         entity.getVolumeUtileM3(),
         entity.getNbPositionsPalettes(),
-        entity.getTypeCarrosserie() != null ? TypeCarrosserie.valueOf(entity.getTypeCarrosserie()) : null,
+        entity.getTypeCarrosserie() != null
+            ? TypeCarrosserie.valueOf(entity.getTypeCarrosserie())
+            : null,
         entity.isGroupeFroid(),
         entity.getTemperatureMin(),
         entity.getTemperatureMax(),
@@ -74,7 +76,8 @@ public interface VehiculeMapper {
         .hauteurM(vehicule.hauteurM())
         .volumeUtileM3(vehicule.volumeUtileM3())
         .nbPositionsPalettes(vehicule.nbPositionsPalettes())
-        .typeCarrosserie(vehicule.typeCarrosserie() != null ? vehicule.typeCarrosserie().name() : null)
+        .typeCarrosserie(
+            vehicule.typeCarrosserie() != null ? vehicule.typeCarrosserie().name() : null)
         .groupeFroid(vehicule.groupeFroid())
         .temperatureMin(vehicule.temperatureMin())
         .temperatureMax(vehicule.temperatureMax())

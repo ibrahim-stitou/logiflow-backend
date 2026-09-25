@@ -47,10 +47,7 @@ class ItineraireServiceTest {
     ItineraireCalcule itineraireCalcule = new ItineraireCalcule(465.3, 258.4, List.of());
     when(aiServiceClientPort.calculerItineraire(points)).thenReturn(itineraireCalcule);
     when(routeGeometryPort.resoudreGeometrie(points))
-        .thenReturn(
-            List.of(
-                new GeoPoint(48.8566, 2.3522),
-                new GeoPoint(45.7640, 4.8357)));
+        .thenReturn(List.of(new GeoPoint(48.8566, 2.3522), new GeoPoint(45.7640, 4.8357)));
     when(interactionRepository.sauvegarder(any(InteractionIa.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
 

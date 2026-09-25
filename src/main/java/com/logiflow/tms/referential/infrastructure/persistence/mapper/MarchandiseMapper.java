@@ -4,7 +4,9 @@ import com.logiflow.tms.referential.domain.model.Marchandise;
 import com.logiflow.tms.referential.infrastructure.persistence.entity.MarchandiseEntity;
 import org.mapstruct.Mapper;
 
-/** Traduit entre le modèle de domaine {@link Marchandise} et l'entité JPA {@link MarchandiseEntity}. */
+/**
+ * Traduit entre le modèle de domaine {@link Marchandise} et l'entité JPA {@link MarchandiseEntity}.
+ */
 @Mapper(componentModel = "spring")
 public interface MarchandiseMapper {
 

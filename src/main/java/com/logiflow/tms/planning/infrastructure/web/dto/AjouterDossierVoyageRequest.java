@@ -14,15 +14,11 @@ public record AjouterDossierVoyageRequest(
 
   public record SelectionArretRequest(UUID arretId, @Valid NouvelArretRequest nouvelArret) {}
 
-  public record NouvelArretRequest(
-      @NotNull String libelle, double latitude, double longitude) {}
+  public record NouvelArretRequest(@NotNull String libelle, double latitude, double longitude) {}
 
   public AjouterDossierVoyageCommand versCommande() {
     return new AjouterDossierVoyageCommand(
-        dossierId,
-        versSelection(chargement),
-        versSelection(dechargement),
-        deviationMaxPourcent);
+        dossierId, versSelection(chargement), versSelection(dechargement), deviationMaxPourcent);
   }
 
   private static AjouterDossierVoyageCommand.SelectionArret versSelection(

@@ -92,7 +92,8 @@ class DossierTransportTest {
                     "Palettes",
                     null,
                     null,
-                    List.of(new LigneMarchandise(UUID.randomUUID(), 500, 2.5, 10, null, null, true)),
+                    List.of(
+                        new LigneMarchandise(UUID.randomUUID(), 500, 2.5, 10, null, null, true)),
                     unSeulSegment,
                     List.of()))
         .isInstanceOf(IllegalArgumentException.class);

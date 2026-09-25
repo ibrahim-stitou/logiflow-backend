@@ -22,9 +22,9 @@ import tools.jackson.databind.ObjectMapper;
  * Traduit entre le modèle de domaine {@link DossierTransport} et l'entité JPA {@link
  * DossierEntity}. Écrit à la main pour les mêmes raisons que les autres mappers du projet.
  *
- * <p>Les lignes de marchandise sont persistées dans {@code dossier.ligne_marchandise} (voir
- * {@link com.logiflow.tms.dossier.infrastructure.persistence.adapter.DossierRepositoryAdapter}),
- * pas dans une colonne JSON sur {@code dossier_transport} (supprimée en V24).
+ * <p>Les lignes de marchandise sont persistées dans {@code dossier.ligne_marchandise} (voir {@link
+ * com.logiflow.tms.dossier.infrastructure.persistence.adapter.DossierRepositoryAdapter}), pas dans
+ * une colonne JSON sur {@code dossier_transport} (supprimée en V24).
  */
 @Component
 @RequiredArgsConstructor
@@ -53,8 +53,7 @@ public class DossierMapper {
         entity.getTemperatureRequise(),
         lignes.stream().map(this::versLigneDomaine).toList(),
         versListe(entity.getSegmentsJson(), new TypeReference<List<Segment>>() {}),
-        versListeOuVide(
-            entity.getDocumentsJson(), new TypeReference<List<DocumentTransport>>() {}),
+        versListeOuVide(entity.getDocumentsJson(), new TypeReference<List<DocumentTransport>>() {}),
         entity.getArretChargementId(),
         entity.getArretDechargementId());
   }

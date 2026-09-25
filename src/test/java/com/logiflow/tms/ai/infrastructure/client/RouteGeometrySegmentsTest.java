@@ -8,7 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** Vérifie le raccordement de segments (fusion + ligne droite) pour les itinéraires multi-étapes. */
+/**
+ * Vérifie le raccordement de segments (fusion + ligne droite) pour les itinéraires multi-étapes.
+ */
 class RouteGeometrySegmentsTest {
 
   @Test
@@ -31,11 +33,11 @@ class RouteGeometrySegmentsTest {
   @Test
   void fusionnerEtapeEviteLesDoublons() throws Exception {
     Method fusionner =
-        OsrmRouteGeometryAdapter.class.getDeclaredMethod(
-            "fusionnerEtape", List.class, List.class);
+        OsrmRouteGeometryAdapter.class.getDeclaredMethod("fusionnerEtape", List.class, List.class);
     fusionner.setAccessible(true);
 
-    List<GeoPoint> accum = new ArrayList<>(List.of(new GeoPoint(33.0, -7.0), new GeoPoint(35.0, -5.5)));
+    List<GeoPoint> accum =
+        new ArrayList<>(List.of(new GeoPoint(33.0, -7.0), new GeoPoint(35.0, -5.5)));
     List<GeoPoint> etape =
         List.of(new GeoPoint(35.0, -5.5), new GeoPoint(36.0, -5.0), new GeoPoint(41.0, 2.0));
     fusionner.invoke(null, accum, etape);

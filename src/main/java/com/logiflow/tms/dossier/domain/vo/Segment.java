@@ -7,8 +7,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Point d'arrêt requis par un dossier de transport (chargement, escale ou déchargement),
- * localisé sur un site.
+ * Point d'arrêt requis par un dossier de transport (chargement, escale ou déchargement), localisé
+ * sur un site.
  */
 public record Segment(
     TypeSegment type, int ordre, UUID siteId, TimeWindow fenetre, Instant realiseLe) {

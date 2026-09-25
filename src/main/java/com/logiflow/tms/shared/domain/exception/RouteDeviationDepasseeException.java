@@ -14,10 +14,7 @@ public class RouteDeviationDepasseeException extends BusinessException {
   private final double maxAllowedPercent;
 
   public RouteDeviationDepasseeException(
-      PointDeviation point,
-      double detourKm,
-      double detourPercent,
-      double maxAllowedPercent) {
+      PointDeviation point, double detourKm, double detourPercent, double maxAllowedPercent) {
     super(
         String.format(
             "Détour %s de %.1f km (%.1f %%), seuil %.1f %%",

@@ -1,11 +1,11 @@
 package com.logiflow.tms.planning.application;
 
+import com.logiflow.tms.config.LogiflowProperties;
 import com.logiflow.tms.planning.domain.model.ArretVoyage;
 import com.logiflow.tms.planning.domain.port.out.VoyageArretRepository;
 import com.logiflow.tms.planning.domain.port.out.VoyageRepository;
 import com.logiflow.tms.planning.domain.service.InsertionItineraireDomainService;
 import com.logiflow.tms.planning.domain.service.InsertionItineraireDomainService.ResultatInsertion;
-import com.logiflow.tms.config.LogiflowProperties;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.exception.NotFoundException;
 import com.logiflow.tms.shared.domain.vo.GeoPoint;
@@ -17,7 +17,10 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Cas d'utilisation de contrôle de déviation lors de l'insertion de points hors itinéraire planifié. */
+/**
+ * Cas d'utilisation de contrôle de déviation lors de l'insertion de points hors itinéraire
+ * planifié.
+ */
 @Service
 @RequiredArgsConstructor
 public class DeviationItineraireService {
@@ -97,8 +100,7 @@ public class DeviationItineraireService {
     voyageRepository
         .parId(voyageId)
         .orElseThrow(
-            () ->
-                new NotFoundException("Aucun voyage trouvé pour l'identifiant " + voyageId));
+            () -> new NotFoundException("Aucun voyage trouvé pour l'identifiant " + voyageId));
 
     List<ArretVoyage> arrets = voyageArretRepository.parVoyageIdOrdonnes(voyageId);
     if (arrets.size() < 2) {

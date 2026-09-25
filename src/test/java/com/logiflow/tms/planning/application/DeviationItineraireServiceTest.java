@@ -3,6 +3,7 @@ package com.logiflow.tms.planning.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.logiflow.tms.config.LogiflowProperties;
 import com.logiflow.tms.planning.application.DeviationItineraireService.ResultatVerificationDeviation;
 import com.logiflow.tms.planning.domain.model.ArretVoyage;
 import com.logiflow.tms.planning.domain.model.Portee;
@@ -13,7 +14,6 @@ import com.logiflow.tms.planning.domain.model.Voyage;
 import com.logiflow.tms.planning.domain.port.out.VoyageArretRepository;
 import com.logiflow.tms.planning.domain.port.out.VoyageRepository;
 import com.logiflow.tms.planning.domain.service.InsertionItineraireDomainService;
-import com.logiflow.tms.config.LogiflowProperties;
 import com.logiflow.tms.planning.domain.vo.Affectation;
 import com.logiflow.tms.planning.domain.vo.Etape;
 import com.logiflow.tms.planning.domain.vo.Trajet;
@@ -68,8 +68,7 @@ class DeviationItineraireServiceTest {
             voyageId, new GeoPoint(0.5, 0.5), new GeoPoint(0, 1.5), 25d);
 
     assertThat(resultat.accepte()).isFalse();
-    assertThat(resultat.raisonsRejet())
-        .anyMatch(r -> r.contains("Détour de chargement"));
+    assertThat(resultat.raisonsRejet()).anyMatch(r -> r.contains("Détour de chargement"));
   }
 
   @Test
@@ -124,11 +123,7 @@ class DeviationItineraireServiceTest {
 
     when(voyageRepository.parId(voyageId)).thenReturn(Optional.of(voyage));
     when(voyageArretRepository.parVoyageIdOrdonnes(voyageId))
-        .thenReturn(
-            List.of(
-                arret(0, "A", 0, 0),
-                arret(1, "B", 0, 1),
-                arret(2, "C", 0, 2)));
+        .thenReturn(List.of(arret(0, "A", 0, 0), arret(1, "B", 0, 1), arret(2, "C", 0, 2)));
   }
 
   private ArretVoyage arret(int indice, String libelle, double lat, double lon) {

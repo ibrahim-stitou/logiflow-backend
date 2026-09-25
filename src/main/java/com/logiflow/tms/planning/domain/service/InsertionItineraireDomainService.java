@@ -10,7 +10,8 @@ import java.util.Objects;
  * Trouve la meilleure position d'insertion d'un point sur l'itinéraire existant d'un voyage.
  *
  * <p>Les distances utilisent la formule de Haversine (à vol d'oiseau). À terme, remplacer par des
- * distances/temps issus d'un moteur de routage (OSRM ou équivalent) pour une précision opérationnelle.
+ * distances/temps issus d'un moteur de routage (OSRM ou équivalent) pour une précision
+ * opérationnelle.
  */
 public class InsertionItineraireDomainService {
 
@@ -42,7 +43,8 @@ public class InsertionItineraireDomainService {
       if (i < indiceArretMinimum) {
         continue;
       }
-      ResultatInsertion candidat = evaluerInsertion(arretsOrdonnes.get(i), arretsOrdonnes.get(i + 1), i, point);
+      ResultatInsertion candidat =
+          evaluerInsertion(arretsOrdonnes.get(i), arretsOrdonnes.get(i + 1), i, point);
       if (meilleur == null || candidat.detourKm() < meilleur.detourKm()) {
         meilleur = candidat;
       }

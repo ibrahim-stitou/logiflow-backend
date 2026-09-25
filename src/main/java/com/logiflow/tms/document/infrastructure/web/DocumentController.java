@@ -64,7 +64,9 @@ public class DocumentController {
   @GetMapping("/api/v1/documents")
   public List<DocumentResponse> lister(
       @RequestParam TypeEntiteDocumentable typeEntite, @RequestParam UUID entiteId) {
-    return documentService.lister(typeEntite, entiteId).stream().map(DocumentResponse::depuis).toList();
+    return documentService.lister(typeEntite, entiteId).stream()
+        .map(DocumentResponse::depuis)
+        .toList();
   }
 
   @DeleteMapping("/api/v1/documents/{id}")

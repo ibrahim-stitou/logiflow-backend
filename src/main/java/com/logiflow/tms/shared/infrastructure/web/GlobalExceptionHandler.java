@@ -61,7 +61,8 @@ public class GlobalExceptionHandler {
             request);
     problemDetail.setProperty("code", "ROUTE_DEVIATION_EXCEEDED");
     problemDetail.setProperty(
-        "point", ex.point() == RouteDeviationDepasseeException.PointDeviation.PICKUP ? "pickup" : "dropoff");
+        "point",
+        ex.point() == RouteDeviationDepasseeException.PointDeviation.PICKUP ? "pickup" : "dropoff");
     problemDetail.setProperty("detourKm", ex.detourKm());
     problemDetail.setProperty("detourPercent", ex.detourPercent());
     problemDetail.setProperty("maxAllowedPercent", ex.maxAllowedPercent());
@@ -147,11 +148,7 @@ public class GlobalExceptionHandler {
   public ProblemDetail gererParametreManquant(
       MissingServletRequestParameterException ex, HttpServletRequest request) {
     return ApiError.of(
-        HttpStatus.BAD_REQUEST,
-        "parametre-manquant",
-        "Requête invalide",
-        ex.getMessage(),
-        request);
+        HttpStatus.BAD_REQUEST, "parametre-manquant", "Requête invalide", ex.getMessage(), request);
   }
 
   @ExceptionHandler(NoResourceFoundException.class)

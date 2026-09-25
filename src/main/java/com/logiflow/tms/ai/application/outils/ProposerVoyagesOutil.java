@@ -115,11 +115,13 @@ class ProposerVoyagesOutil implements OutilCopilote {
         option.dossierIds().stream()
             .map(id -> propositions.libellesDossiers().getOrDefault(id, id))
             .toList();
-    option.dossierIds().forEach(
-        id ->
-            sources.add(
-                new SourceCopilote(
-                    "DOSSIER", propositions.libellesDossiers().getOrDefault(id, id), id)));
+    option
+        .dossierIds()
+        .forEach(
+            id ->
+                sources.add(
+                    new SourceCopilote(
+                        "DOSSIER", propositions.libellesDossiers().getOrDefault(id, id), id)));
     return ligne(
         "option",
         option.rang(),
@@ -138,7 +140,9 @@ class ProposerVoyagesOutil implements OutilCopilote {
         "remorque",
         option.remorqueId() == null
             ? null
-            : propositions.libellesRemorques().getOrDefault(option.remorqueId(), option.remorqueId()),
+            : propositions
+                .libellesRemorques()
+                .getOrDefault(option.remorqueId(), option.remorqueId()),
         "chauffeurs",
         option.chauffeurIds().stream()
             .map(id -> propositions.libellesChauffeurs().getOrDefault(id, id))

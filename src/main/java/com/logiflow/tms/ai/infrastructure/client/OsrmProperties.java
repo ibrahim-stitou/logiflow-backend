@@ -9,9 +9,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "logiflow.osrm")
 public record OsrmProperties(
-    @NotBlank String baseUrl,
-    Duration connectTimeout,
-    Duration readTimeout) {
+    @NotBlank String baseUrl, Duration connectTimeout, Duration readTimeout) {
 
   public OsrmProperties {
     if (connectTimeout == null) {

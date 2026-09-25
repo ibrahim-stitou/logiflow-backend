@@ -2,13 +2,13 @@ package com.logiflow.tms.maintenance.domain.model;
 
 import com.logiflow.tms.maintenance.domain.vo.EnginRef;
 import com.logiflow.tms.maintenance.domain.vo.LigneCout;
+import com.logiflow.tms.shared.domain.DeviseApplication;
 import com.logiflow.tms.shared.domain.exception.BusinessException;
 import com.logiflow.tms.shared.domain.vo.Money;
 import com.logiflow.tms.shared.domain.vo.Reference;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import com.logiflow.tms.shared.domain.DeviseApplication;
 import java.util.Currency;
 import java.util.List;
 import java.util.Map;

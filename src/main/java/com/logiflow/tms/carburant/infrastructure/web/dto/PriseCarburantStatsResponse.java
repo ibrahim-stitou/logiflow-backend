@@ -8,8 +8,7 @@ import java.util.List;
 public record PriseCarburantStatsResponse(
     long nombre, double litresTotal, BigDecimal montantTotal, List<ParType> parType) {
 
-  public record ParType(
-      TypeCarburant type, long nombre, double litres, BigDecimal montant) {}
+  public record ParType(TypeCarburant type, long nombre, double litres, BigDecimal montant) {}
 
   public static PriseCarburantStatsResponse depuis(
       PriseCarburantRepository.PriseCarburantStats stats) {
@@ -18,9 +17,7 @@ public record PriseCarburantStatsResponse(
         stats.litresTotal(),
         stats.montantTotal(),
         stats.parType().stream()
-            .map(
-                row ->
-                    new ParType(row.type(), row.nombre(), row.litres(), row.montant()))
+            .map(row -> new ParType(row.type(), row.nombre(), row.litres(), row.montant()))
             .toList());
   }
 }

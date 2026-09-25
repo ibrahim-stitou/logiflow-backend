@@ -39,8 +39,7 @@ public class UtilisateurEntity extends BaseEntity {
   protected UtilisateurEntity() {}
 
   @Builder
-  public UtilisateurEntity(
-      UUID id, String login, String email, String rolesJson, boolean actif) {
+  public UtilisateurEntity(UUID id, String login, String email, String rolesJson, boolean actif) {
     definirId(id);
     this.login = login;
     this.email = email;

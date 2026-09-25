@@ -127,8 +127,26 @@ public final class Remorque {
       Double temperatureMin,
       Double temperatureMax) {
     return creer(
-        id, immatriculation, null, carrosserie, null, null, null, null, null, null, capaciteUtile,
-        null, null, null, groupeFroid, temperatureMin, temperatureMax, null, null, null);
+        id,
+        immatriculation,
+        null,
+        carrosserie,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        capaciteUtile,
+        null,
+        null,
+        null,
+        groupeFroid,
+        temperatureMin,
+        temperatureMax,
+        null,
+        null,
+        null);
   }
 
   public static Remorque creer(
@@ -253,7 +271,8 @@ public final class Remorque {
       throw new IllegalArgumentException("Le kilométrage relevé ne peut pas régresser");
     }
     if (nouvellesHeuresGroupeFroid < this.heuresGroupeFroid) {
-      throw new IllegalArgumentException("Les heures groupe froid relevées ne peuvent pas régresser");
+      throw new IllegalArgumentException(
+          "Les heures groupe froid relevées ne peuvent pas régresser");
     }
     this.kilometrage = nouveauKilometrage;
     this.heuresGroupeFroid = nouvellesHeuresGroupeFroid;

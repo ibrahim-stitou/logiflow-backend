@@ -70,11 +70,7 @@ public class PriseCarburantEntity extends BaseEntity {
 
   /** Met à jour l'état métier mutable sans remplacer l'identité JPA. */
   public void ecraserEtatMetier(
-      UUID stationId,
-      String typeCarburant,
-      double litrage,
-      BigDecimal montantTtc,
-      String statut) {
+      UUID stationId, String typeCarburant, double litrage, BigDecimal montantTtc, String statut) {
     this.stationId = stationId;
     this.typeCarburant = typeCarburant;
     this.litrage = litrage;

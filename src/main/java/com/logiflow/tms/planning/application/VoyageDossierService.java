@@ -49,9 +49,7 @@ public class VoyageDossierService {
   private final LogiflowProperties logiflowProperties;
 
   public record ResultatVerificationAjout(
-      boolean compatible,
-      DeviationEchec deviation,
-      List<TronconEnEchec> tronconsEnEchec) {
+      boolean compatible, DeviationEchec deviation, List<TronconEnEchec> tronconsEnEchec) {
 
     public record DeviationEchec(
         String point, double detourKm, double detourPercent, double maxAllowedPercent) {}
@@ -143,11 +141,7 @@ public class VoyageDossierService {
     boolean dechargementNouveau = command.dechargement().nouvelArret() != null;
     if (chargementNouveau || dechargementNouveau) {
       verifierDeviationSiNecessaire(
-          voyageId,
-          command,
-          arrets,
-          chargementNouveau,
-          dechargementNouveau);
+          voyageId, command, arrets, chargementNouveau, dechargementNouveau);
     }
 
     UUID arretChargementId =
@@ -175,8 +169,7 @@ public class VoyageDossierService {
         command.dossierId(), arretChargementId, arretDechargementId);
 
     voyage.ajouterDossier(command.dossierId());
-    voyage.mettreAJourRemplissage(
-        calculerTauxRemplissage(voyage, command.dossierId(), dossier));
+    voyage.mettreAJourRemplissage(calculerTauxRemplissage(voyage, command.dossierId(), dossier));
     voyageRepository.sauvegarder(voyage);
 
     return command.dossierId();
@@ -196,10 +189,7 @@ public class VoyageDossierService {
     PointDeviation point =
         "pickup".equals(deviation.point()) ? PointDeviation.PICKUP : PointDeviation.DROPOFF;
     throw new RouteDeviationDepasseeException(
-        point,
-        deviation.detourKm(),
-        deviation.detourPercent(),
-        deviation.maxAllowedPercent());
+        point, deviation.detourKm(), deviation.detourPercent(), deviation.maxAllowedPercent());
   }
 
   private ResultatVerificationAjout.DeviationEchec evaluerDeviation(
@@ -223,8 +213,7 @@ public class VoyageDossierService {
       return null;
     }
 
-    if (deviation.dechargement().apresIndiceArret()
-        < deviation.chargement().apresIndiceArret()) {
+    if (deviation.dechargement().apresIndiceArret() < deviation.chargement().apresIndiceArret()) {
       throw new BusinessException(
           "Le point de déchargement ne peut pas être inséré avant le point de chargement sur l'itinéraire");
     }
@@ -232,10 +221,7 @@ public class VoyageDossierService {
     ResultatInsertion insertionChargement = deviation.chargement();
     if (chargementNouveau && insertionChargement.detourPourcent() > seuil) {
       return new ResultatVerificationAjout.DeviationEchec(
-          "pickup",
-          insertionChargement.detourKm(),
-          insertionChargement.detourPourcent(),
-          seuil);
+          "pickup", insertionChargement.detourKm(), insertionChargement.detourPourcent(), seuil);
     }
 
     ResultatInsertion insertionDechargement = deviation.dechargement();
@@ -279,9 +265,7 @@ public class VoyageDossierService {
       NouvelArret nouvel = command.dechargement().nouvelArret();
       ResultatInsertion insertion =
           insertionItineraireDomainService.trouverMeilleureInsertion(
-              itineraire,
-              new GeoPoint(nouvel.latitude(), nouvel.longitude()),
-              indiceChargement);
+              itineraire, new GeoPoint(nouvel.latitude(), nouvel.longitude()), indiceChargement);
       indiceDechargement = insertion.apresIndiceArret() + 1;
       itineraire = simulerInsertion(voyageId, itineraire, insertion, nouvel);
     }
@@ -316,10 +300,7 @@ public class VoyageDossierService {
   }
 
   private UUID resoudreArretChargement(
-      UUID voyageId,
-      SelectionArret selection,
-      List<ArretVoyage> arrets,
-      boolean estNouveau) {
+      UUID voyageId, SelectionArret selection, List<ArretVoyage> arrets, boolean estNouveau) {
     if (!estNouveau) {
       UUID arretId = selection.arretExistantId();
       verifierArretDuVoyage(arrets, arretId);
@@ -411,8 +392,7 @@ public class VoyageDossierService {
 
   private GeoPoint pointDepuisSelection(SelectionArret selection, List<ArretVoyage> arrets) {
     if (selection.nouvelArret() != null) {
-      return new GeoPoint(
-          selection.nouvelArret().latitude(), selection.nouvelArret().longitude());
+      return new GeoPoint(selection.nouvelArret().latitude(), selection.nouvelArret().longitude());
     }
     return arrets.stream()
         .filter(a -> a.id().equals(selection.arretExistantId()))
@@ -439,16 +419,14 @@ public class VoyageDossierService {
     return voyageRepository
         .parId(voyageId)
         .orElseThrow(
-            () ->
-                new NotFoundException("Aucun voyage trouvé pour l'identifiant " + voyageId));
+            () -> new NotFoundException("Aucun voyage trouvé pour l'identifiant " + voyageId));
   }
 
   private Voyage chargerVoyageAvecVerrouillage(UUID voyageId) {
     return voyageRepository
         .parIdAvecVerrouillage(voyageId)
         .orElseThrow(
-            () ->
-                new NotFoundException("Aucun voyage trouvé pour l'identifiant " + voyageId));
+            () -> new NotFoundException("Aucun voyage trouvé pour l'identifiant " + voyageId));
   }
 
   private void validerDossierTransportable(DossierSummary dossier) {
@@ -484,7 +462,8 @@ public class VoyageDossierService {
   private void verifierArretDuVoyage(List<ArretVoyage> arrets, UUID arretId) {
     boolean present = arrets.stream().anyMatch(a -> a.id().equals(arretId));
     if (!present) {
-      throw new BusinessException("L'arrêt " + arretId + " n'appartient pas à l'itinéraire du voyage");
+      throw new BusinessException(
+          "L'arrêt " + arretId + " n'appartient pas à l'itinéraire du voyage");
     }
   }
 

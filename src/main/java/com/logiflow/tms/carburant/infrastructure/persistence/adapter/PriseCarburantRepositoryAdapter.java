@@ -1,5 +1,9 @@
 package com.logiflow.tms.carburant.infrastructure.persistence.adapter;
 
+import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versBigDecimal;
+import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versEntier;
+import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versReel;
+
 import com.logiflow.tms.carburant.domain.model.PriseCarburant;
 import com.logiflow.tms.carburant.domain.model.StatutPrise;
 import com.logiflow.tms.carburant.domain.model.TypeCarburant;
@@ -9,9 +13,6 @@ import com.logiflow.tms.carburant.infrastructure.persistence.repository.PriseCar
 import com.logiflow.tms.shared.application.Page;
 import com.logiflow.tms.shared.application.PageRequest;
 import com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat;
-import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versBigDecimal;
-import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versEntier;
-import static com.logiflow.tms.shared.infrastructure.persistence.JpaTupleAgregat.versReel;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

@@ -42,8 +42,7 @@ class CapaciteTronconDomainServiceTest {
 
   @Test
   void unDossierSurUnTronconIntermediaireNeChargeQueCeTroncon() {
-    List<DossierSurTroncons> dossiers =
-        List.of(new DossierSurTroncons(1000, 5.0, 1, 2));
+    List<DossierSurTroncons> dossiers = List.of(new DossierSurTroncons(1000, 5.0, 1, 2));
 
     List<UtilisationTroncon> utilisation =
         service.calculerUtilisation(arretsQuatrePoints, dossiers);
@@ -57,8 +56,7 @@ class CapaciteTronconDomainServiceTest {
 
   @Test
   void unDossierSurToutLeVoyageChargeTousLesTroncons() {
-    List<DossierSurTroncons> dossiers =
-        List.of(new DossierSurTroncons(800, 4.0, 0, 3));
+    List<DossierSurTroncons> dossiers = List.of(new DossierSurTroncons(800, 4.0, 0, 3));
 
     List<UtilisationTroncon> utilisation =
         service.calculerUtilisation(arretsQuatrePoints, dossiers);
@@ -69,14 +67,12 @@ class CapaciteTronconDomainServiceTest {
 
   @Test
   void unNouveauDossierCompatibleEstAccepte() {
-    List<DossierSurTroncons> dossiers =
-        List.of(new DossierSurTroncons(500, 2.0, 0, 2));
+    List<DossierSurTroncons> dossiers = List.of(new DossierSurTroncons(500, 2.0, 0, 2));
     List<UtilisationTroncon> utilisation =
         service.calculerUtilisation(arretsQuatrePoints, dossiers);
     Capacite max = new Capacite(2000, 20.0, 33);
 
-    ResultatVerification resultat =
-        service.verifierAjoutDossier(utilisation, max, 1, 3, 400, 3.0);
+    ResultatVerification resultat = service.verifierAjoutDossier(utilisation, max, 1, 3, 400, 3.0);
 
     assertThat(resultat.compatible()).isTrue();
     assertThat(resultat.tronconsDepasses()).isEmpty();
@@ -84,14 +80,12 @@ class CapaciteTronconDomainServiceTest {
 
   @Test
   void unDepassementPoidsSurUnSeulTronconEstSignale() {
-    List<DossierSurTroncons> dossiers =
-        List.of(new DossierSurTroncons(900, 1.0, 0, 3));
+    List<DossierSurTroncons> dossiers = List.of(new DossierSurTroncons(900, 1.0, 0, 3));
     List<UtilisationTroncon> utilisation =
         service.calculerUtilisation(arretsQuatrePoints, dossiers);
     Capacite max = new Capacite(1000, 20.0, 33);
 
-    ResultatVerification resultat =
-        service.verifierAjoutDossier(utilisation, max, 1, 3, 200, 1.0);
+    ResultatVerification resultat = service.verifierAjoutDossier(utilisation, max, 1, 3, 200, 1.0);
 
     assertThat(resultat.compatible()).isFalse();
     assertThat(resultat.tronconsDepasses())
@@ -110,13 +104,10 @@ class CapaciteTronconDomainServiceTest {
   void uneRouteDeDeuxArretsExposeUnSeulTroncon() {
     UUID voyageId = UUID.randomUUID();
     List<ArretVoyage> deuxArrets =
-        List.of(
-            arret(arretA, voyageId, 0, "Départ"),
-            arret(arretB, voyageId, 1, "Arrivée"));
+        List.of(arret(arretA, voyageId, 0, "Départ"), arret(arretB, voyageId, 1, "Arrivée"));
 
     List<UtilisationTroncon> utilisation =
-        service.calculerUtilisation(
-            deuxArrets, List.of(new DossierSurTroncons(600, 2.0, 0, 1)));
+        service.calculerUtilisation(deuxArrets, List.of(new DossierSurTroncons(600, 2.0, 0, 1)));
 
     assertThat(utilisation).hasSize(1);
     assertThat(utilisation.getFirst().poidsUtiliseKg()).isEqualTo(600);
@@ -128,12 +119,10 @@ class CapaciteTronconDomainServiceTest {
         service.calculerUtilisation(arretsQuatrePoints, List.of());
     Capacite max = new Capacite(5000, 10.0, 33);
 
-    ResultatVerification resultat =
-        service.verifierAjoutDossier(utilisation, max, 0, 3, 100, 12.0);
+    ResultatVerification resultat = service.verifierAjoutDossier(utilisation, max, 0, 3, 100, 12.0);
 
     assertThat(resultat.compatible()).isFalse();
-    assertThat(resultat.tronconsDepasses())
-        .allMatch(t -> t.motif() == MotifDepassement.VOLUME);
+    assertThat(resultat.tronconsDepasses()).allMatch(t -> t.motif() == MotifDepassement.VOLUME);
   }
 
   private static ArretVoyage arret(UUID id, UUID voyageId, int indice, String libelle) {

@@ -34,10 +34,7 @@ class VoyageArretMaintenanceServiceTest {
 
     when(dossierApi.listerArretsVoyageReferences(List.of(dossierId))).thenReturn(Set.of(original));
     when(voyageArretRepository.parVoyageIdOrdonnes(voyageId))
-        .thenReturn(
-            List.of(
-                arret(original, voyageId, 0, true),
-                arret(insere, voyageId, 1, false)));
+        .thenReturn(List.of(arret(original, voyageId, 0, true), arret(insere, voyageId, 1, false)));
 
     int supprimes = service.purgerArretsOrphelins(voyageId, List.of(dossierId));
 
@@ -47,7 +44,6 @@ class VoyageArretMaintenanceServiceTest {
   }
 
   private static ArretVoyage arret(UUID id, UUID voyageId, int indice, boolean original) {
-    return ArretVoyage.creer(
-        id, voyageId, indice, "Stop", new GeoPoint(0, indice), null, original);
+    return ArretVoyage.creer(id, voyageId, indice, "Stop", new GeoPoint(0, indice), null, original);
   }
 }

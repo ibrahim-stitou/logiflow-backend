@@ -88,9 +88,7 @@ class CarburantControllerIT extends AbstractIntegrationTest {
     UUID priseId = UUID.fromString(objectMapper.readTree(priseJson).get("id").asText());
 
     mockMvc
-        .perform(
-            post("/api/v1/prises-carburant/{id}/valider", priseId)
-                .with(jwtExploitant()))
+        .perform(post("/api/v1/prises-carburant/{id}/valider", priseId).with(jwtExploitant()))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.statut").value("VALIDEE"));
   }

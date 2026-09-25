@@ -32,7 +32,19 @@ class ProposerVoyagesOutilTest {
     Instant depart = Instant.parse("2026-10-05T06:00:00Z");
     Arret arret =
         new Arret(
-            0, "s1", "Lyon", 45.7, 4.8, List.of("d1"), List.of(), depart, depart, 0, 0, 6000, 0,
+            0,
+            "s1",
+            "Lyon",
+            45.7,
+            4.8,
+            List.of("d1"),
+            List.of(),
+            depart,
+            depart,
+            0,
+            0,
+            6000,
+            0,
             true);
     Option option =
         new Option(

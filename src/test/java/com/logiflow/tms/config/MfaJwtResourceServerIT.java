@@ -26,8 +26,8 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Vérifie le branchement réel du {@link MfaJwtValidator} sur la chaîne de validation du
- * {@code JwtDecoder} auto-configuré, en profil non permissif : un jeton signé correctement mais ne
+ * Vérifie le branchement réel du {@link MfaJwtValidator} sur la chaîne de validation du {@code
+ * JwtDecoder} auto-configuré, en profil non permissif : un jeton signé correctement mais ne
  * prouvant pas de MFA est rejeté en 401, un jeton portant {@code amr = ["pwd","otp"]} est accepté.
  */
 @AutoConfigureMockMvc

@@ -21,20 +21,14 @@ class InsertionItineraireDomainServiceTest {
   void setUp() {
     service = new InsertionItineraireDomainService();
     voyageId = UUID.randomUUID();
-    routeEquatoriale =
-        List.of(
-            arret(0, "A", 0, 0),
-            arret(1, "B", 0, 1),
-            arret(2, "C", 0, 2));
+    routeEquatoriale = List.of(arret(0, "A", 0, 0), arret(1, "B", 0, 1), arret(2, "C", 0, 2));
   }
 
   @Test
   void uneRouteMinimaleDeDeuxArretsAccepteUneInsertion() {
-    List<ArretVoyage> deuxArrets =
-        List.of(arret(0, "Départ", 0, 0), arret(1, "Arrivée", 0, 2));
+    List<ArretVoyage> deuxArrets = List.of(arret(0, "Départ", 0, 0), arret(1, "Arrivée", 0, 2));
 
-    ResultatInsertion resultat =
-        service.trouverMeilleureInsertion(deuxArrets, new GeoPoint(0, 1));
+    ResultatInsertion resultat = service.trouverMeilleureInsertion(deuxArrets, new GeoPoint(0, 1));
 
     assertThat(resultat.apresIndiceArret()).isZero();
     assertThat(service.detourAcceptable(resultat.detourPourcent(), 25)).isTrue();

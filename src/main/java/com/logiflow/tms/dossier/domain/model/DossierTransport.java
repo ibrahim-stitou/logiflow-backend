@@ -224,7 +224,8 @@ public final class DossierTransport {
   public boolean contientAdr(java.util.function.Predicate<UUID> marchandiseEstDangereuse) {
     return lignesMarchandise.stream()
         .anyMatch(
-            ligne -> ligne.estMatiereDangereuse(marchandiseEstDangereuse.test(ligne.marchandiseId())));
+            ligne ->
+                ligne.estMatiereDangereuse(marchandiseEstDangereuse.test(ligne.marchandiseId())));
   }
 
   /**

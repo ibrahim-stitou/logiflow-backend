@@ -35,19 +35,15 @@ public record VoyageCapaciteResponse(
         arretsOrdonnes.stream()
             .map(
                 arret ->
-                    new ArretCapaciteResponse(
-                        arret.id(), arret.indiceSequence(), arret.libelle()))
+                    new ArretCapaciteResponse(arret.id(), arret.indiceSequence(), arret.libelle()))
             .toList();
 
     List<TronconCapaciteResponse> troncons =
         vue.troncons().stream()
-            .map(
-                troncon ->
-                    versTroncon(troncon, capacite.poidsKg(), capacite.volumeM3()))
+            .map(troncon -> versTroncon(troncon, capacite.poidsKg(), capacite.volumeM3()))
             .toList();
 
-    return new VoyageCapaciteResponse(
-        capacite.poidsKg(), capacite.volumeM3(), arrets, troncons);
+    return new VoyageCapaciteResponse(capacite.poidsKg(), capacite.volumeM3(), arrets, troncons);
   }
 
   private static TronconCapaciteResponse versTroncon(

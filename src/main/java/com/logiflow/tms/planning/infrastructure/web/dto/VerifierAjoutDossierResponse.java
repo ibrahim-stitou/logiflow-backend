@@ -7,15 +7,10 @@ import java.util.UUID;
 
 /** Résultat du contrôle à blanc d'ajout d'un dossier à un voyage. */
 public record VerifierAjoutDossierResponse(
-    boolean compatible,
-    DeviationResponse deviation,
-    List<TronconEchecResponse> failedLegs) {
+    boolean compatible, DeviationResponse deviation, List<TronconEchecResponse> failedLegs) {
 
   public record DeviationResponse(
-      String point,
-      double detourKm,
-      double detourPercent,
-      double maxAllowedPercent) {}
+      String point, double detourKm, double detourPercent, double maxAllowedPercent) {}
 
   public record TronconEchecResponse(
       UUID arretDepartId,
