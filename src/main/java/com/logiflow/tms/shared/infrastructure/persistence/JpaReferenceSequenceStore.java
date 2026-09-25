@@ -19,14 +19,17 @@ public class JpaReferenceSequenceStore implements ReferenceSequenceStore {
       SELECT reference FROM commande.commande WHERE reference LIKE :pattern
       UNION ALL
       SELECT reference FROM planning.voyage WHERE reference LIKE :pattern
+      UNION ALL
+      SELECT reference FROM maintenance.ordre_travail WHERE reference LIKE :pattern
+      UNION ALL
+      SELECT reference FROM maintenance.sinistre WHERE reference LIKE :pattern
       """;
 
   @PersistenceContext private EntityManager entityManager;
 
   @Override
   public long derniereSequence(String prefixe, int annee) {
-    String motif =
-        prefixe.toUpperCase(Locale.ROOT) + "-" + annee + "-%";
+    String motif = prefixe.toUpperCase(Locale.ROOT) + "-" + annee + "-%";
     @SuppressWarnings("unchecked")
     List<String> references =
         entityManager

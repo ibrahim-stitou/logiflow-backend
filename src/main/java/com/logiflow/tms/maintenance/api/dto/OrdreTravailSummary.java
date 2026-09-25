@@ -4,12 +4,19 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/** Vue publique d'un ordre de travail de maintenance. */
+/** Vue publique d'un ordre de travail ({@code typeEngin} : VEHICULE ou REMORQUE). */
 public record OrdreTravailSummary(
     UUID id,
-    UUID vehiculeId,
+    String reference,
+    String typeEngin,
+    UUID enginId,
     String type,
+    String nature,
     String statut,
-    LocalDateTime datePlanifiee,
-    BigDecimal cout,
-    String devise) {}
+    String titre,
+    LocalDateTime debutPlanifie,
+    LocalDateTime finPlanifiee,
+    LocalDateTime finReelle,
+    Integer kilometrage,
+    boolean immobilisation,
+    BigDecimal totalTtc) {}

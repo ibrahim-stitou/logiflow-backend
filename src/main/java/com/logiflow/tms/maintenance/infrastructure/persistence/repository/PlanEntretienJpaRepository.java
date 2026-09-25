@@ -6,10 +6,24 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface PlanEntretienJpaRepository extends JpaRepository<PlanEntretienEntity, UUID> {
 
-  List<PlanEntretienEntity> findByVehiculeId(UUID vehiculeId);
+  @Query(
+      """
+      SELECT e FROM PlanEntretienEntity e
+      WHERE (:typeEngin IS NULL OR e.typeEngin = :typeEngin)
+        AND (:enginId IS NULL OR e.enginId = :enginId)
+        AND (:actif IS NULL OR e.actif = :actif)
+      ORDER BY e.libelle
+      """)
+  Page<PlanEntretienEntity> rechercher(
+      @Param("typeEngin") String typeEngin,
+      @Param("enginId") UUID enginId,
+      @Param("actif") Boolean actif,
+      Pageable pageable);
 
-  Page<PlanEntretienEntity> findByVehiculeId(UUID vehiculeId, Pageable pageable);
+  List<PlanEntretienEntity> findByActifTrue();
 }

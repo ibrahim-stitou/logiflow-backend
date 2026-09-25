@@ -43,4 +43,16 @@ public interface VehiculeApi {
 
   /** État (compteurs, âge) des véhicules en service, pour l'analyse de maintenance. */
   List<VehiculeEtatSummary> listerPourMaintenance();
+
+  /**
+   * Immobilise l'engin pour la maintenance ({@code sinistre} = false → EN_MAINTENANCE) ou suite à
+   * un sinistre (true → IMMOBILISE). Sans effet sur un engin hors service.
+   */
+  void signalerImmobilisation(UUID id, boolean sinistre);
+
+  /** Remet l'engin DISPONIBLE s'il était EN_MAINTENANCE ou IMMOBILISE. */
+  void signalerRemiseEnService(UUID id);
+
+  /** Relève les compteurs ; une valeur inférieure à la valeur actuelle est ignorée. */
+  void releverCompteurs(UUID id, Integer kilometrage, Integer heures);
 }

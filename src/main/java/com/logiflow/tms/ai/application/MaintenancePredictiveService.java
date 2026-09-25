@@ -83,11 +83,11 @@ public class MaintenancePredictiveService {
     Map<UUID, List<PlanEntretienSummary>> plans =
         parVehicule(
             toutes(maintenanceApi::plansEntretien, command.vehiculeId()),
-            PlanEntretienSummary::vehiculeId);
+            PlanEntretienSummary::enginId);
     Map<UUID, List<OrdreTravailSummary>> ordres =
         parVehicule(
             toutes(maintenanceApi::ordresTravail, command.vehiculeId()),
-            OrdreTravailSummary::vehiculeId);
+            OrdreTravailSummary::enginId);
     Map<UUID, List<ActiviteVoyageSummary>> voyages =
         voyageApi
             .activiteVehicules(
@@ -137,9 +137,9 @@ public class MaintenancePredictiveService {
                           new ContexteMaintenance.Ordre(
                               o.type(),
                               o.statut(),
-                              o.datePlanifiee() == null
-                                  ? null
-                                  : o.datePlanifiee().atZone(FUSEAU_EXPLOITATION).toInstant()))
+                              (o.finReelle() != null ? o.finReelle() : o.debutPlanifie())
+                                  .atZone(FUSEAU_EXPLOITATION)
+                                  .toInstant()))
                   .toList(),
               documentApi.lister("VEHICULE", v.id()).stream()
                   .map(d -> new ContexteMaintenance.Document(d.typeDocument(), d.dateExpiration()))

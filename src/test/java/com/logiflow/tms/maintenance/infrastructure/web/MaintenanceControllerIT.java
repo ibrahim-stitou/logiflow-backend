@@ -2,232 +2,357 @@ package com.logiflow.tms.maintenance.infrastructure.web;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.logiflow.tms.fleet.domain.model.TypeVehicule;
 import com.logiflow.tms.fleet.infrastructure.web.dto.VehiculeRequest;
-import com.logiflow.tms.maintenance.domain.model.TypeIntervention;
-import com.logiflow.tms.maintenance.infrastructure.web.dto.OrdreTravailRequest;
-import com.logiflow.tms.maintenance.infrastructure.web.dto.PlanEntretienRequest;
 import com.logiflow.tms.maintenance.infrastructure.web.dto.ScoreSanteRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
-import com.logiflow.tms.shared.domain.vo.Money;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Currency;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+/**
+ * Test d'intégration du module maintenance refondu : cycle d'un OT jusqu'à la clôture (statut de la
+ * flotte, compteurs, plan), sinistre avec contrat d'assurance et OT de réparation, coûts.
+ */
 @AutoConfigureMockMvc
 class MaintenanceControllerIT extends AbstractIntegrationTest {
+
+  private static final LocalDateTime DEBUT = LocalDateTime.now().withNano(0).minusDays(1);
 
   @Autowired private MockMvc mockMvc;
   @Autowired private ObjectMapper objectMapper;
 
+  private ResultActions envoyer(
+      org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder requete,
+      Object corps)
+      throws Exception {
+    return mockMvc.perform(
+        requete
+            .with(jwt())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(corps)));
+  }
+
+  private JsonNode json(ResultActions resultat) throws Exception {
+    return objectMapper.readTree(resultat.andReturn().getResponse().getContentAsString());
+  }
+
+  private UUID creer(String uri, Object corps) throws Exception {
+    return UUID.fromString(
+        json(envoyer(post(uri), corps).andExpect(status().isCreated())).get("id").asText());
+  }
+
   private UUID creerVehicule() throws Exception {
-    var requete =
+    return creer(
+        "/api/v1/vehicules",
         new VehiculeRequest(
-            "MT-IT-001", TypeVehicule.PORTEUR, null, null, null, null, null, null, 19000, null,
-            9000, null, null, null, null, null, null, false, null, null, null, null, null);
-    String reponse =
-        mockMvc
-            .perform(
-                post("/api/v1/vehicules")
-                    .with(jwt())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(objectMapper.writeValueAsString(requete)))
+            "MT-" + (100 + (int) (Math.random() * 900)) + "-IT",
+            TypeVehicule.PORTEUR,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            19000,
+            null,
+            9000,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            false,
+            null,
+            null,
+            null,
+            null,
+            null));
+  }
+
+  private static Map<String, Object> details(String titre) {
+    return Map.of(
+        "type",
+        "ENTRETIEN_PREVENTIF",
+        "nature",
+        "PREVENTIF",
+        "titre",
+        titre,
+        "debutPlanifie",
+        DEBUT.toString(),
+        "finPlanifiee",
+        DEBUT.plusHours(4).toString(),
+        "budgetEstime",
+        300);
+  }
+
+  private static List<Map<String, Object>> lignes() {
+    return List.of(
+        Map.of(
+            "type",
+            "MAIN_OEUVRE",
+            "designation",
+            "Main-d'œuvre",
+            "quantite",
+            2,
+            "prixUnitaireHt",
+            65),
+        Map.of(
+            "type",
+            "PIECE",
+            "designation",
+            "Filtre à huile",
+            "referencePiece",
+            "FH-12",
+            "quantite",
+            1,
+            "prixUnitaireHt",
+            40,
+            "tauxTva",
+            20));
+  }
+
+  @Test
+  void cycleDUnOtIssuDUnPlanJusquALaCloture() throws Exception {
+    UUID vehiculeId = creerVehicule();
+    UUID planId =
+        creer(
+            "/api/v1/maintenance/plans",
+            Map.of(
+                "engin", Map.of("type", "VEHICULE", "id", vehiculeId),
+                "parametres",
+                    Map.of(
+                        "libelle",
+                        "Révision",
+                        "periodiciteKm",
+                        40000,
+                        "periodiciteMois",
+                        12,
+                        "seuilAlerteKm",
+                        2000,
+                        "seuilAlerteJours",
+                        15,
+                        "dureeEstimeeMin",
+                        240)));
+
+    String otJson =
+        envoyer(
+                post("/api/v1/maintenance/ordres-travail"),
+                Map.of(
+                    "engin", Map.of("type", "VEHICULE", "id", vehiculeId),
+                    "origine", "PLAN_ENTRETIEN",
+                    "planId", planId,
+                    "details", details("Révision annuelle"),
+                    "lignes", lignes()))
             .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.reference").value(org.hamcrest.Matchers.startsWith("OT-")))
+            .andExpect(jsonPath("$.statut").value("PLANIFIE"))
+            .andExpect(jsonPath("$.totalHt").value(170.0))
+            .andExpect(jsonPath("$.totalTtc").value(204.0))
             .andReturn()
             .getResponse()
             .getContentAsString();
-    return UUID.fromString(objectMapper.readTree(reponse).get("id").asText());
+    String otId = objectMapper.readTree(otJson).get("id").asText();
+
+    envoyer(
+            patch("/api/v1/maintenance/ordres-travail/{id}/statut", otId),
+            Map.of("valeur", "EN_COURS"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.debutReel").exists());
+    mockMvc
+        .perform(get("/api/v1/vehicules/{id}", vehiculeId).with(jwt()))
+        .andExpect(jsonPath("$.statut").value("EN_MAINTENANCE"));
+
+    envoyer(
+            post("/api/v1/maintenance/ordres-travail/{id}/cloture", otId),
+            Map.of(
+                "finReelle",
+                LocalDateTime.now(java.time.ZoneId.of("Europe/Paris"))
+                    .plusMinutes(5)
+                    .withNano(0)
+                    .toString(),
+                "kilometrage",
+                12345,
+                "travauxRealises",
+                "Vidange et filtres",
+                "numeroFacture",
+                "FAC-1"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.statut").value("TERMINE"));
+
+    mockMvc
+        .perform(get("/api/v1/vehicules/{id}", vehiculeId).with(jwt()))
+        .andExpect(jsonPath("$.statut").value("DISPONIBLE"))
+        .andExpect(jsonPath("$.kilometrage").value(12345));
+    mockMvc
+        .perform(get("/api/v1/maintenance/plans/{id}", planId).with(jwt()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.derniereKm").value(12345))
+        .andExpect(jsonPath("$.echeance.kmRestant").value(40000))
+        .andExpect(jsonPath("$.echeance.etat").value("OK"));
+    mockMvc
+        .perform(get("/api/v1/maintenance/plans/{id}/ordres-travail", planId).with(jwt()))
+        .andExpect(jsonPath("$.length()").value(1));
+    mockMvc
+        .perform(
+            get("/api/v1/maintenance/couts").param("enginId", vehiculeId.toString()).with(jwt()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.nombreOrdres").value(1))
+        .andExpect(jsonPath("$.totalHt").value(170.0))
+        .andExpect(jsonPath("$.parNature[0].cle").value("PREVENTIF"));
   }
 
   @Test
-  void creerUnOrdreTravailPourUnVehiculeExistant() throws Exception {
+  void sinistreAvecContratDAssuranceEtReparation() throws Exception {
     UUID vehiculeId = creerVehicule();
-    var requete =
-        new OrdreTravailRequest(
-            vehiculeId,
-            TypeIntervention.ENTRETIEN_PREVENTIF,
-            LocalDateTime.now(),
-            new Money(BigDecimal.valueOf(250), Currency.getInstance("EUR")));
+    UUID assureurId =
+        creer(
+            "/api/v1/maintenance/prestataires",
+            Map.of(
+                "code",
+                "ASS-IT-" + vehiculeId.toString().substring(0, 6),
+                "raisonSociale",
+                "Assureur IT",
+                "type",
+                "ASSUREUR"));
+    creer(
+        "/api/v1/maintenance/contrats-assurance",
+        Map.of(
+            "assureurId",
+            assureurId,
+            "numeroPolice",
+            "POL-IT",
+            "type",
+            "FLOTTE",
+            "garanties",
+            List.of("RC", "DOMMAGES"),
+            "franchise",
+            500,
+            "dateEffet",
+            LocalDate.now().minusMonths(1).toString(),
+            "dateEcheance",
+            LocalDate.now().plusMonths(11).toString()));
 
+    String sinistreJson =
+        envoyer(
+                post("/api/v1/maintenance/sinistres"),
+                Map.of(
+                    "vehiculeId",
+                    vehiculeId,
+                    "dateSurvenance",
+                    DEBUT.toString(),
+                    "type",
+                    "ACCROCHAGE",
+                    "gravite",
+                    "MATERIEL_LEGER",
+                    "description",
+                    "Accrochage sur un quai de chargement",
+                    "enginImmobilise",
+                    true))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.reference").value(org.hamcrest.Matchers.startsWith("SIN-")))
+            .andExpect(jsonPath("$.franchise").value(500.0))
+            .andExpect(jsonPath("$.contratId").exists())
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    String sinistreId = objectMapper.readTree(sinistreJson).get("id").asText();
     mockMvc
-        .perform(
-            post("/api/v1/ordres-travail")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requete)))
+        .perform(get("/api/v1/vehicules/{id}", vehiculeId).with(jwt()))
+        .andExpect(jsonPath("$.statut").value("IMMOBILISE"));
+
+    String otJson =
+        envoyer(
+                post("/api/v1/maintenance/sinistres/{id}/reparations", sinistreId),
+                Map.of(
+                    "engin", Map.of("type", "VEHICULE", "id", vehiculeId),
+                    "details",
+                        Map.of(
+                            "type", "CARROSSERIE",
+                            "nature", "CORRECTIF",
+                            "titre", "Reprise carrosserie",
+                            "debutPlanifie", DEBUT.plusHours(2).toString())))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.origine").value("SINISTRE"))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+    String otId = objectMapper.readTree(otJson).get("id").asText();
+
+    envoyer(
+            patch("/api/v1/maintenance/sinistres/{id}/statut", sinistreId),
+            Map.of("valeur", "CLOS"))
+        .andExpect(status().is4xxClientError());
+
+    envoyer(put("/api/v1/maintenance/ordres-travail/{id}/lignes", otId), lignes())
+        .andExpect(status().isOk());
+    envoyer(
+            patch("/api/v1/maintenance/ordres-travail/{id}/statut", otId),
+            Map.of("valeur", "EN_COURS"))
+        .andExpect(status().isOk());
+    envoyer(
+            post("/api/v1/maintenance/ordres-travail/{id}/cloture", otId),
+            Map.of(
+                "finReelle",
+                LocalDateTime.now(java.time.ZoneId.of("Europe/Paris"))
+                    .plusMinutes(5)
+                    .withNano(0)
+                    .toString(),
+                "kilometrage",
+                5000))
+        .andExpect(status().isOk());
+    // Le sinistre immobilise encore le véhicule tant qu'il n'est pas clos.
+    mockMvc
+        .perform(get("/api/v1/vehicules/{id}", vehiculeId).with(jwt()))
+        .andExpect(jsonPath("$.statut").value("EN_MAINTENANCE"));
+
+    Map<String, Object> modification = new java.util.HashMap<>();
+    modification.put("vehiculeId", vehiculeId);
+    modification.put("dateSurvenance", DEBUT.toString());
+    modification.put("type", "ACCROCHAGE");
+    modification.put("gravite", "MATERIEL_LEGER");
+    modification.put("description", "Accrochage sur un quai de chargement");
+    modification.put("enginImmobilise", true);
+    modification.put("indemnite", 100);
+    envoyer(put("/api/v1/maintenance/sinistres/{id}", sinistreId), modification)
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.couts.reparationsHt").value(170.0))
+        .andExpect(jsonPath("$.couts.coutNet").value(70.0));
+
+    envoyer(
+            patch("/api/v1/maintenance/sinistres/{id}/statut", sinistreId),
+            Map.of("valeur", "CLOS"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.statut").value("CLOS"));
+    mockMvc
+        .perform(get("/api/v1/vehicules/{id}", vehiculeId).with(jwt()))
+        .andExpect(jsonPath("$.statut").value("DISPONIBLE"));
+  }
+
+  @Test
+  void scoreDeSanteToujoursCalculable() throws Exception {
+    UUID vehiculeId = creerVehicule();
+    envoyer(
+            post("/api/v1/scores-sante"),
+            new ScoreSanteRequest(vehiculeId, 92, 4000, LocalDate.now().plusMonths(3), null))
         .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.statut").value("PLANIFIE"));
-  }
-
-  @Test
-  void listerLesOrdresDeTravail() throws Exception {
-    UUID vehiculeId = creerVehicule();
-    var requete =
-        new OrdreTravailRequest(
-            vehiculeId,
-            TypeIntervention.REPARATION,
-            LocalDateTime.now(),
-            new Money(BigDecimal.valueOf(180), Currency.getInstance("EUR")));
-
-    mockMvc
-        .perform(
-            post("/api/v1/ordres-travail")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requete)))
-        .andExpect(status().isCreated());
-
-    mockMvc
-        .perform(
-            get("/api/v1/ordres-travail")
-                .with(jwt())
-                .param("page", "0")
-                .param("size", "10"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.totalElements", greaterThanOrEqualTo(1)))
-        .andExpect(jsonPath("$.content[0].statut").value("PLANIFIE"));
-  }
-
-  @Test
-  void listerLesOrdresDeTravailParVehicule() throws Exception {
-    UUID vehiculeA = creerVehicule();
-    UUID vehiculeB = creerVehicule();
-    var ordreA =
-        new OrdreTravailRequest(
-            vehiculeA,
-            TypeIntervention.ENTRETIEN_PREVENTIF,
-            LocalDateTime.now(),
-            new Money(BigDecimal.valueOf(120), Currency.getInstance("EUR")));
-    var ordreB =
-        new OrdreTravailRequest(
-            vehiculeB,
-            TypeIntervention.REPARATION,
-            LocalDateTime.now(),
-            new Money(BigDecimal.valueOf(300), Currency.getInstance("EUR")));
-
-    mockMvc
-        .perform(
-            post("/api/v1/ordres-travail")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(ordreA)))
-        .andExpect(status().isCreated());
-    mockMvc
-        .perform(
-            post("/api/v1/ordres-travail")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(ordreB)))
-        .andExpect(status().isCreated());
-
-    mockMvc
-        .perform(
-            get("/api/v1/ordres-travail")
-                .with(jwt())
-                .param("vehiculeId", vehiculeA.toString())
-                .param("page", "0")
-                .param("size", "10"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.totalElements").value(1))
-        .andExpect(jsonPath("$.content[0].vehiculeId").value(vehiculeA.toString()));
-  }
-
-  @Test
-  void listerLesPlansEntretien() throws Exception {
-    UUID vehiculeId = creerVehicule();
-    var requete = new PlanEntretienRequest(vehiculeId, "Vidange moteur", 30_000, 12, 500, 60);
-
-    mockMvc
-        .perform(
-            post("/api/v1/plans-entretien")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requete)))
-        .andExpect(status().isCreated());
-
-    mockMvc
-        .perform(
-            get("/api/v1/plans-entretien")
-                .with(jwt())
-                .param("page", "0")
-                .param("size", "10"))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.totalElements", greaterThanOrEqualTo(1)))
-        .andExpect(jsonPath("$.content[0].libelle").value("Vidange moteur"));
-  }
-
-  @Test
-  void consulterLeDernierScoreDeSante() throws Exception {
-    UUID vehiculeId = creerVehicule();
-    var requete = new ScoreSanteRequest(vehiculeId, 92, 4000, LocalDate.now().plusMonths(3), null);
-
-    mockMvc
-        .perform(
-            post("/api/v1/scores-sante")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requete)))
-        .andExpect(status().isCreated());
-
-    mockMvc
-        .perform(
-            get("/api/v1/scores-sante/dernier")
-                .with(jwt())
-                .param("vehiculeId", vehiculeId.toString()))
-        .andExpect(status().isOk())
         .andExpect(jsonPath("$.statut").value("BON"));
-  }
-
-  @Test
-  void calculerUnScoreDeSanteDeriveLeStatut() throws Exception {
-    UUID vehiculeId = creerVehicule();
-    var requete = new ScoreSanteRequest(vehiculeId, 92, 4000, LocalDate.now().plusMonths(3), null);
-
-    mockMvc
-        .perform(
-            post("/api/v1/scores-sante")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requete)))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.statut").value("BON"));
-  }
-
-  @Test
-  void creerUnOrdreTravailPourUnVehiculeInexistantRenvoie404() throws Exception {
-    var requete =
-        new OrdreTravailRequest(
-            UUID.randomUUID(),
-            TypeIntervention.REPARATION,
-            LocalDateTime.now(),
-            new Money(BigDecimal.TEN, Currency.getInstance("EUR")));
-
-    mockMvc
-        .perform(
-            post("/api/v1/ordres-travail")
-                .with(jwt())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requete)))
-        .andExpect(status().isNotFound());
-  }
-
-  @Test
-  void accederSansAuthentificationRenvoie401() throws Exception {
-    mockMvc
-        .perform(get("/api/v1/ordres-travail/{id}", UUID.randomUUID()))
-        .andExpect(status().isUnauthorized());
   }
 }

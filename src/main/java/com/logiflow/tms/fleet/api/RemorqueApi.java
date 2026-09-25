@@ -1,5 +1,6 @@
 package com.logiflow.tms.fleet.api;
 
+import com.logiflow.tms.fleet.api.dto.RemorqueEtatSummary;
 import com.logiflow.tms.fleet.api.dto.RemorquePlanificationSummary;
 import com.logiflow.tms.fleet.api.dto.RemorqueSummary;
 import com.logiflow.tms.shared.application.Page;
@@ -38,4 +39,19 @@ public interface RemorqueApi {
 
   /** Remorques en service (hors HORS_SERVICE), documents évalués à la date donnée. */
   List<RemorquePlanificationSummary> listerPourPlanification(LocalDate date);
+
+  /** État (compteurs, âge) des remorques en service, pour la maintenance. */
+  List<RemorqueEtatSummary> listerPourMaintenance();
+
+  /**
+   * Immobilise l'engin pour la maintenance ({@code sinistre} = false → EN_MAINTENANCE) ou suite à
+   * un sinistre (true → IMMOBILISE). Sans effet sur un engin hors service.
+   */
+  void signalerImmobilisation(UUID id, boolean sinistre);
+
+  /** Remet l'engin DISPONIBLE s'il était EN_MAINTENANCE ou IMMOBILISE. */
+  void signalerRemiseEnService(UUID id);
+
+  /** Relève les compteurs ; une valeur inférieure à la valeur actuelle est ignorée. */
+  void releverCompteurs(UUID id, Integer kilometrage, Integer heures);
 }

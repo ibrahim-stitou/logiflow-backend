@@ -179,6 +179,37 @@ public class VehiculeService implements VehiculeApi {
     return resultat;
   }
 
+  @Override
+  @Transactional
+  public void signalerImmobilisation(UUID id, boolean sinistre) {
+    Vehicule engin = trouverOuEchouer(id);
+    if (engin.statut() != StatutVehicule.HORS_SERVICE) {
+      engin.changerStatut(sinistre ? StatutVehicule.IMMOBILISE : StatutVehicule.EN_MAINTENANCE);
+      vehiculeRepository.sauvegarder(engin);
+    }
+  }
+
+  @Override
+  @Transactional
+  public void signalerRemiseEnService(UUID id) {
+    Vehicule engin = trouverOuEchouer(id);
+    if (engin.statut() == StatutVehicule.EN_MAINTENANCE
+        || engin.statut() == StatutVehicule.IMMOBILISE) {
+      engin.changerStatut(StatutVehicule.DISPONIBLE);
+      vehiculeRepository.sauvegarder(engin);
+    }
+  }
+
+  @Override
+  @Transactional
+  public void releverCompteurs(UUID id, Integer kilometrage, Integer heures) {
+    Vehicule engin = trouverOuEchouer(id);
+    int km = kilometrage == null ? engin.kilometrage() : Math.max(kilometrage, engin.kilometrage());
+    int h = heures == null ? engin.heuresMoteur() : Math.max(heures, engin.heuresMoteur());
+    engin.relever(km, h);
+    vehiculeRepository.sauvegarder(engin);
+  }
+
   private VehiculePlanificationSummary versPlanification(Vehicule vehicule, LocalDate date) {
     return new VehiculePlanificationSummary(
         vehicule.id(),

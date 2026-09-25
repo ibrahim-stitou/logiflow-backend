@@ -2,6 +2,7 @@ package com.logiflow.tms.fleet.application;
 
 import com.logiflow.tms.document.api.DocumentApi;
 import com.logiflow.tms.fleet.api.RemorqueApi;
+import com.logiflow.tms.fleet.api.dto.RemorqueEtatSummary;
 import com.logiflow.tms.fleet.api.dto.RemorquePlanificationSummary;
 import com.logiflow.tms.fleet.api.dto.RemorqueSummary;
 import com.logiflow.tms.fleet.application.command.CreerRemorqueCommand;
@@ -144,6 +145,64 @@ public class RemorqueService implements RemorqueApi {
       courante.contenu().stream()
           .filter(r -> r.statut() != StatutVehicule.HORS_SERVICE)
           .map(r -> versPlanification(r, date))
+          .forEach(resultat::add);
+      page = new PageRequest(page.numero() + 1, PAGE_PLANIFICATION);
+    } while (page.numero() < courante.totalPages());
+    return resultat;
+  }
+
+  @Override
+  @Transactional
+  public void signalerImmobilisation(UUID id, boolean sinistre) {
+    Remorque engin = trouverOuEchouer(id);
+    if (engin.statut() != StatutVehicule.HORS_SERVICE) {
+      engin.changerStatut(sinistre ? StatutVehicule.IMMOBILISE : StatutVehicule.EN_MAINTENANCE);
+      remorqueRepository.sauvegarder(engin);
+    }
+  }
+
+  @Override
+  @Transactional
+  public void signalerRemiseEnService(UUID id) {
+    Remorque engin = trouverOuEchouer(id);
+    if (engin.statut() == StatutVehicule.EN_MAINTENANCE
+        || engin.statut() == StatutVehicule.IMMOBILISE) {
+      engin.changerStatut(StatutVehicule.DISPONIBLE);
+      remorqueRepository.sauvegarder(engin);
+    }
+  }
+
+  @Override
+  @Transactional
+  public void releverCompteurs(UUID id, Integer kilometrage, Integer heures) {
+    Remorque engin = trouverOuEchouer(id);
+    int km = kilometrage == null ? engin.kilometrage() : Math.max(kilometrage, engin.kilometrage());
+    int h =
+        heures == null ? engin.heuresGroupeFroid() : Math.max(heures, engin.heuresGroupeFroid());
+    engin.relever(km, h);
+    remorqueRepository.sauvegarder(engin);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<RemorqueEtatSummary> listerPourMaintenance() {
+    List<RemorqueEtatSummary> resultat = new ArrayList<>();
+    PageRequest page = PageRequest.premiere(PAGE_PLANIFICATION);
+    Page<Remorque> courante;
+    do {
+      courante = remorqueRepository.rechercherParStatut("", null, page);
+      courante.contenu().stream()
+          .filter(r -> r.statut() != StatutVehicule.HORS_SERVICE)
+          .map(
+              r ->
+                  new RemorqueEtatSummary(
+                      r.id(),
+                      r.immatriculation().valeur(),
+                      r.carrosserie() == null ? null : r.carrosserie().name(),
+                      r.statut().name(),
+                      r.kilometrage(),
+                      r.heuresGroupeFroid(),
+                      r.anneeFabrication()))
           .forEach(resultat::add);
       page = new PageRequest(page.numero() + 1, PAGE_PLANIFICATION);
     } while (page.numero() < courante.totalPages());

@@ -339,6 +339,52 @@ class VoyageControllerIT extends AbstractIntegrationTest {
   }
 
   @Test
+  void unVehiculeRetenuALAtelierSurLaPeriodeEstRefuse() throws Exception {
+    UUID lyon = creerSite("Lyon", 45.76, 4.84);
+    UUID marseille = creerSite("Marseille", 43.30, 5.37);
+    Instant depart = Instant.now().plus(30, ChronoUnit.DAYS);
+    UUID vehiculeId = creerPorteur();
+    UUID dossierId = creerDossier(lyon, marseille, depart);
+    UUID chauffeurId = creerChauffeur();
+    java.time.LocalDateTime atelier =
+        java.time.LocalDateTime.ofInstant(depart, java.time.ZoneId.of("Europe/Paris"))
+            .minusHours(1);
+    creerId(
+        objectMapper.writeValueAsString(
+            Map.of(
+                "engin", Map.of("type", "VEHICULE", "id", vehiculeId),
+                "details",
+                    Map.of(
+                        "type", "REPARATION",
+                        "nature", "CORRECTIF",
+                        "titre", "Remplacement embrayage",
+                        "debutPlanifie", atelier.toString(),
+                        "finPlanifiee", atelier.plusHours(6).toString()))),
+        "/api/v1/maintenance/ordres-travail");
+
+    mockMvc
+        .perform(
+            get("/api/v1/voyages/ressources-disponibles")
+                .param("debut", depart.toString())
+                .param("fin", depart.plus(8, ChronoUnit.HOURS).toString())
+                .with(jwt()))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.vehicules[*].id", not(hasItem(vehiculeId.toString()))));
+
+    mockMvc
+        .perform(
+            post("/api/v1/voyages")
+                .with(jwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    objectMapper.writeValueAsString(
+                        voyage(depart, vehiculeId, dossierId, chauffeurId))))
+        .andExpect(status().isBadRequest())
+        .andExpect(
+            jsonPath("$.violations[*]", hasItem(org.hamcrest.Matchers.containsString("atelier"))));
+  }
+
+  @Test
   void accederSansAuthentificationRenvoie401() throws Exception {
     mockMvc.perform(get("/api/v1/voyages")).andExpect(status().isUnauthorized());
   }

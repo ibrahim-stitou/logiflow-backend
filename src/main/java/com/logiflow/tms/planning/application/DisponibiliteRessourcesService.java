@@ -6,6 +6,8 @@ import com.logiflow.tms.fleet.api.RemorqueApi;
 import com.logiflow.tms.fleet.api.VehiculeApi;
 import com.logiflow.tms.fleet.api.dto.RemorquePlanificationSummary;
 import com.logiflow.tms.fleet.api.dto.VehiculePlanificationSummary;
+import com.logiflow.tms.maintenance.api.MaintenanceApi;
+import com.logiflow.tms.maintenance.api.dto.IndisponibiliteSummary;
 import com.logiflow.tms.planning.domain.model.Voyage;
 import com.logiflow.tms.planning.domain.port.out.VoyageRepository;
 import com.logiflow.tms.planning.domain.vo.Affectation;
@@ -39,6 +41,7 @@ public class DisponibiliteRessourcesService {
   private final VehiculeApi vehiculeApi;
   private final RemorqueApi remorqueApi;
   private final ChauffeurApi chauffeurApi;
+  private final MaintenanceApi maintenanceApi;
 
   /** Ressources libres et exploitables sur une période, pour la planification manuelle. */
   public record RessourcesDisponibles(
@@ -112,6 +115,15 @@ public class DisponibiliteRessourcesService {
       }
       for (Affectation affectation : voyage.affectations()) {
         chauffeurs.putIfAbsent(affectation.chauffeurId(), reference);
+      }
+    }
+    // Engins retenus à l'atelier (OT planifié ou en cours avec immobilisation).
+    for (IndisponibiliteSummary atelier : maintenanceApi.indisponibilites(debut, fin)) {
+      String motif = "l'ordre de travail " + atelier.reference() + " (atelier)";
+      if ("REMORQUE".equals(atelier.typeEngin())) {
+        remorques.putIfAbsent(atelier.enginId(), motif);
+      } else {
+        vehicules.putIfAbsent(atelier.enginId(), motif);
       }
     }
     return new RessourcesOccupees(vehicules, remorques, chauffeurs);

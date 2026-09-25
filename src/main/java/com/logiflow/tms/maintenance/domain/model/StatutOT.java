@@ -4,6 +4,7 @@ package com.logiflow.tms.maintenance.domain.model;
 public enum StatutOT {
   PLANIFIE,
   EN_COURS,
+  EN_ATTENTE_PIECES,
   TERMINE,
   ANNULE
 }

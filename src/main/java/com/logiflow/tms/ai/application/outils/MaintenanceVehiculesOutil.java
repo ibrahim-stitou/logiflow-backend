@@ -73,22 +73,26 @@ class MaintenanceVehiculesOutil implements OutilCopilote {
       lignes.add(
           ligne(
               "nature", "ORDRE_TRAVAIL",
-              "vehicule", immatriculation(ot.vehiculeId(), immatriculations),
+              "reference", ot.reference(),
+              "engin", immatriculation(ot.enginId(), immatriculations),
+              "titre", ot.titre(),
               "type", ot.type(),
               "statut", ot.statut(),
-              "datePlanifiee", ot.datePlanifiee() == null ? null : ot.datePlanifiee().toString(),
-              "cout", ot.cout(),
-              "devise", ot.devise()));
+              "debutPlanifie", ot.debutPlanifie() == null ? null : ot.debutPlanifie().toString(),
+              "finReelle", ot.finReelle() == null ? null : ot.finReelle().toString(),
+              "coutTtcEur", ot.totalTtc()));
     }
     for (var plan : plans.contenu()) {
       lignes.add(
           ligne(
               "nature", "PLAN_ENTRETIEN",
-              "vehicule", immatriculation(plan.vehiculeId(), immatriculations),
+              "engin", immatriculation(plan.enginId(), immatriculations),
               "libelle", plan.libelle(),
               "periodiciteKm", plan.periodiciteKm(),
               "periodiciteMois", plan.periodiciteMois(),
-              "seuilAlerteKm", plan.seuilAlerteKm()));
+              "kmRestant", plan.kmRestant(),
+              "dateEcheance", plan.dateEcheance() == null ? null : plan.dateEcheance().toString(),
+              "etat", plan.etat()));
     }
     List<SourceCopilote> sources =
         immatriculations.entrySet().stream()

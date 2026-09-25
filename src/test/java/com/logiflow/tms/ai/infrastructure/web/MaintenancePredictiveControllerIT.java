@@ -14,16 +14,10 @@ import com.logiflow.tms.ai.domain.model.maintenance.ResultatMaintenance;
 import com.logiflow.tms.ai.domain.port.out.MaintenancePredictiveClientPort;
 import com.logiflow.tms.fleet.domain.model.TypeVehicule;
 import com.logiflow.tms.fleet.infrastructure.web.dto.VehiculeRequest;
-import com.logiflow.tms.maintenance.domain.model.TypeIntervention;
-import com.logiflow.tms.maintenance.infrastructure.web.dto.OrdreTravailRequest;
-import com.logiflow.tms.maintenance.infrastructure.web.dto.PlanEntretienRequest;
 import com.logiflow.tms.shared.AbstractIntegrationTest;
 import com.logiflow.tms.shared.domain.exception.ServiceIndisponibleException;
-import com.logiflow.tms.shared.domain.vo.Money;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Currency;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -131,16 +125,38 @@ class MaintenancePredictiveControllerIT extends AbstractIntegrationTest {
   @Test
   void analyseUnVehiculeEtEnregistreSonScoreDeSante() throws Exception {
     UUID vehiculeId = creerVehicule();
+    UUID planId =
+        creerId(
+            Map.of(
+                "engin", Map.of("type", "VEHICULE", "id", vehiculeId),
+                "parametres",
+                    Map.of(
+                        "libelle",
+                        "Révision",
+                        "periodiciteKm",
+                        40000,
+                        "periodiciteMois",
+                        12,
+                        "seuilAlerteKm",
+                        2000,
+                        "dureeEstimeeMin",
+                        150)),
+            "/api/v1/maintenance/plans");
     creerId(
-        new PlanEntretienRequest(vehiculeId, "Révision", 40000, 12, 2000, 150),
-        "/api/v1/plans-entretien");
-    creerId(
-        new OrdreTravailRequest(
-            vehiculeId,
-            TypeIntervention.ENTRETIEN_PREVENTIF,
-            LocalDateTime.now().minusDays(100),
-            new Money(BigDecimal.valueOf(300), Currency.getInstance("EUR"))),
-        "/api/v1/ordres-travail");
+        Map.of(
+            "engin",
+            Map.of("type", "VEHICULE", "id", vehiculeId),
+            "origine",
+            "PLAN_ENTRETIEN",
+            "planId",
+            planId,
+            "details",
+            Map.of(
+                "type", "ENTRETIEN_PREVENTIF",
+                "nature", "PREVENTIF",
+                "titre", "Révision",
+                "debutPlanifie", LocalDateTime.now().minusDays(100).withNano(0).toString())),
+        "/api/v1/maintenance/ordres-travail");
     AtomicReference<ContexteMaintenance> recu = new AtomicReference<>();
     when(clientPort.recommander(any()))
         .thenAnswer(
