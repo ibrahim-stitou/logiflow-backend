@@ -22,6 +22,10 @@
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- Sécurité : Tomcat 11.0.22 (géré par Spring Boot 4.1.0, 11.0.24 en 4.1.1) est touché par
+             des CVE CRITIQUES corrigées en 11.0.25 (Trivy, workflow Sécurité). Surcharge à retirer
+             dès qu'une version de Spring Boot embarque Tomcat >= 11.0.25. -->
+        <tomcat.version>11.0.26</tomcat.version>
         <!-- Dépendances hors BOM Spring Boot : versions explicites -->
         <!-- Spring Modulith 2.1.x = ligne alignée sur Spring Boot 4.1.x (cf. section "Points à vérifier") -->
         <spring-modulith.version>2.1.0</spring-modulith.version>
