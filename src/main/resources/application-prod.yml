@@ -1,0 +1,59 @@
+# Profil de production (déploiement : dépôt logiflow-infra).
+#
+# - Keycloak obligatoire : tout appel non public exige un JWT valide (signature, émetteur, preuve
+#   MFA si MFA_REQUIRED=true). Aucun mode permissif ni utilisateur fictif.
+# - Données de démonstration : absentes par défaut. logiflow-infra les active en passant
+#   FLYWAY_LOCATIONS=classpath:db/migration,classpath:db/migration/seed (variable DEMO_DATA).
+# - Derrière un reverse proxy TLS (Caddy) : les en-têtes X-Forwarded-* sont pris en compte.
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT:5432}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+
+  flyway:
+    locations: ${FLYWAY_LOCATIONS:classpath:db/migration}
+
+  jpa:
+    properties:
+      hibernate:
+        format_sql: false
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # issuer-uri : URL publique de Keycloak, doit être identique au claim « iss » des jetons
+          # (ex. https://auth.<domaine>/realms/logiflow). Pas d'appel réseau au démarrage quand
+          # jwk-set-uri est fourni.
+          issuer-uri: ${OAUTH2_ISSUER_URI}
+          # jwk-set-uri : peut viser Keycloak par le réseau interne Docker
+          # (http://keycloak:8080/realms/logiflow/protocol/openid-connect/certs).
+          jwk-set-uri: ${OAUTH2_JWK_SET_URI}
+
+server:
+  forward-headers-strategy: framework
+  shutdown: graceful
+
+logiflow:
+  security:
+    permissive-local-profile: false
+    anonymous-local-access: false
+
+management:
+  endpoint:
+    health:
+      show-details: never
+
+springdoc:
+  api-docs:
+    enabled: ${API_DOCS_ENABLED:true}
+  swagger-ui:
+    enabled: ${API_DOCS_ENABLED:true}
+
+logging:
+  level:
+    root: INFO
+    com.logiflow.tms: INFO
