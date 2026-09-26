@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
 
@@ -28,15 +28,15 @@
         <tomcat.version>11.0.26</tomcat.version>
         <!-- Dépendances hors BOM Spring Boot : versions explicites -->
         <!-- Spring Modulith 2.1.x = ligne alignée sur Spring Boot 4.1.x (cf. section "Points à vérifier") -->
-        <spring-modulith.version>2.1.0</spring-modulith.version>
+        <spring-modulith.version>2.1.1</spring-modulith.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
-        <springdoc.version>3.1.0</springdoc.version>
+        <springdoc.version>3.1.1</springdoc.version>
         <!-- Doit rester strictement aligné sur hibernate.version géré par spring-boot-dependencies -->
-        <hibernate-spatial.version>7.4.1.Final</hibernate-spatial.version>
+        <hibernate-spatial.version>7.4.10.Final</hibernate-spatial.version>
         <archunit.version>1.5.0</archunit.version>
         <rest-assured.version>5.5.7</rest-assured.version>
-        <spotless.version>3.9.0</spotless.version>
+        <spotless.version>3.10.2</spotless.version>
         <jacoco.version>0.8.15</jacoco.version>
 
         <!-- Couverture minimale imposée sur le package domain -->
