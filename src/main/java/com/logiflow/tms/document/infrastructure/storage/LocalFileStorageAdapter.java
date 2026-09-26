@@ -2,6 +2,7 @@ package com.logiflow.tms.document.infrastructure.storage;
 
 import com.logiflow.tms.document.domain.port.out.FileStorageService;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
@@ -34,6 +35,19 @@ public class LocalFileStorageAdapter implements FileStorageService {
   }
 
   @Override
+  public byte[] lire(String url) {
+    Path fichier = cheminLocal(url);
+    try {
+      if (!Files.isRegularFile(fichier)) {
+        throw new IllegalArgumentException("Fichier introuvable pour " + url);
+      }
+      return Files.readAllBytes(fichier);
+    } catch (IOException e) {
+      throw new UncheckedIOException("Échec de lecture du fichier " + url, e);
+    }
+  }
+
+  @Override
   public void supprimer(String url) {
     if (url == null || !url.startsWith(CHEMIN_PUBLIC)) {
       return;
@@ -47,7 +61,21 @@ public class LocalFileStorageAdapter implements FileStorageService {
     }
   }
 
-  private String nomFichierSecurise(String nomFichier) {
+  private Path cheminLocal(String url) {
+    if (url == null || !url.startsWith(CHEMIN_PUBLIC)) {
+      throw new IllegalArgumentException("URL de stockage non supportée : " + url);
+    }
+    String relatif = url.substring(CHEMIN_PUBLIC.length());
+    if (relatif.isBlank()
+        || relatif.contains("..")
+        || relatif.contains("/")
+        || relatif.contains("\\")) {
+      throw new IllegalArgumentException("URL de stockage invalide : " + url);
+    }
+    return Path.of(storageProperties.localPath()).resolve(relatif);
+  }
+
+  private static String nomFichierSecurise(String nomFichier) {
     if (nomFichier == null || nomFichier.isBlank()) {
       return "fichier";
     }

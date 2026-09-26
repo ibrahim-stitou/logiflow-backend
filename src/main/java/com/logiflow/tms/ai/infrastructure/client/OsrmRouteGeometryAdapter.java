@@ -7,13 +7,12 @@ import com.logiflow.tms.shared.domain.exception.ServiceIndisponibleException;
 import com.logiflow.tms.shared.domain.vo.GeoPoint;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 @Component
-@RequiredArgsConstructor
 public class OsrmRouteGeometryAdapter implements RouteGeometryPort {
 
   /**
@@ -23,6 +22,10 @@ public class OsrmRouteGeometryAdapter implements RouteGeometryPort {
   private static final double ECART_DESTINATION_KM = 5.0;
 
   private final RestClient osrmRestClient;
+
+  public OsrmRouteGeometryAdapter(@Qualifier("osrmRestClient") RestClient osrmRestClient) {
+    this.osrmRestClient = osrmRestClient;
+  }
 
   @Override
   public List<GeoPoint> resoudreGeometrie(List<PointItineraire> points) {

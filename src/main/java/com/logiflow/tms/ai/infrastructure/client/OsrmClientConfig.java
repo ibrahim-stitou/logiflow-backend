@@ -10,7 +10,8 @@ import org.springframework.web.client.RestClient;
 @EnableConfigurationProperties(OsrmProperties.class)
 public class OsrmClientConfig {
 
-  @Bean
+  /** Client dédié OSRM — ne pas marquer {@code @Primary} (réservé au client Flask). */
+  @Bean(name = "osrmRestClient")
   public RestClient osrmRestClient(OsrmProperties properties) {
     SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
     requestFactory.setConnectTimeout(properties.connectTimeout());

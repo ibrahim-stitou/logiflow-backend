@@ -8,10 +8,14 @@ import com.logiflow.tms.document.infrastructure.web.dto.DocumentResponse;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -67,6 +71,23 @@ public class DocumentController {
     return documentService.lister(typeEntite, entiteId).stream()
         .map(DocumentResponse::depuis)
         .toList();
+  }
+
+  /**
+   * Flux binaire authentifié du fichier. Les liens {@code /fichiers/**} ne sont pas joignables
+   * depuis le front (proxy / Caddy ne routent que {@code /api/*}).
+   */
+  @GetMapping("/api/v1/documents/{id}/contenu")
+  public ResponseEntity<byte[]> telecharger(@PathVariable UUID id) {
+    DocumentService.ContenuDocument contenu = documentService.lireContenu(id);
+    ContentDisposition disposition =
+        ContentDisposition.inline()
+            .filename(contenu.nomFichier(), StandardCharsets.UTF_8)
+            .build();
+    return ResponseEntity.ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+        .contentType(MediaType.parseMediaType(contenu.typeMime()))
+        .body(contenu.octets());
   }
 
   @DeleteMapping("/api/v1/documents/{id}")

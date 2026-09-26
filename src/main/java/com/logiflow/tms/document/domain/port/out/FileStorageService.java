@@ -10,6 +10,14 @@ public interface FileStorageService {
   /** Stocke le contenu et renvoie l'URL permettant de le récupérer ultérieurement. */
   String stocker(String nomFichier, byte[] contenu, String typeContenu);
 
+  /**
+   * Lit le fichier référencé par cette URL.
+   *
+   * @throws IllegalArgumentException si l'URL n'est pas gérée par ce stockage ou le fichier manque
+   * @throws java.io.UncheckedIOException si le fichier est illisible
+   */
+  byte[] lire(String url);
+
   /** Supprime le fichier référencé par cette URL, silencieusement s'il n'existe plus. */
   void supprimer(String url);
 }
