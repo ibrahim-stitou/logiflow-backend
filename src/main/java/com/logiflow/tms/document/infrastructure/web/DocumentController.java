@@ -81,9 +81,7 @@ public class DocumentController {
   public ResponseEntity<byte[]> telecharger(@PathVariable UUID id) {
     DocumentService.ContenuDocument contenu = documentService.lireContenu(id);
     ContentDisposition disposition =
-        ContentDisposition.inline()
-            .filename(contenu.nomFichier(), StandardCharsets.UTF_8)
-            .build();
+        ContentDisposition.inline().filename(contenu.nomFichier(), StandardCharsets.UTF_8).build();
     return ResponseEntity.ok()
         .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
         .contentType(MediaType.parseMediaType(contenu.typeMime()))
