@@ -1,6 +1,6 @@
 # Image PostgreSQL 18 + PostGIS 3.6 (officielle) enrichie avec pgvector.
 # Nécessaire car aucune image officielle ne combine nativement PostGIS et pgvector.
-FROM postgis/postgis:18-3.6
+FROM postgis/postgis:18-3.7
 
 # v0.8.0 ne compile pas contre PostgreSQL 18 (signature de vacuum_delay_point changée côté PG18) ;
 # v0.8.1 ajoute le support PG18. TODO revérifier la dernière version stable avant mise en prod.
